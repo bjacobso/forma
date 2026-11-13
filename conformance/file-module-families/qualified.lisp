@@ -1,0 +1,6 @@
+(export flow flow-child/step)
+(define flow/check [label] (str label "!"))
+(type StepIR {:label String})
+(form (flow-child/step label) :types {:label String} :ir StepIR {:label (flow/check label)})
+(type FlowIR {:name Symbol})
+(form (flow name) :types {:name (Declares FlowDef)} :ir FlowIR {:name name})

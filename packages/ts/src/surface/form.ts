@@ -412,8 +412,22 @@ function innermost(expression: SExpr, span: { readonly start: number; readonly e
   return expression.loc.start === span.start && expression.loc.end === span.end ? expression : undefined;
 }
 
+// Reference leaves are checked against semantic declarations below, never by a
+// value contract. Keep all surrounding containers and ordinary field contracts.
+function holeValueContract(type: SExpr, types: ReadonlyMap<string,SExpr>, seen = new Set<string>()): SExpr {
+  const key = name(type);
+  if (key && seen.has(key)) return type;
+  if (key) seen = new Set([...seen,key]);
+  type = resolveTypeAlias(type,types);
+  if (head(type) === "Refers") return sym(type,"Any");
+  if (type._tag === "Map") return {...type,pairs:type.pairs.map(([k,v])=>[k,holeValueContract(v,types,seen)] as const)};
+  if (type._tag === "List") return {...type,items:type.items.map((v,i)=>i ? holeValueContract(v,types,seen) : v)};
+  return type;
+}
+
 export interface LinkedFormContext {
   readonly environment: () => Env;
+  readonly forDescriptor: (descriptor: FormDescriptor) => LinkedFormContext;
   readonly evaluateHole: (expression: SExpr, type: SExpr) => KValue;
   readonly run: (expression: SExpr, environment: Env, builtins: Record<string,BuiltinFn>) => KValue;
 }
@@ -432,7 +446,9 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
     for (const [n,t] of spec.holes) {
       const e = values.get(n);
       const u = unwrapOption(t);
-      let value: KValue = e ? linked ? linked.evaluateHole(e, u) : datum(e) : null;
+      const childSyntax = linked && (registry?.getChildForms(descriptor.name,n).length ?? 0) > 0 &&
+        (head(u) === "List" ? e?._tag === "Vector" : e?._tag === "List");
+      let value: KValue = e ? linked && !childSyntax ? linked.evaluateHole(e, u) : datum(e) : null;
       if (e && head(u) === "Record" && e._tag === "Map") value = e.pairs.map(([k,v])=>[datum(k),datum(v)]);
 
       converted.set(`:${n}`,value); env = env.bind(n,value);
@@ -550,11 +566,15 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         const childValues = yield* Effect.forEach(children, original => {
           const childHead = head(original) ?? "";
           const direct = registry.get(childHead);
-          const childDescriptor = family && (!direct || !allowedChildren.includes(direct)) ? registry.get(`${childName}/${childHead}`) : direct;
+          const childDescriptor = family && (!direct || !allowedChildren.includes(direct))
+            ? linked
+              ? allowedChildren.find(candidate => authorNames(candidate.name) === `${authorNames(childName)}/${authorNames(childHead)}` || authorNames(candidate.name) === authorNames(childHead))
+              : registry.get(`${childName}/${childHead}`)
+            : direct;
           const child = childDescriptor && original._tag === "List" ? {...original, items: [sym(original.items[0]!, childDescriptor.name), ...original.items.slice(1)]} : original;
-          if (!childDescriptor?.surface || !allowedChildren.includes(childDescriptor)) return Effect.fail(new ElaborationError({message:`Expected child form ${childName}`,hookName:descriptor.name,phase:"construct"}));
+          if (!childDescriptor?.surface || !allowedChildren.includes(childDescriptor)) return Effect.fail(new ElaborationError({message:`Expected child form ${authorNames(childName)}`,hookName:descriptor.name,phase:"construct"}));
           const normalized = normalizeUnifiedForm(childDescriptor,child);
-          const hooks = unifiedFormHooks(childDescriptor,registry,hostedBuiltins,hostedDsls);
+          const hooks = unifiedFormHooks(childDescriptor,registry,hostedBuiltins,hostedDsls,linked?.forDescriptor(childDescriptor));
           const childInput = {...input,semanticEnv,formName:childDescriptor.name,descriptor:childDescriptor,rawExpr:child,loc:child.loc,identifiers:normalized.identifiers,normalizedSlots:normalized.slots};
           return Effect.gen(function* () {
             const checked = yield* hooks.find(h=>h.kind==="validate")!.execute(childInput);
@@ -590,7 +610,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         const syntaxHole = ["Declares","Refers","Expr"].includes(head(u) ?? "") || ["Symbol","Type","Syntax","RuntimeExpr"].includes(name(u) ?? "");
         const childHole = name(u) !== undefined && /^[a-z]/.test(name(u)!) && !spec.types.has(name(u)!);
         const literal = !syntaxHole && !childHole && (e._tag === "Str" || e._tag === "Num" || e._tag === "Bool");
-        const problems = linked && !syntaxHole ? contractErrors(converted.get(`:${n}`)!,t,spec.types,n)
+        const problems = linked && !syntaxHole ? contractErrors(converted.get(`:${n}`)!,holeValueContract(t,spec.types),spec.types,n)
           : !validLiteral(e,t,spec.types) ? [enumMembers(u,spec.types) ? `${n} must be one of ${enumMembers(u,spec.types)!.join(", ")}` : `${n} does not match its declared hole type`]
           : literal ? contractErrors(datum(e),t,spec.types,n) : [];
         const holeDetails = { form: descriptor.name, hole: n, expected: formatSExprMany([t]).trim(), actual: formatSExprMany([e]).trim(), ...(name(e) ? { name: name(e)! } : {}), ...(enumMembers(u,spec.types) ? { candidates: enumMembers(u,spec.types)! } : {}) };
@@ -617,8 +637,15 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
           for (const unknown of unknownTypeReferences(syntax, n => spec.types.has(n) || input.semanticEnv.getDeclaredNames().has(n) || input.semanticEnv.getFact("type-kind", n) !== undefined)) diagnostics.push({severity:"error",message:`Unknown type ${unknown.name}`,loc:unknown.loc,details:{...holeDetails,name:unknown.name,expected:"Type",actual:unknown.name,candidates},help:"Declare or import the type, or use a type already in scope."});
         }
         const checkReferences = (value: SExpr, type: SExpr): void => {
-          type = unwrapOption(type);
-          if (head(type) === "List" && type._tag === "List" && value._tag === "Vector") {
+          type = unwrapOption(linked ? resolveTypeAlias(type,spec.types) : type);
+          if (linked && type._tag === "Map" && value._tag === "Map") {
+            for (const [key,fieldType] of type.pairs) {
+              const field = value.pairs.find(([k])=>fieldName(k) === fieldName(key))?.[1];
+              if (field) checkReferences(field,fieldType);
+            }
+          } else if (linked && head(type) === "Refers" && value._tag !== "Sym") {
+            diagnostics.push({code:"elaborate/hole-type",severity:"error",message:"A reference must be a declared name",loc:value.loc});
+          } else if (head(type) === "List" && type._tag === "List" && value._tag === "Vector") {
             for (const item of value.items) checkReferences(item, type.items[1]!);
           } else if (head(type) === "Refers" && value._tag === "Sym") {
             const declared = input.semanticEnv.getDeclaredNames().get(value.name);

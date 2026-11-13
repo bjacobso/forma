@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; design only, not implemented |
+| Status | Accepted; implementation incomplete (see implementation gate) |
 | Created | 2026-11-13 |
 | Related | [RFC 0002](./0002-modules-and-packages.md), [RFC 0008](./0008-typed-form-results.md), [RFC 0021](./0021-languages-as-libraries.md) |
 | Scope | Qualified declarations, nested references and descriptor-aware child dispatch in file modules |
@@ -21,7 +21,7 @@ The evidence is commit `87b8356` on `wp/lx2-data-adapter`, specifically
 `packages/ts/test/connectors-import-investigation.test.ts`. Its four probes
 record limitations, not intended semantics. This RFC designs LX2a only; the
 output-neutral adapter/backend split and data emission belong to LX2b. No
-engine change, adapter API or new bundled library is delivered by this note.
+adapter API or new bundled library is proposed by this RFC.
 
 ## Current execution: gap 3
 
@@ -91,8 +91,13 @@ For each present hole, before `evaluateHole` can run ordinary code:
    error prevents parent hooks from consuming an invalid projection.
 
 Ordinary value holes continue using caller evaluation; syntax/reference holes
-continue preserving syntax. A child hole accepts child syntax, not an expression
-that computes a child or a prebuilt IR value. This introduces no macro expansion
+continue preserving syntax. Probe tests on the pre-change linked engine establish a narrower boundary:
+a single family hole already accepts a prebuilt IR map, including a symbol
+bound to that map. Keep those values on the existing evaluation/contract path.
+A `let`-bound helper result and a helper call returning child IR fail child
+dispatch today; repeated holes reject all three computed-child probes. Only
+call-shaped children in those paths require child syntax rather than an
+expression computing IR. This introduces no macro expansion
 or evaluation of the child head. Parent hook dependency ordering must use
 projected child values; a preliminary frame may retain raw syntax for existing
 `:scope` behavior, but must never execute a child call as a conversion shortcut.
@@ -163,6 +168,14 @@ the conflicting import/alias and identify both names. Thus a child cannot
 silently capture `flow-child/step` that would otherwise access a module export.
 Export aliases must likewise remain unique under the existing export checks.
 
+Local declarations shadow builtins today: `(define map [x] (+ x 1))`
+changes a local `(map 41)` to `42`. Qualified locals follow that same rule:
+`diag/error` shadows the exact builtin, while `diag/custom` is an ordinary
+local even though its prefix names a builtin namespace. A prefix alone does
+not grant namespace access. Rewriting the exact local to its resolved identity
+keeps it separate from builtin calls in imported library helpers. Those helpers
+retain their defining environment; caller shadowing must not capture them.
+
 ## Nested semantic references: gap 2
 
 In `unifiedFormHooks` validation, walk hole syntax and its resolved type
@@ -193,6 +206,11 @@ namespace-only uses retain their meaning. Duplicate declarations/imports are
 already errors. The new reference rejection cases occupy file-family/nested
 record paths that currently fail before successful validation; implementation
 must pin that boundary rather than tighten unrelated binding-type fallbacks.
+
+The pre-change computed-child probes are executable compatibility evidence in
+`file-module-families.test.ts`: single prebuilt maps and their bound symbols
+pass; single `let`/helper calls and repeated computed entries fail. Preserve
+each successful path, rather than claiming all computed children were errors.
 
 Project and bundled preludes retain datum-first conversion, direct-descriptor
 precedence, scopes, projections and existing diagnostic codes. Resolved family
@@ -245,3 +263,16 @@ visibility or expansion semantics.
 vocabulary and makes a parent library's internals part of every call site's
 imports. Retaining reachable descriptors by identity gives lexical execution
 without granting the importer ordinary access to private bindings.
+
+## Implementation gate (phase 2)
+
+The three engine paths have an initial implementation with neutral regression
+fixtures, but acceptance is blocked. The unchanged connectors library resolves
+and elaborates after those changes; `checkModuleGraph` then rejects its private
+`name-of` helper at `nil?`. `builtins/contracts.ts` explicitly records `nil?`,
+`some`, `flat-map`, and `get` as runtime operations without ordinary HM schemes.
+Supporting these helpers in plain `forma check` needs a separate decision about
+builtin type coverage or the checking boundary for compile-time helpers. The
+implementation stops at the brief's scope gate rather than introducing either
+policy implicitly. The requested final status “Accepted; implemented in this PR”
+must wait for that gate and the remaining test plan to pass.

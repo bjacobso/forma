@@ -378,14 +378,16 @@ function resolveModuleGraphUnlocated(
           scalar(header) ??
           (header?._tag === "List" ? scalar(header.items[0]) : undefined);
       if (!name) continue; // Existing surface diagnostics handle malformed declarations.
-      if (name.includes("/") || name.includes(".") || name.includes("__forma_"))
+      if (name.split("/").some(segment => !segment) || name.includes(".") || name.includes("__forma_"))
         fail(
           id,
           header!,
           "module/declaration-name",
           name.includes("__forma_")
             ? "Module declaration uses a reserved internal name."
-            : `Module declaration ${name} must be an unqualified name.`,
+            : name.includes(".")
+              ? `Module declaration ${name} must be an unqualified name.`
+              : `Module declaration ${name} must have nonempty slash-separated segments.`,
         );
       if (bindings.has(name))
         fail(
@@ -561,8 +563,7 @@ function resolveModuleGraphUnlocated(
       ) {
         const alias = scalar(e.items[3])!;
         if (
-          bindings.has(alias) ||
-          imports.has(alias) ||
+          [...bindings.keys(), ...imports.keys()].some(n => n === alias || n.startsWith(`${alias}/`)) ||
           namespaces.has(alias) ||
           alias.includes("/") ||
           alias.includes(".")
@@ -582,7 +583,7 @@ function resolveModuleGraphUnlocated(
             if (
               bindings.has(b.name) ||
               imports.has(b.name) ||
-              namespaces.has(b.name)
+              (namespaces.has(b.name) || namespaces.has(b.name.split("/")[0]!))
             )
               fail(
                 id,
@@ -700,7 +701,7 @@ function resolveModuleGraphUnlocated(
       let binding = visible.get(n),
         suffix = "";
       const slash = n.indexOf("/");
-      if (slash > 0) {
+      if (!binding && slash > 0) {
         const alias = n.slice(0, slash),
           qualified = n.slice(slash + 1),
           memberRoot = qualified.split(".")[0]!;
@@ -1165,12 +1166,12 @@ function resolveModuleGraphUnlocated(
             "module/duplicate-declaration",
             `Duplicate declaration ${name} in ${id}.`,
           );
-        if (name.includes("/") || name.includes("."))
+        if (name.split("/").some(segment => !segment) || name.includes("."))
           fail(
             id,
             node,
             "module/declaration-name",
-            `Module declaration ${name} must be unqualified.`,
+            `Module declaration ${name} must have nonempty slash-separated segments and no dots.`,
           );
         const identity = { moduleId: id, declaration: name };
         const binding: ModuleBinding = {
