@@ -1,18 +1,20 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { generateHttpApiProgram } from "@forma-language/forma/http-api";
-import { generateRpcProgram } from "@forma-language/forma/rpc";
+import { resolveModuleGraph, sourceModuleResolver, linkEffectModules } from "@forma-language/forma/modules";
 
 const read = name => readFileSync(new URL(name, import.meta.url), "utf8");
 export function compile(domain = read("domain.lisp"), http = read("http.lisp"), rpc = read("rpc.lisp")) {
-  const result = generateHttpApiProgram(`${domain}\n${http}`, { sourceId: "workshops.lisp" });
-  if (!result.ok) throw new Error(JSON.stringify(result.diagnostics, null, 2));
-  const rpcResult = generateRpcProgram(`${domain}\n${rpc}`, { sourceId: "rpc.lisp", schemasFrom: "./http.ts" });
-  if (!rpcResult.ok) throw new Error(JSON.stringify(rpcResult.diagnostics, null, 2));
-  return {
-    "http.ts": result.code,
-    "rpc.ts": rpcResult.code,
-  };
+  const sources = [{ id: "domain.lisp", source: domain }, { id: "http.lisp", source: http }, { id: "rpc.lisp", source: rpc }];
+  const generated = {};
+  for (const entry of sources.slice(1)) {
+    const graph = resolveModuleGraph(entry, sourceModuleResolver(sources));
+    const result = linkEffectModules(graph);
+    if (!result.ok) throw new Error(JSON.stringify(result.diagnostics, null, 2));
+    for (const module of result.modules) {
+      generated[module.fileName] = module.code;
+    }
+  }
+  return generated;
 }
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {

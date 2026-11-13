@@ -8,10 +8,11 @@
  * one module. Adding a library adds an extension, not a linker.
  */
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
-import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
-import { bootstrapPreludes, type PreludeName } from "../Preludes.js";
-import type { BootstrappedPrelude } from "../descriptor/bootstrap.js";
-import { elaborateProgram, sourceLocator, type ElaboratedDeclaration } from "../descriptor/elaborate.js";
+import { diagnosticFromUnknown, type Diagnostic, type Span } from "../diagnostic/diagnostic.js";
+import { bootstrapPreludes, preludeSource, type PreludeName } from "../Preludes.js";
+import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bootstrap.js";
+import { elaborateProgram, elaborateSources, sourceLocator, type ElaboratedDeclaration } from "../descriptor/elaborate.js";
+import { SimpleSemanticEnvironment } from "../descriptor/SemanticEnvironment.js";
 import { emissionDatum, emissionSchema } from "../descriptor/form-emitter.js";
 import type { CheckInfo } from "../mechanics/check.js";
 import { schemaReferences } from "../mechanics/effect-schema.js";
@@ -20,7 +21,14 @@ import { elaborateEffectForms } from "../mechanics/elaborate.js";
 import { typeName } from "../mechanics/naming.js";
 import { parse, toSExprMany } from "../reader/index.js";
 import type { SExpr } from "../reader/types.js";
-import { head } from "../surface/effect.js";
+import { resolveModuleGraph, ModuleError, type ModuleGraph } from "../modules/graph.js";
+import { linkEffectLibraryModules } from "./modules.js";
+import { checkModuleGraph } from "../modules/check.js";
+import { ordinaryEffectGraph } from "./modules.js";
+import type { LinkedEffectModule } from "../modules/link.js";
+import { head, normalizeEffectProgram } from "../surface/effect.js";
+import { mechanicsPackageableDeclarations } from "../mechanics/artifact.js";
+import { checkMechanicsProgram } from "../mechanics/checked.js";
 
 /** A declaration, service, entity, or other part of the linked system. */
 export interface SystemNode {
@@ -66,6 +74,8 @@ export interface ExtensionContext {
   readonly diagnose: (diagnostics: readonly Diagnostic[]) => void;
 }
 export interface MechanicsContext extends ExtensionContext {
+  /** Dependency declarations, under their resolved module identities. */
+  readonly importedDeclarations: readonly ElaboratedDeclaration[];
   readonly mechanics: readonly PackageableDeclaration[];
   readonly check: CheckInfo;
   /** Names the domain module exports. */
@@ -98,7 +108,7 @@ export interface LinkOptions {
   readonly sourceId: string;
   /** Namespace of the linker's own parse and emit diagnostics. */
   readonly namespace: string;
-  /** Import referenced domain schemas from this module instead of emitting the domain module. */
+  /** @deprecated Use a file module import for domain schemas instead. */
   readonly schemasFrom?: string;
 }
 
@@ -108,13 +118,30 @@ export interface LinkedEffectSystem {
   readonly diagnostics: readonly Diagnostic[];
   readonly code?: string;
   readonly system?: EffectSystemGraph;
+  /** One output per source module when linking a file-module graph. */
+  readonly modules?: readonly LinkedEffectModule[];
 }
 
 const effectNames = ["Context", "Effect", "Layer", "Ref", "Schema"];
 const effectImport = /^import \{ ([^}]*) \} from "effect";$/m;
 const uses = (code: string, name: string) => new RegExp(`(?<![\\w$])${name}\\.`).test(code);
 
-export function linkEffectSystem(source: string, extensions: readonly EffectExtension[], options: LinkOptions): LinkedEffectSystem {
+/** Internal module input. Dependencies retain resolved identities and author locations. */
+export interface EffectModuleInput {
+  readonly authored: readonly SExpr[];
+  readonly scope: readonly SExpr[];
+  readonly dependencies: readonly PackageableDeclaration[];
+}
+
+export function linkEffectSystem(source: string | ModuleGraph, extensions: readonly EffectExtension[], options: LinkOptions, input?: EffectModuleInput): LinkedEffectSystem {
+  if (typeof source !== "string") {
+    const checked = checkModuleGraph(ordinaryEffectGraph(source));
+    if (!checked.ok) return { ok: false, declarations: [], diagnostics: checked.diagnostics };
+    const linked = linkEffectLibraryModules(source, checked.environments);
+    return { ok: linked.ok, declarations: linked.declarations, diagnostics: linked.diagnostics,
+      ...(linked.ok ? { code: linked.modules.find(m => m.moduleId === source.entry)!.code, modules: linked.modules, system: linked.system } : {}),
+    };
+  }
   const { sourceId, namespace } = options;
   const diagnostics: Diagnostic[] = [];
   let declarations: readonly PackageableDeclaration[] = [];
@@ -133,9 +160,21 @@ export function linkEffectSystem(source: string, extensions: readonly EffectExte
       ...(error.loc ? { span: span(error.loc) } : {}),
     });
     if (failed()) return result();
-    const authored = toSExprMany(parsed.redTree);
-    const prelude = bootstrapPreludes(["compiler.lisp", ...extensions.map(e => e.prelude)]);
-    const projected = elaborateProgram(source, { prelude, sourceId });
+    const authored = input?.authored ?? toSExprMany(parsed.redTree);
+    if (!input && authored.some(e => ["import", "export", "export-from"].includes(head(e) ?? ""))) {
+      try { return linkEffectSystem(resolveModuleGraph({ id: sourceId, source }, () => undefined), extensions, options); }
+      catch (error) {
+        if (error instanceof ModuleError) { diagnostics.push(...error.diagnostics); return result(); }
+        throw error;
+      }
+    }
+    const prelude = extensions.length ? bootstrapPreludes(["compiler.lisp", ...extensions.map(e => e.prelude)]) : bootstrapFromSources(preludeSource("compiler.lisp"), "");
+    const importedDeclarations = (input?.dependencies ?? []).filter((d): d is ElaboratedDeclaration => "formName" in d);
+    const semanticEnv = new SimpleSemanticEnvironment();
+    for (const d of importedDeclarations) if (d.summary.name) semanticEnv.declareGlobal(d.summary.name, d.formName);
+    const projected = input
+      ? elaborateSources([{ sourceId, source, expressions: [...input.scope.filter(e => ["type", "class", "error"].includes(head(e) ?? "")), ...authored] }], { prelude, semanticEnv })
+      : elaborateProgram(source, { prelude, sourceId });
     diagnostics.push(...projected.diagnostics);
     if (failed()) return result();
 
@@ -153,14 +192,20 @@ export function linkEffectSystem(source: string, extensions: readonly EffectExte
     // Library forms were checked by their preludes; everything else, and the
     // lowered forms, is an ordinary Effect program checked once.
     const ordinary = authored.filter(e => !prelude.descriptions.get(head(e) ?? "")?.surface);
-    const mechanics = elaborateEffectForms([...ordinary, ...lowered], source, { sourceId });
+    const mechanics = input
+      ? moduleMechanics([...ordinary, ...lowered], input, sourceId)
+      : elaborateEffectForms([...ordinary, ...lowered], source, { sourceId });
     diagnostics.push(...mechanics.diagnostics.map(({ phase: _, ...d }) => ({ ...d, phase: "typecheck" as const })));
     declarations = [...mechanics.declarations, ...projected.declarations];
     if (failed() || !mechanics.check) return result();
-    const module = generateMechanicsEffectTypeScriptModule(mechanics.declarations, { check: mechanics.check }).code;
+    const externalNames = new Set(input?.dependencies.flatMap(d => d.summary.name ? [d.summary.name] : []));
+    const module = generateMechanicsEffectTypeScriptModule(mechanics.declarations, {
+      check: mechanics.check, externalNames,
+      ...(input ? { exports: new Set(mechanics.declarations.flatMap(d => d.summary.name ? [d.summary.name] : [])) } : {}),
+    }).code;
     const exports = new Set([...module.matchAll(/^export (?:const|class|type) ([\w$]+)/gm)].map(m => m[1]!));
     const checked = contexts.map((context): MechanicsContext => ({
-      ...context, mechanics: mechanics.declarations, check: mechanics.check!, exports,
+      ...context, importedDeclarations, mechanics: [...input?.dependencies ?? [], ...mechanics.declarations], check: mechanics.check!, exports,
     }));
     extensions.forEach((extension, i) => extension.check?.(checked[i]!));
     if (failed()) return result();
@@ -219,11 +264,23 @@ export function linkEffectSystem(source: string, extensions: readonly EffectExte
       body = effectImport.test(module) ? module.replace(effectImport, header) : [header, module].filter(Boolean).join("\n\n");
     }
     const code = `${[body.trimEnd(), target].filter(Boolean).join("\n\n")}\n`;
-    return result(code, systemGraph(mechanics.declarations, mechanics.check, extensions, checked, owner));
+    return result(code, systemGraph([...input?.dependencies ?? [], ...mechanics.declarations], mechanics.check, extensions, checked, owner, input !== undefined));
   } catch (error) {
-    diagnostics.push({ code: `${namespace}/emit`, severity: "error", phase: "typecheck", message: String(error) });
+    const diagnostic = input ? diagnosticFromUnknown(error, "typecheck", sourceId) : undefined;
+    diagnostics.push(diagnostic?.span ? diagnostic : { code: `${namespace}/emit`, severity: "error", phase: "typecheck", message: String(error) });
     return result();
   }
+}
+
+/** Project only this module, but normalize and check in the resolved graph's scope. */
+function moduleMechanics(authored: readonly SExpr[], input: EffectModuleInput, sourceId: string) {
+  const scope = normalizeEffectProgram([...input.scope, ...authored], true, true);
+  const locations = new Set(authored.map(e => e.loc));
+  const local = scope.filter(e => locations.has(e.loc));
+  const projected = mechanicsPackageableDeclarations(local, sourceId, true, scope);
+  if (!projected.ok) return { declarations: [], diagnostics: projected.diagnostics.map(d => ({ ...d, severity: "error" as const, phase: "typecheck" as const })), check: undefined };
+  const checked = checkMechanicsProgram([...input.dependencies, ...projected.declarations]);
+  return { declarations: projected.declarations, diagnostics: checked.diagnostics, check: checked.check };
 }
 
 /** Mechanics declarations give services, layers, operations, schemas, and
@@ -235,6 +292,7 @@ function systemGraph(
   extensions: readonly EffectExtension[],
   contexts: readonly MechanicsContext[],
   owner: ReadonlyMap<ElaboratedDeclaration, number>,
+  pendingModuleEdges = false,
 ): EffectSystemGraph {
   const nodes = new Map<string, SystemNode>();
   const edges = new Map<string, SystemEdge>();
@@ -288,6 +346,6 @@ function systemGraph(
   for (const [from, n, kind] of pending) add.edge(from, nodes.has(`error:${n}`) ? `error:${n}` : `schema:${n}`, kind);
   return {
     nodes: [...nodes.values()],
-    edges: [...edges.values()].filter(e => nodes.has(e.from) && nodes.has(e.to)),
+    edges: [...edges.values()].filter(e => pendingModuleEdges || nodes.has(e.from) && nodes.has(e.to)),
   };
 }

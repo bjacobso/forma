@@ -98,6 +98,8 @@ export interface ElaborateProgramResult {
 export interface ProgramSource {
   readonly sourceId: string;
   readonly source: string;
+  /** Already resolved module syntax, retaining author locations. */
+  readonly expressions?: readonly SExpr[];
 }
 
 /** Elaborate every top-level form of `source` against a bootstrapped prelude. */
@@ -138,7 +140,7 @@ export function elaborateSources(
 
   const descriptions = options.prelude.descriptions.fork();
   const elaboration = options.prelude.elaboration.fork();
-  const authorForms = sources.flatMap(({source})=>toSExprMany(parse(source).redTree));
+  const authorForms = sources.flatMap(({source, expressions})=>expressions ?? toSExprMany(parse(source).redTree));
   const typeDefinitions = new Map<string,SExpr>();
   for (const descriptor of descriptions.list()) for (const [n,t] of descriptor.surface?.types ?? []) typeDefinitions.set(n,t);
   for (const e of authorForms) { const definition=typeDefinition(e); if (definition) typeDefinitions.set(...definition); }
@@ -212,14 +214,14 @@ export function elaborateSources(
     readonly name?: string;
   }[] = [];
 
-  for (const { sourceId, source } of sources) {
+  for (const { sourceId, source, expressions } of sources) {
     const locate = sourceLocator(source, sourceId);
     const at = report.bind(undefined, locate);
     const parsed = parse(source);
     for (const error of parsed.errors) at("parse/syntax", error.message, error.loc);
     if (parsed.errors.length > 0) continue;
 
-    const original = toSExprMany(parsed.redTree);
+    const original = expressions ?? toSExprMany(parsed.redTree);
     let authored: readonly SExpr[];
     try {authored=lowerActionProgram(original, new Set(authorForms.flatMap(e => head(e)===":" && e._tag==="List" && surfaceName(e.items[1]) && (head(e.items[2])==="Action" || e.items[2]?._tag==="List" && head(e.items[2])==="->" && head(e.items[2].items.at(-1))==="Action") ? [surfaceName(e.items[1])!] : [])));}
     catch (error) {at("elaborate/action-definition",errorMessage(error),toSExprMany(parsed.redTree)[0]?.loc);continue;}

@@ -1,3 +1,7 @@
+(import "./domain.lisp" [WorkshopId Reserve Workshop WorkshopNotFound NotEnoughSeats lookup reserve])
+(import "forma:effect/http-api" [api group endpoint handle handler])
+(export Workshops)
+
 (api Workshops
   (group booking
     (endpoint get-workshop :get "/workshops/:id"

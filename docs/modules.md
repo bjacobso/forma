@@ -401,6 +401,11 @@ host's module ID; use the returned interfaces and `generatedBindingName` to loca
 an authored export. The integration fixture compiles this output with `tsc` and
 runs it with Effect, asserting zero calls at import and one call on execution.
 
+File modules can select bundled RPC, HTTP API, and Cluster descriptors with
+`forma:effect/rpc`, `forma:effect/http-api`, and `forma:effect/cluster` imports.
+These work with plain `forma check` and emit real imports between generated
+modules; see [Effect library imports](./effect/system.md#libraries-selected-by-file-imports).
+
 The target retains its existing supported Effect subset. Inferred closed,
 polymorphic pure function signatures are supported. Generic schemas, inferred
 open-row signatures, and variadic functions require further target work and report

@@ -44,6 +44,20 @@ describe("human CLI", { timeout: 30_000 }, () => {
       expect(result.stderr).not.toMatch(/__forma_|\bt\d+\b|\(at line/);
     });
   }
+  it("checks import-selected Effect contracts without host flags", () => {
+    const dir = workspace({
+      "domain.lisp": '(export Greeting) (type Greeting {:message String})',
+      "rpc.lisp": '(import "./domain.lisp" [Greeting])\n(import "forma:effect/rpc" [rpc-group rpc])\n(rpc-group Greetings (rpc "Greet" :payload String :success Greeting))',
+      "missing.lisp": '(rpc-group Greetings (rpc "Greet" :payload String :success String))',
+    });
+    expect(run(dir, ["check", "rpc.lisp"])).toMatchObject({ status: 0, stdout: "", stderr: "0 errors, 0 warnings\n" });
+    const missing = run(dir, ["check", "missing.lisp"]);
+    expect(missing.status).toBe(1);
+    expect(missing.stderr).toContain('add (import "forma:effect/rpc" [rpc-group rpc])');
+    expect(missing.stderr).toContain("missing.lisp:1:1");
+    expect(missing.stderr).not.toMatch(/__forma_|\bt\d+\b/);
+  });
+
   it("runs checked and unchecked programs and supports JSON", () => {
     const dir = workspace({ "main.lisp": "(+ 1 2)", "bad.lisp": '(+ 1 "nope")', "unchecked.lisp": '(upper "yes")' });
     expect(run(dir, ["run", "main.lisp"])).toMatchObject({ status: 0, stdout: "3\n" });

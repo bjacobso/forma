@@ -1,0 +1,5 @@
+(import "./domain.lisp" :as a)
+(import "./other.lisp" :as b)
+(import "forma:effect/rpc" [rpc-group rpc])
+(type Greeting String)
+(rpc-group Greetings (rpc "Greet" :payload a/Greeting :success b/Greeting))

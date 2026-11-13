@@ -19,11 +19,12 @@ Read the files in this order:
 3. `rpc.lisp`: the same queries/commands as `GetWorkshop` and `ReserveSeats`.
 4. `../../preludes/rpc.lisp`: the reusable typed RPC prelude, with Forma
    `:emit` hooks producing native `Rpc.make` and `RpcGroup.make` calls.
-5. `generate.mjs`: the HTTP and RPC host adapters. `schemasFrom` imports shared
-   schemas without a fixed schema list. It assembles sources explicitly, not
-   through Forma module imports.
-6. `generated/http.ts` and `generated/rpc.ts`: reproducible output, saved for
-   inspection. HTTP output owns the shared schemas; RPC imports those exact values.
+5. `generate.mjs`: resolves the Forma module graph and links each module. HTTP
+   and RPC import `domain.lisp` and their `forma:effect/*` libraries explicitly.
+6. `generated/domain.ts`, `generated/http.ts`, and `generated/rpc.ts`: reproducible
+   output, saved for inspection. Domain output owns the shared schemas; HTTP and
+   RPC import those exact values. The linker derives these readable
+   paths and their relative `.ts` imports directly from the source paths.
 7. `runtime.ts`: **hand-authored**, explicit native Effect Booking implementation,
    RPC registration, HTTP/RPC transport layers and Swagger. The native RPC handlers
    reuse the generated operations; both transports reach the same repository.
@@ -57,7 +58,7 @@ bash examples/http-rpc/check.sh
 node examples/http-rpc/server.ts
 ```
 
-The generator imports `@forma-language/forma/http-api` and `/rpc`. The commands
+The generator imports `@forma-language/forma/modules`. The commands
 above install a local tarball built from this checkout.
 The check builds the compiler, checks saved generation against sources, strictly
 typechecks generated and native code, and runs contract-negative and transport
@@ -119,11 +120,11 @@ The tests assert this distinction and verify rejected requests leave state intac
   is needed for deterministic tests. `server.ts` and `client.ts` exercise real
   sockets; the walkthrough above was also run against the supervised server.
 - HTTP lowering is the existing shipped spike, not universal HTTP support.
-  Its documented middleware, streaming and module-import limits still apply.
+  Its documented middleware and streaming limits still apply.
 - RPC contracts use the dedicated `rpc.lisp` prelude and `@forma-language/forma/rpc`
-  adapter, which support named unary groups and checked schemas without changes
-  to mechanics. Native handler registration is still explicit; streaming,
-  middleware and Forma file-module RPC linking are not implemented.
+  adapter, selected by `forma:effect/rpc`, which support named unary groups and
+  checked schemas without changes to mechanics. Native handler registration is
+  still explicit; streaming and middleware are not implemented. File-module RPC linking is supported.
 - Refinements run at transport decoding, not as static proofs of arbitrary Forma
   expressions. Native code calling service methods directly must validate its own
   untrusted input.

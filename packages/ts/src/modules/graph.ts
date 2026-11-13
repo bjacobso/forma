@@ -25,6 +25,8 @@ import {
 } from "./packages.js";
 import type { Span } from "../diagnostic/diagnostic.js";
 import { retiredExtensionDiagnostic } from "./retired-extension.js";
+import { bootstrapPreludes } from "../Preludes.js";
+import { effectLibraries, isEffectLibrary } from "../effect-system/libraries.js";
 import { bundledModuleSources } from "./sources.generated.js";
 
 /** A resolver is supplied by the host. IDs identify file instances, not contents. */
@@ -245,6 +247,7 @@ function resolveModuleGraphUnlocated(
   // Reserved, runtime-independent sources take precedence over host/package lookup.
   const externalResolver = resolver;
   resolver = (specifier, importer) => {
+    if (isEffectLibrary(specifier)) return { id: specifier, source: "" };
     const bundled = specifier.startsWith("forma:");
     const internal = importer.startsWith("forma:") &&
       (specifier.startsWith("./") || specifier.startsWith("../"));
@@ -253,7 +256,7 @@ function resolveModuleGraphUnlocated(
     if ((!internal || /^\.\/[a-z]+\.lisp$/.test(specifier)) && Object.hasOwn(bundledModuleSources, name))
       return { id: `forma:${name}`, source: bundledModuleSources[name as keyof typeof bundledModuleSources] };
     throw new ModuleResolutionError("module/specifier",
-      `Unknown bundled library ${specifier}. Available libraries: ${Object.keys(bundledModuleSources).map(name => `forma:${name}`).join(", ")}.`);
+      `Unknown bundled library ${specifier}. Available libraries: ${[...Object.keys(bundledModuleSources).map(name => `forma:${name}`), ...Object.keys(effectLibraries)].join(", ")}.`);
   };
   // Each package's own modules use its prelude, through the project mechanism.
   const core: ModuleCoreOptions = hostCore.packages
@@ -324,6 +327,18 @@ function resolveModuleGraphUnlocated(
     const id = normalizeModuleId(input.id),
       cached = completed.get(id);
     if (cached) return cached;
+    if (isEffectLibrary(id)) {
+      const exports: ModuleBinding[] = effectLibraries[id]().forms.map(name => ({
+        name, identity: { moduleId: id, declaration: name }, symbol: name,
+        kind: "form", constructors: [],
+      }));
+      const library: ResolvedModule = {
+        id, source: "", expressions: [], dependencies: [], bindings: new Map(), imports: new Map(),
+        namespaceImports: [], interface: { moduleId: id, exports },
+      };
+      completed.set(id, library);
+      return library;
+    }
     active.push(id);
     const parsed = parse(input.source);
     if (parsed.errors.length)
@@ -586,6 +601,42 @@ function resolveModuleGraphUnlocated(
           `Use (${h} "./file.lisp" [names])${h === "import" ? ' or (import "./file.lisp" :as alias)' : ""}.`,
         );
     }
+    const libraries = new Set([...dependencies, ...[...imports.values(), ...[...namespaces.values()].flatMap(m => m.interface.exports)]
+      .map(b => b.identity.moduleId)].filter(isEffectLibrary));
+    for (const e of authored) {
+      let h = headSym(e);
+      if (!h || e._tag !== "List") continue;
+      const slash = h.indexOf("/");
+      if (slash > 0 && namespaces.has(h.slice(0, slash))) h = h.slice(slash + 1);
+      const lexical = slash > 0
+        ? namespaces.get(headSym(e)!.slice(0, slash))?.interface.exports.find(binding => binding.name === h)
+        : imports.get(h) ?? bindings.get(h);
+      if (lexical && !isEffectLibrary(lexical.identity.moduleId)) continue;
+      const library = Object.entries(effectLibraries).find(([, library]) => library().forms.includes(h!));
+      if (library && !libraries.has(library[0] as keyof typeof effectLibraries) && !imports.has(h) && !bindings.has(h))
+        fail(id, e, "module/unimported-library", `${h} requires a library import: add (import "${library[0]}" [${library[1]().forms.join(" ")}]).`);
+      if (!library || !libraries.has(library[0] as keyof typeof effectLibraries)) continue;
+      const prelude = bootstrapPreludes(["compiler.lisp", library[1]().prelude]);
+      const descriptor = prelude.descriptions.get(h)?.surface;
+      if (!descriptor) continue;
+      // Binding introduction comes from the prelude's Declares holes, just as
+      // it does for ordinary imported forms. Do not duplicate domain vocabulary.
+      let holes: ReadonlyMap<string, SExpr>;
+      try { holes = matchFormSyntax(descriptor, { ...e, items: [{ ...e.items[0]!, _tag: "Sym", name: h } as SExpr, ...e.items.slice(1)] }); }
+      catch { continue; } // The descriptor checker reports malformed applications.
+      for (const [hole, type] of descriptor.holes) {
+        if (headSym(type) !== "Declares") continue;
+        const node = holes.get(hole), name = scalar(node);
+        if (!name) continue;
+        if (name.includes("/") || name.includes(".") || name.includes("__forma_"))
+          fail(id, node!, "module/declaration-name", "Module declaration names must be unqualified and cannot use reserved internal names.");
+        if (bindings.has(name) || imports.has(name) || namespaces.has(name))
+          fail(id, node!, "module/duplicate-declaration", `Duplicate declaration ${name} in ${id}.`);
+        const identity = { moduleId: id, declaration: name };
+        bindings.set(name, { name, identity, symbol: bindingSymbol(identity), kind: "declaration", constructors: [] });
+        declarationNodes.set(name, node!);
+      }
+    }
     for (const introduced of discoverFormDeclarations(
       authored,
       bindings,
@@ -623,6 +674,9 @@ function resolveModuleGraphUnlocated(
       });
       declarationNodes.set(name, node);
     }
+    const effectPrelude = libraries.size
+      ? bootstrapPreludes(["compiler.lisp", ...[...libraries].map(id => effectLibraries[id]().prelude)])
+      : undefined;
     const visible = new Map([...bindings, ...imports]);
     let allowResolved = false;
     const resolve = (
@@ -811,6 +865,39 @@ function resolveModuleGraphUnlocated(
                   ? resolve(q, locals)
                   : q;
         return { ...e, items: [items[0]!, ...items.slice(1).map(quoted)] };
+      }
+      const resolvedHead = items[0]?._tag === "Sym" ? resolve(items[0], locals, type) : items[0];
+      const formDescriptor = effectPrelude?.descriptions.get(scalar(resolvedHead) ?? "");
+      const descriptor = formDescriptor?.surface;
+      if (descriptor) {
+        let holes: ReadonlyMap<string, SExpr>;
+        try { holes = matchFormSyntax(descriptor, { ...e, items: [resolvedHead!, ...items.slice(1)] }); }
+        catch { return e; } // Descriptor checking owns malformed-form diagnostics.
+        const replacements = new Map<SExpr, SExpr>();
+        const hole = (node: SExpr, type: SExpr): void => {
+          if (headSym(type) === "Option" && type._tag === "List" && type.items[1]) return hole(node, type.items[1]);
+          if (headSym(type) === "List" && type._tag === "List" && type.items[1] && (node._tag === "Vector" || node._tag === "List")) {
+            node.items.forEach(child => hole(child, type.items[1]!));
+            return;
+          }
+          const kind = scalar(type);
+          // Symbols and literal metadata are wire vocabulary, not references.
+          if (["Symbol", "String", "Keyword", "Syntax"].includes(kind ?? "")) return;
+          replacements.set(node, headSym(type) === "Declares" || headSym(type) === "Refers"
+            ? resolve(node, locals) : walk(node, locals, kind === "Type"));
+        };
+        const metadata = formDescriptor?.extensions?.["module"];
+        const references = metadata && typeof metadata === "object" && !Array.isArray(metadata) && "references" in metadata && Array.isArray(metadata.references) ? metadata.references : [];
+        for (const [name, type] of descriptor.holes) {
+          const node = holes.get(name);
+          if (node && references.includes(name)) replacements.set(node, resolve(node, locals));
+          else if (node) hole(node, type);
+        }
+        const replace = (node: SExpr): SExpr => replacements.get(node) ??
+          (node._tag === "List" || node._tag === "Vector" || node._tag === "Set"
+            ? { ...node, items: node.items.map(replace) }
+            : node._tag === "Map" ? { ...node, pairs: node.pairs.map(([k, v]) => [k, replace(v)] as const) } : node);
+        return { ...e, items: [resolvedHead!, ...items.slice(1).map(replace)] };
       }
       const scoped = (binders: SExpr) =>
         new Set([...locals, ...boundNames(binders)]);

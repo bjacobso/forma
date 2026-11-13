@@ -1,3 +1,4 @@
+(export WorkshopId Seats Reserve Workshop WorkshopNotFound NotEnoughSeats Booking lookup reserve)
 ; A workshop has twelve seats. A reservation claims 1–6 seats atomically.
 (type WorkshopId (String :pattern "^ws-[a-z]+$"))
 (type Seats (Int :min 1 :max 6))

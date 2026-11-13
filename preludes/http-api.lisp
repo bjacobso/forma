@@ -84,6 +84,7 @@
         (group system (endpoint health :get "/health" :success String)))
       (handle Health system (handler health health))]]
   :types {:endpoint Symbol :operation Symbol}
+  :extensions {:module {:references ["operation"]}}
   :ir HttpHandlerIR
   :emit (fn [ir]
     `(ts/method handlers "handle" ~(get ir :endpoint) ~(ts/operation (get ir :operation))))
