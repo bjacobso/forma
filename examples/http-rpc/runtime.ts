@@ -3,7 +3,8 @@ import { Effect, Layer } from "effect";
 import { HttpRouter, HttpServer } from "effect/http";
 import { HttpApiBuilder, HttpApiSwagger } from "effect/http-api";
 import { RpcServer, RpcSerialization } from "effect/rpc";
-import { Booking, Workshop, WorkshopNotFound, NotEnoughSeats, Workshops, WorkshopsBookingLive, lookup, reserve } from "./generated/http.ts";
+import { Booking, Workshop, WorkshopNotFound, NotEnoughSeats, lookup, reserve } from "./generated/domain.ts";
+import { Workshops, WorkshopsBookingLive } from "./generated/http.ts";
 import { WorkshopRpc } from "./generated/rpc.ts";
 
 export function makeRoutes() {

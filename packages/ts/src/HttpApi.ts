@@ -31,8 +31,8 @@ export const httpApiExtension: EffectExtension = {
   prelude: "http-api.lisp",
   forms: ["api", "group", "endpoint", "handle", "handler"],
   imports: { "effect/http-api": ["HttpApi", "HttpApiBuilder", "HttpApiEndpoint", "HttpApiGroup"] },
-  check: ({ declarations, mechanics, authored, locate, report }) => {
-    checkHttpApiDeclarations(declarations, mechanics, (d: HttpDeclaration, code, message, operation) => {
+  check: ({ declarations, importedDeclarations, mechanics, authored, locate, report }) => {
+    checkHttpApiDeclarations([...importedDeclarations.filter(d => d.formName === "api"), ...declarations], mechanics, (d: HttpDeclaration, code, message, operation) => {
       // Point at the handler that links the operation, when there is one.
       const handle = authored.find((e) => head(e) === "handle" && e.loc.start === d.span?.startOffset);
       const child = operation && handle?._tag === "List"

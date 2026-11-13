@@ -4,6 +4,7 @@
  * system as data: its services, layers, operations, library declarations, and
  * the relations between them.
  */
+import type { ModuleGraph } from "./modules/graph.js";
 import { clusterExtension } from "./Cluster.js";
 import { httpApiExtension } from "./HttpApi.js";
 import { rpcExtension } from "./Rpc.js";
@@ -24,9 +25,11 @@ export interface EffectSystemOptions {
 export type EffectSystemResult = LinkedEffectSystem;
 
 /** Check and generate one module from a program mixing Effect declarations and
- * library forms. `system` is present when generation succeeds.
+ * library forms, or link a resolved file-module graph with import-selected
+ * libraries. Graph results include one entry in `modules` per source module.
+ * `system` is present when generation succeeds.
  */
-export function generateEffectSystem(source: string, options: EffectSystemOptions = {}): EffectSystemResult {
+export function generateEffectSystem(source: string | ModuleGraph, options: EffectSystemOptions = {}): EffectSystemResult {
   return linkEffectSystem(source, options.extensions ?? effectExtensions, {
     sourceId: options.sourceId ?? "system.lisp", namespace: "effect-system",
   });

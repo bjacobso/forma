@@ -1,3 +1,4 @@
+import { hasEffectLibraries, linkEffectLibraryModules, ordinaryEffectGraph } from "../effect-system/modules.js";
 import { diagnosticLocator } from "../diagnostic/locations.js";
 import type { PackageableDeclaration } from "../artifact/artifact.js";
 import { checkModuleGraph } from "./check.js";
@@ -33,7 +34,7 @@ export function moduleOutputName(id: string): string {
   return `module_${[...new TextEncoder().encode(id)].map((b) => b.toString(16).padStart(2, "0")).join("")}.ts`;
 }
 export function generatedBindingName(binding: ModuleBinding): string {
-  return ["type", "class", "error", "service", "layer"].includes(binding.kind)
+  return ["type", "class", "error", "service", "layer", "declaration"].includes(binding.kind)
     ? typeName(binding.symbol)
     : camelIdentifier(binding.symbol);
 }
@@ -42,6 +43,10 @@ function moduleMechanicsDeclarationsUnlocated(graph: ModuleGraph): {
   declarations: readonly PackageableDeclaration[];
   diagnostics: readonly Diagnostic[];
 } {
+  if (hasEffectLibraries(graph)) {
+    const linked = linkEffectModules(graph);
+    return { declarations: linked.declarations, diagnostics: linked.diagnostics };
+  }
   const check = checkModuleGraph(graph);
   if (!check.ok) return { declarations: [], diagnostics: check.diagnostics };
   let enriched;
@@ -101,6 +106,11 @@ function linkEffectModulesUnlocated(
   graph: ModuleGraph,
   declarations?: readonly PackageableDeclaration[],
 ): LinkedEffectProgram {
+  if (hasEffectLibraries(graph)) {
+    const checked = checkModuleGraph(ordinaryEffectGraph(graph));
+    if (!checked.ok) return { ok: false, entry: moduleOutputName(graph.entry), interfaces: checked.interfaces, declarations: [], modules: [], diagnostics: checked.diagnostics };
+    return linkEffectLibraryModules(graph, checked.environments);
+  }
   const projected = declarations
     ? { declarations, diagnostics: [] as readonly Diagnostic[] }
     : moduleMechanicsDeclarations(graph);

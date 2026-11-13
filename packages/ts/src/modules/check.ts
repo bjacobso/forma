@@ -1,3 +1,4 @@
+import { hasEffectLibraries, ordinaryEffectGraph, linkEffectLibraryModules } from "../effect-system/modules.js";
 import { diagnosticLocator } from "../diagnostic/locations.js";
 import { Effect, Layer, Ref } from "effect";
 import { inferProgram } from "../type/infer-program.js";
@@ -46,6 +47,12 @@ export function checkModuleGraph(
   graph: ModuleGraph,
   options: ModuleCheckOptions = {},
 ): ModuleCheckResult {
+  if (hasEffectLibraries(graph)) {
+    const ordinary = checkModuleGraph(ordinaryEffectGraph(graph), options);
+    if (!ordinary.ok) return ordinary;
+    const linked = linkEffectLibraryModules(graph, ordinary.environments);
+    return { ...ordinary, ok: linked.ok, interfaces: graph.modules.map(m => m.interface), diagnostics: linked.diagnostics };
+  }
   const environments = new Map<string, TypeEnv>(),
     results = new Map<string, Type>(),
     typedSpans = new Map<string, readonly TypedSpan[]>(),

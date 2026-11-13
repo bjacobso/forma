@@ -16,6 +16,7 @@ export interface RpcProgramOptions {
   /** Import referenced domain schemas instead of emitting the domain module.
    * The source must still include their declarations for checking. The caller
    * must supply a module exporting the corresponding generated schema values.
+   * @deprecated Use a file module import for domain schemas instead.
    */
   readonly schemasFrom?: string;
 }

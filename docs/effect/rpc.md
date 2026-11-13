@@ -44,7 +44,11 @@ checks, rejects duplicate/generated-name conflicts and malformed contracts,
 and omits code on failure. It is a TypeScript host adapter, not a new language
 primitive. Contracts are inside groups; bare top-level `rpc` forms are rejected.
 
-By default the output includes the domain schemas, errors, services and operations
+For file-module programs, import schemas from their owning `.lisp` file and
+select `(import "forma:effect/rpc" [rpc-group rpc])`; see
+[linking file modules](./system.md#libraries-selected-by-file-imports).
+
+For legacy standalone generation, the output includes the domain schemas, errors, services and operations
 authored alongside the groups. To share exactly the same runtime schema values
 with an HTTP module:
 
@@ -55,7 +59,7 @@ const rpc = generateRpcProgram(domainSource + "\n" + rpcSource, {
 });
 ```
 
-With `schemasFrom`, the output imports only schemas referenced by RPC contracts
+`schemasFrom` is deprecated in favor of file-module imports. With this option, the output imports only schemas referenced by RPC contracts
 and emits the groups, not a second copy of the domain module. The source still
 needs those domain declarations for checking. The caller must provide a module
 exporting the corresponding generated schema names; TypeScript checks that module
@@ -105,6 +109,5 @@ and integration tests for both transports.
 This is a unary contract prelude, not a whole application framework. Native code
 still supplies handlers, service implementations, transport/serialization layers,
 authentication and process startup. No Forma handler-link syntax, streaming RPC,
-middleware declarations, TypeScript builder DSL or file-module RPC linking is
-implemented. Runtime validation and native Effect handler typing are tested;
+middleware declarations or a TypeScript builder DSL is implemented. Runtime validation and native Effect handler typing are tested;
 portable RPC artifact validation and other code-generation targets are not claimed.

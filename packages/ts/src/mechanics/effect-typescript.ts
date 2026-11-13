@@ -12,6 +12,7 @@
  *
  * @module
  */
+import { authorNames } from "../diagnostic/diagnostic.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import { arrowBody, Precedence, type BuiltinOverload, type EmitContext, type ImportName } from "./builtins.js";
 import {
@@ -307,7 +308,7 @@ class Generator {
     const className = typeName(name);
     const fields = isRecord(schema) ? arrayItems(schema["fields"]).filter(isRecord) : [];
     const head = error
-      ? `export class ${className} extends Schema.TaggedError<${className}>()(${JSON.stringify(name)}, {`
+      ? `export class ${className} extends Schema.TaggedError<${className}>()(${JSON.stringify(authorNames(name))}, {`
       : `export class ${className} extends Schema.Class<${className}>(${JSON.stringify(name)})({`;
     const body=this.linked ? `{ declare private readonly __formaNominal: void; }` : "{}";
     if (fields.length === 0) return [`${head}}) ${body}`];
@@ -683,7 +684,7 @@ class Generator {
                 const scope=callback.child();
                 const binding=String(handler["binding"]);
                 const bound=binding!=="_" && freeIn(handler["handler"],binding) ? scope.bind(binding) : undefined;
-                const label=handler["errorType"]==="_" ? "default" : `case ${JSON.stringify(handler["errorType"])}`;
+                const label=handler["errorType"]==="_" ? "default" : `case ${JSON.stringify(authorNames(String(handler["errorType"])))}`;
                 return `${inner}    ${label}: {\n${bound ? `${inner}      const ${bound} = ${error};\n` : ""}${inner}      return ${this.effectExpression(handler["handler"],scope,`${inner}      `)};\n${inner}    }`;
               });
               return `(${error}) => {\n${inner}  switch (${error}._tag) {\n${branches.join("\n")}\n${inner}  }\n${inner}}`;
@@ -698,7 +699,7 @@ class Generator {
               const deeper = `${inner}  `;
               const entries = handlers.map(
                 (handler) =>
-                  `${deeper}${propertyName(String(handler["errorType"]))}: ${this.handler(String(handler["binding"]), handler["handler"], names, deeper)},`,
+                  `${deeper}${propertyName(authorNames(String(handler["errorType"])))}: ${this.handler(String(handler["binding"]), handler["handler"], names, deeper)},`,
               );
               return `{\n${entries.join("\n")}\n${inner}}`;
             },

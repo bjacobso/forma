@@ -64,6 +64,53 @@ linker also rejects two libraries deriving the same export: an entity named
 `ShopUsers` and `(handle Shop users ...)` both derive `ShopUsersLive`, and the
 second is reported at its declaration.
 
+## Libraries selected by file imports
+
+File modules select their libraries lexically, using the same named or namespace
+import syntax as `forma:kernel`:
+
+```lisp
+; domain.lisp
+(export Greeting)
+(type Greeting {:message String})
+```
+
+```lisp
+; rpc.lisp
+(import "./domain.lisp" [Greeting])
+(import "forma:effect/rpc" [rpc-group rpc])
+(export Greetings)
+(rpc-group Greetings (rpc "Greet" :payload String :success Greeting))
+```
+
+The other bundled specifiers are `forma:effect/http-api` and
+`forma:effect/cluster`. Importing a library enables its descriptors in that file;
+a dependency's imports do not enable them in its consumers. Missing imports and
+unknown library names produce located diagnostics. Plain `forma check rpc.lisp`
+checks the domain and RPC contracts without host flags.
+
+```ts
+import { resolveModuleGraph, sourceModuleResolver } from "@forma-language/forma/modules";
+import { generateEffectSystem } from "@forma-language/forma/effect-system";
+
+const graph = resolveModuleGraph(
+  { id: "rpc.lisp", source: rpcSource },
+  sourceModuleResolver([{ id: "domain.lisp", source: domainSource }]),
+);
+const result = generateEffectSystem(graph);
+// Write each result.modules entry's code to its fileName; inspect result.system.
+```
+
+Each source module emits once. Forma file imports become real ES imports of the
+owning generated module, so RPC and HTTP contracts share domain schema values.
+The existing `moduleOutputName` mapping encodes the module ID's UTF-8 bytes as
+`module_<hex>.ts`; ES imports use its `.js` counterpart. Resolved identities keep
+same-spelled declarations in different files distinct. Authored exports also have
+readable TypeScript aliases, including a library declaration's derived exports.
+The [HTTP/RPC example](https://github.com/bjacobso/forma/tree/main/examples/http-rpc)
+presents its three known outputs as `domain.ts`, `http.ts`, and `rpc.ts` by
+remapping these filenames and import paths in its generator.
+
 ## The system graph
 
 `result.system` has `nodes` and `edges`. A node id is `kind:name`; child names
@@ -90,8 +137,10 @@ Cluster `TestRunner`, using one `Ledger` implementation.
 
 - The extensions are RPC, HTTP API, and Cluster. Elm and email still have their
   own linkers.
-- Libraries are selected by the `extensions` option, not by Forma module
-  imports. A form from an unselected library is an unknown form.
+- Standalone source strings without module directives retain the `extensions`
+  option and the dedicated generators. File-module graphs select libraries by
+  import. These adapters still emit TypeScript; an output-neutral adapter API
+  is not implemented.
 - The graph describes the program; nothing consumes it yet. It is not a
   deployment manifest, and runners, transports, and storage remain native
   Effect wiring.
