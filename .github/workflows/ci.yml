@@ -83,6 +83,9 @@ jobs:
           node-version: 22.19.0
           cache: pnpm
       - uses: ./.github/actions/install
+      # Host tests import the engine's built dist; pnpm check builds it via
+      # turbo in the main job, so build explicitly here.
+      - run: pnpm exec turbo run build --filter=@forma-language/forma
       - run: pnpm --filter @formalang/ts test
       - run: pnpm --filter @formalang/host test
       - run: pnpm pack:check
