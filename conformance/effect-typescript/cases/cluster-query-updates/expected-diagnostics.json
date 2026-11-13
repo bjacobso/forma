@@ -1,0 +1,15 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "elaborate",
+      "severity": "error",
+      "code": "cluster/query-updates",
+      "message": "A query runs concurrently with commands (Rpc.fork), so it cannot update state.",
+      "line": 7,
+      "column": 13,
+      "endLine": 7,
+      "endColumn": 39
+    }
+  ]
+}

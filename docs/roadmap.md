@@ -14,6 +14,8 @@
 - Operational Effect inference, portable artifacts, editor services, a language
   server, and the browser playground. Conformance fixtures pin observable behavior.
 - Native unary RPC/group generation through the [RPC prelude](./effect/rpc.md).
+- Prototype Effect Cluster entities with in-memory state and checked delivery
+  rules through the [cluster prelude](./effect/cluster.md).
 
 ## Trust work in progress
 

@@ -4,7 +4,7 @@ import { pathToFileURL } from "node:url";
 import ts from "typescript";
 
 const root = resolve(import.meta.dirname, "..");
-const namespaces = new Set("abi artifact descriptor edit edit-script elaborate email elm evaluation host-effect http http-api internal io lower mechanics module ontology parse read reader rpc session surface typecheck value-ref".split(" "));
+const namespaces = new Set("abi artifact cluster descriptor edit edit-script elaborate email elm evaluation host-effect http http-api internal io lower mechanics module ontology parse read reader rpc session surface typecheck value-ref".split(" "));
 
 function files(directory) {
   return readdirSync(directory, { withFileTypes: true }).flatMap(entry => {
@@ -29,9 +29,9 @@ export function diagnosticCodes() {
     const visit = node => {
       if (ts.isStringLiteralLike(node)) add(node.text, ts.isPropertyAssignment(node.parent) && node.parent.name.getText(source) === "code");
       // Bundled adapters construct namespaced codes from local suffixes.
-      const adapter = path.match(/\/(Elm|Email|HttpApi|Rpc)\.ts$/)?.[1];
+      const adapter = path.match(/\/(Cluster|Elm|Email|HttpApi|Rpc)\.ts$/)?.[1];
       if (adapter && ts.isCallExpression(node) && node.expression.getText(source) === "report") {
-        const prefix = { Elm: "elm", Email: "email", HttpApi: "http-api", Rpc: "rpc" }[adapter];
+        const prefix = { Cluster: "cluster", Elm: "elm", Email: "email", HttpApi: "http-api", Rpc: "rpc" }[adapter];
         const suffix = node.arguments[1];
         if (suffix) {
           const literal = n => {

@@ -117,6 +117,10 @@
       "types": "./dist/Rpc.d.mts",
       "import": "./dist/Rpc.mjs"
     },
+    "./cluster": {
+      "types": "./dist/Cluster.d.mts",
+      "import": "./dist/Cluster.mjs"
+    },
     "./descriptor": {
       "types": "./dist/Descriptor.d.mts",
       "import": "./dist/Descriptor.mjs"

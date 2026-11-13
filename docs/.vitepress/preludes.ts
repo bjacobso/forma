@@ -62,6 +62,16 @@ const manifest: Record<string, Manifest> = {
     guide: { text: "Prelude-defined RPC", link: "/effect/rpc" },
     note: "Handlers and transports remain native Effect code. No RPC execution kernel is generated.",
   },
+  cluster: {
+    title: "Effect Cluster entities",
+    group: "domain",
+    status: "Prototype",
+    tone: "live",
+    order: 2.6,
+    summary: "Entities with pure state transitions and checked delivery rules, emitted as native Effect 4 Entity.make and toLayer.",
+    guide: { text: "Prelude-defined Cluster entities", link: "/effect/cluster" },
+    note: "In-memory state only. Runners, message storage, and process wiring remain native Effect code.",
+  },
   elm: {
     title: "Elm-style applications",
     group: "domain",

@@ -51,6 +51,11 @@ typed forms and emit hooks. `@formalang/ts/rpc` assembles standalone modules or
 imports shared schemas; handlers and transports remain native Effect code.
 See [Prelude-defined RPC](../docs/effect/rpc.md).
 
+`cluster.lisp` declares Effect Cluster entities: state, commands, queries, and
+delivery rules. `@formalang/ts/cluster` lowers each transition to a checked
+Effect function and emits native `Entity.make` and `toLayer` code. Runners and
+storage remain native. See [Prelude-defined Cluster entities](../docs/effect/cluster.md).
+
 The site's [prelude reference](https://forma-lang.com/preludes/) is generated
 from these files when the docs build: forms and slot types from descriptors,
 signatures from `(: name type)`, and documentation from docstrings and the

@@ -1,0 +1,25 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "cluster/dedupe-field",
+      "message": "The payload has no field request-id to deduplicate by.",
+      "line": 9,
+      "column": 37,
+      "endLine": 9,
+      "endColumn": 48
+    },
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "cluster/dedupe-field",
+      "message": "Deduplicate by a String or Int field; at is not one.",
+      "line": 13,
+      "column": 37,
+      "endLine": 13,
+      "endColumn": 40
+    }
+  ]
+}

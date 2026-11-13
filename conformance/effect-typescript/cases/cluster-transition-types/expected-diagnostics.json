@@ -1,0 +1,35 @@
+{
+  "typescript": "not-generated",
+  "diagnostics": [
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/unknown-field",
+      "message": "AccountState has no field :limit.",
+      "line": 13,
+      "column": 48,
+      "endLine": 13,
+      "endColumn": 54
+    },
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/type-mismatch",
+      "message": "Expected Int, but this is String.",
+      "line": 14,
+      "column": 12,
+      "endLine": 14,
+      "endColumn": 31
+    },
+    {
+      "phase": "typecheck",
+      "severity": "error",
+      "code": "mechanics/undeclared-error",
+      "message": "Operation accountWithdraw can fail with Frozen, but its signature declares only [InsufficientFunds].",
+      "line": 12,
+      "column": 13,
+      "endLine": 12,
+      "endColumn": 40
+    }
+  ]
+}
