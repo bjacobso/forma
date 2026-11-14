@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import { readFileSync } from "node:fs";
 
 import { Analysis } from "../src/index.js";
+import { preludeSources } from "../src/Preludes.js";
 
 const PRELUDE = `(macro (twice x) \`(+ ~x ~x))
 (define base 10)
@@ -264,5 +265,14 @@ describe("AnalysisWorkspace", () => {
     expect(ws.diagnostics("b.lisp")).toEqual([]);
     expect(ws.analysis("b.lisp").bindingDisplay("b")).toBeDefined();
     expect(ws.analysis("a.lisp").hasBinding("b")).toBe(false);
+  });
+
+  test("type slots of prelude forms accept the document's own type declarations", () => {
+    const ws = new Analysis.AnalysisWorkspace();
+    for (const name of ["compiler.lisp", "rpc.lisp"] as const) ws.setPrelude(name, preludeSources[name]);
+    ws.setDocument("doc.lisp", '(type Foo {:id String})\n(error Missing {:id String})\n(rpc-group G (rpc "X" :payload Foo :success Foo :error Missing))');
+    expect(ws.diagnostics("doc.lisp")).toEqual([]);
+    ws.setDocument("doc.lisp", '(rpc-group G (rpc "X" :payload Foo :success Foo))');
+    expect(ws.diagnostics("doc.lisp").map((d) => d.message)).toContain("Unknown type Foo");
   });
 });
