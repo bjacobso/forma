@@ -96,6 +96,14 @@ describe("forma website worker metadata", () => {
     expect(env.ASSETS.fetch).toHaveBeenCalledWith(expect.objectContaining({ url: "https://forma-lang.com/playground/" }));
   });
 
+  test("serves the cold reading editor route", async () => {
+    const env = mockEnv();
+    const response = await worker.fetch(new Request("https://forma-lang.com/playground/read?example=effect"), env);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toContain("<title>Reading Forma</title>");
+    expect(env.ASSETS.fetch).toHaveBeenCalledWith(expect.objectContaining({ url: "https://forma-lang.com/playground/" }));
+  });
+
   test("passes non-document routes through to assets", async () => {
     const env = mockEnv(new Response("asset"));
 
