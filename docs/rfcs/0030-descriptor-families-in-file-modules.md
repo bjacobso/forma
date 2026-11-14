@@ -198,27 +198,135 @@ cannot establish declaration existence, kind identity or semantic scope. A
 mixed record must still validate its ordinary fields as well as its references;
 skipping an entire composite contract because it contains syntax is unsound.
 
+## Hook-only helpers are compile-time code
+
+This section proposes option 1 for phase 4; it is not implemented or accepted
+yet. Checked Forma keeps strict `Bool` conditions and no truthiness. Prelude
+helpers execute in the dynamic compile-time dialect. File modules need an
+explicit boundary between these phases rather than unsound builtin HM schemes.
+
+### Classification and checking
+
+A top-level `define` is hook-only when reachable from a form hook and unreachable
+from every runtime root. Hook roots include `:check`, the `:ir` construction body,
+`:type`/result-type computation, `:scope`, `:emit` and `:infer-fn`, including their
+named-hook equivalents. Traverse lexical dependencies transitively through
+helper functions and constants, including helpers retained by private children.
+Literal type metadata and quoted names do not constitute helper calls.
+
+Runtime roots are every exported value (including export aliases and facade
+re-exports), top-level runtime expressions and definitions required by those
+expressions. Every `define` outside the hook-reachable set is also a runtime
+root, including an otherwise unused private definition. A reference from any
+runtime `define` makes its dependency runtime, transitively. Follow references
+inside function bodies as well as initializer expressions; taking a helper as
+a value counts as use. A definition reached by both phases stays HM-checked.
+Compute both closures to a fixed point, so cycles cannot hide a runtime use.
+Exporting a form descriptor alone does not make its hook dependencies runtime;
+exporting a helper value does.
+
+Unreachable definitions remain ordinary checked definitions. This is no general
+unchecked-private-function facility. Shared helpers must satisfy ordinary HM:
+a non-`Bool` condition reports `typecheck/type-mismatch` at the condition; a
+builtin lacking an HM scheme still reports `typecheck/unbound-symbol` at its
+use. No new truthiness coercion or permissive `Unknown` scheme is introduced.
+
+Reuse the checks behind `forma prelude check` (#155), in
+`preludes/check.ts`, for the compile-time portion with its resolved dependencies:
+reader/declaration and descriptor validation; hook/reference, hook-kind and
+projection metachecks (`validatePreludeMetacheck`); nonempty form docstrings;
+at least one example per form and elaboration of every example; registration
+of literal diagnostic codes and codes emitted by examples in the consumer
+catalog. Docstrings and examples are obligations of forms, not each helper.
+Reuse this service over module syntax and environments, not by concatenating
+files into a prelude that loses lexical identities. Apply it during module
+checking, so CLI and editor checking agree without a second command.
+
+The prelude path offers no exhaustive static arity or unbound-symbol check over
+helper bodies. Bootstrap, example execution and invoked hooks retain evaluator
+checks for unbound symbols and argument counts wherever the evaluator enforces
+them. An unexecuted branch can therefore contain an undetected error. Hook-only
+helpers lose HM inference, generalization, argument/result compatibility and
+static `Bool` condition checks; descriptor contracts still check hook results.
+Passing examples demonstrate those executions, not soundness of every branch.
+
+Reader, descriptor and documentation errors point to the defining source;
+example failures identify the form's example and retain its source mapping.
+Helper evaluation failures point to the authored helper expression when known,
+with a related invoking hook/call span; otherwise locate the hook application.
+Preserve explicit hook diagnostics and their `:at` locations. Spans carry source
+ID and line/column; messages contain authored names, never mangled identities.
+
+### Visibility and editor behavior
+
+Hook-only helpers remain private lexical dependencies of their descriptors.
+An importer naming one in its import list gets `module/private-export`
+at that import, just as for any other private binding. Importing
+the parent neither exports the helper nor grants an ordinary callable binding.
+
+Recommend that an explicit export makes the helper runtime and HM-checked,
+rather than rejecting the export itself. Exporting is an unambiguous request
+for an ordinary API, and the same runtime-root rule handles direct exports,
+aliases and re-exports. A dynamic helper may then fail HM at its defining body;
+the export does not bypass checking or synthesize an inferred public scheme.
+
+Hover labels a hook-only binding “compile-time helper (prelude dialect)” and
+shows its authored parameters, documentation and definition location. It shows
+no inferred HM type; annotations may be shown as authored, not HM-verified.
+References and go-to-definition retain lexical identities. Shared/exported
+helpers show normal HM types and diagnostics. The language server publishes
+the same metacheck, example and evaluation diagnostics as module checking,
+including on unused branches only when an existing prelude check detects them.
+
+### Implementation sketch and acceptance tests
+
+Extend `modules/compile-time.ts` to expose hook roots and lexical dependency
+edges already used by `prepareCompileTimeModule` and LX1's dependency graph.
+Use resolved binding identities across modules, respecting parameters, local
+bindings, quotes and executable unquotes; the existing symbol collector alone
+is not a scope-aware classifier. Include definition-site imports and private
+child hooks. Keep the current lazy helper execution environment.
+
+In `modules/check.ts`, compute hook/runtime closures before lowering and invoking
+`inferProgram`, the HM entry in `type/infer-program.ts`. Exclude only hook-only
+definitions from that file-module HM input, and run the shared prelude checks
+with source mappings. Do not insert helper schemes into the runtime environment.
+Expose classification to editor metadata/signatures so absence of an HM type
+is deliberate. Keep the ordinary HM engine's strict conditions unchanged.
+
+Add neutral conformance fixtures for each hook root and a transitive helper
+chain; runtime initializer/body use, exports, alias/facade exports, shared use,
+unused definitions and cycles; private import rejection and lexical shadowing;
+metacheck, documentation, example, diagnostic-coverage and executed arity/name
+errors. Pin located HM rejection of a shared helper's truthy condition and the
+limited checking of unexecuted helper branches. Add editor hover/type/diagnostic
+tests and cross-module identity tests. Finally require all three connectors
+probes to pass with the unchanged library, plain CLI check to accept the passing
+source, and `bad-state` to retain both located `E_MACHINE_STATE` diagnostics.
+These are future implementation gates; phase 4 changes documentation only.
+
 ## Compatibility and rollout
 
-No previously working program should newly error or change meaning. The naming
-collision rules require newly legal qualified local/imported bindings; existing
-namespace-only uses retain their meaning. Duplicate declarations/imports are
-already errors. The new reference rejection cases occupy file-family/nested
-record paths that currently fail before successful validation; implementation
-must pin that boundary rather than tighten unrelated binding-type fallbacks.
+Forma is greenfield: this RFC does not promise that nothing newly errors, and
+adds no compatibility shim. Conformance cases pin qualified-name resolution and
+collisions, nested reference validity and locations, family identity/dispatch,
+private hook environments, and the proposed compile-time/runtime boundary.
+The new form documentation/example checks can reject incomplete file-module
+libraries; exporting or sharing a dynamic helper subjects it to HM checking.
 
 The pre-change computed-child probes are executable compatibility evidence in
 `file-module-families.test.ts`: single prebuilt maps and their bound symbols
-pass; single `let`/helper calls and repeated computed entries fail. Preserve
-each successful path, rather than claiming all computed children were errors.
+pass; single `let`/helper calls and repeated computed entries fail. These pinned
+successful paths remain requirements; broader historical behavior is not a
+compatibility contract.
 
 Project and bundled preludes retain datum-first conversion, direct-descriptor
 precedence, scopes, projections and existing diagnostic codes. Resolved family
 metadata adapts their current registry behavior without imposing file-export
 restrictions. `forma:kernel`, `forma:test`, `forma:effect/*` and existing
-conformance programs keep their import selection and results. No global child
-registry is added. Any counterexample to this compatibility claim blocks phase
-2 acceptance and requires a revised design, not a silent breaking adjustment.
+conformance programs keep their pinned import selection and results. No global
+child registry is added. Review semantic expectation changes explicitly;
+do not silently rewrite stored output to make an implementation pass.
 
 ## Test plan for phase 2
 
@@ -264,13 +372,18 @@ vocabulary and makes a parent library's internals part of every call site's
 imports. Retaining reachable descriptors by identity gives lexical execution
 without granting the importer ordinary access to private bindings.
 
-**Skip HM checking for hook-only helpers.** This would distinguish helpers used
-only by form hooks from ordinary module values. That is a separate decision
-about phase distinctions and is outside this RFC. The chosen direction is to
-supply sound ordinary HM schemes for required builtins, preserving the existing
-checking boundary.
+**Typed truthiness (option 2).** Give `some` an `Option` result and permit `if`
+to consume `Option`. The phase-4 recommendation rejects this because it reverses
+the strict-`Bool`, no-truthiness design documented in `docs/clojure.md`, and
+typing `some` alone does not settle other dynamic helper idioms. Greenfield
+makes compatibility cost moot; it does not remove that language-design change.
 
-## Implementation gate (phase 3)
+**Edit the library (option 3).** Rewrite helpers with explicit predicates and
+HM-supported operations. The recommendation rejects this because the task is
+to import the unchanged prelude-style library; rewriting it evades the phase
+boundary and leaves other dynamic prelude helpers facing the same question.
+
+## Implementation gate (phase 3 evidence; phase 4 decision pending)
 
 The three engine paths have an initial implementation with neutral regression
 fixtures, but acceptance remains blocked. The unchanged connectors library now
@@ -291,5 +404,7 @@ rules. No new ordinary `get` scheme is required for these calls. `flat-map`
 already has authority analysis alongside `map`, but its ordinary HM scheme
 remains deferred at the stop gate.
 
-The final status “Accepted; implemented in this PR” must wait for this gate and
-the remaining test plan to pass. No stored expected output has been rewritten.
+Phase 4 proposes the hook-only boundary above to address this gate; Meta and
+Ben have not chosen it yet. The final status “Accepted; implemented in this PR”
+must wait for that decision, implementation and the remaining test plan to
+pass. No stored expected output has been rewritten.
