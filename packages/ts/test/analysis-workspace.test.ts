@@ -275,4 +275,13 @@ describe("AnalysisWorkspace", () => {
     ws.setDocument("doc.lisp", '(rpc-group G (rpc "X" :payload Foo :success Foo))');
     expect(ws.diagnostics("doc.lisp").map((d) => d.message)).toContain("Unknown type Foo");
   });
+
+  test("a prelude form named handle is typed as that form, not the retired effect handler", () => {
+    const ws = new Analysis.AnalysisWorkspace();
+    for (const name of ["compiler.lisp", "http-api.lisp"] as const) ws.setPrelude(name, preludeSources[name]);
+    ws.setPrelude("ops.lisp", "(error Missing {:id String})\n(: find (-> {:params {:id String}} (Effect String [Missing] [])))\n(define find [request] (succeed request.params.id))");
+    ws.setDocument("doc.lisp", '(api Api (group items (endpoint get-item :get "/items/:id" :params {:id String} :success String :errors [Missing])))\n(handle Api items (handler get-item find))');
+    expect(ws.diagnostics("doc.lisp").map((d) => d.message)).toEqual([]);
+  });
 });
+
