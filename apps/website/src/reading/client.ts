@@ -1,6 +1,7 @@
-import type { Analysis, Inspection, ReadingRequest, ReadingResponse } from "./protocol";
+import type { Analysis, Completions, Inspection, Location, Problems, ReadingRequest, ReadingResponse, SnippetEntry, SourceFile } from "./protocol";
 
 type Pending = { resolve: (response: ReadingResponse) => void };
+type Request = ReadingRequest extends infer R ? R extends ReadingRequest ? Omit<R, "id"> : never : never;
 
 /** One analysis worker per page; requests answer in order. */
 export class ReadingClient {
@@ -16,24 +17,43 @@ export class ReadingClient {
     };
   }
 
-  private send(request: Omit<ReadingRequest, "id"> & { kind: ReadingRequest["kind"] }): Promise<ReadingResponse> {
+  private send(request: Request): Promise<ReadingResponse> {
     const id = this.nextId++;
     return new Promise(resolve => {
       this.pending.set(id, { resolve });
-      this.worker.postMessage({ ...request, id } as ReadingRequest);
+      this.worker.postMessage({ ...request, id });
     });
   }
 
-  async analyze(source: string): Promise<Analysis> {
-    const response = await this.send({ kind: "analyze", source });
+  async analyze(files: readonly SourceFile[], file: string): Promise<Analysis> {
+    const response = await this.send({ kind: "analyze", files, file });
     if (response.kind !== "analyze") throw new Error(response.kind === "error" ? response.message : "Unexpected response");
     return response.analysis;
   }
 
-  async inspect(source: string, from: number, to: number): Promise<Inspection> {
-    const response = await this.send({ kind: "inspect", source, from, to } as ReadingRequest);
-    if (response.kind !== "inspect") return {};
-    return response.inspection;
+  async inspect(files: readonly SourceFile[], file: string, from: number, to: number): Promise<Inspection> {
+    const response = await this.send({ kind: "inspect", files, file, from, to });
+    return response.kind === "inspect" ? response.inspection : {};
+  }
+
+  async definition(files: readonly SourceFile[], file: string, offset: number): Promise<Location | null> {
+    const response = await this.send({ kind: "definition", files, file, offset });
+    return response.kind === "definition" ? response.location : null;
+  }
+
+  async complete(files: readonly SourceFile[], file: string, offset: number): Promise<Completions | null> {
+    const response = await this.send({ kind: "complete", files, file, offset });
+    return response.kind === "complete" ? response.completions : null;
+  }
+
+  async problems(files: readonly SourceFile[]): Promise<Problems> {
+    const response = await this.send({ kind: "problems", files, file: "" });
+    return response.kind === "problems" ? response.problems : {};
+  }
+
+  async snippets(files: readonly SourceFile[], file: string): Promise<readonly SnippetEntry[]> {
+    const response = await this.send({ kind: "snippets", files, file });
+    return response.kind === "snippets" ? response.snippets : [];
   }
 
   dispose(): void {

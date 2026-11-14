@@ -1,16 +1,26 @@
 import { ordersSource } from "../effectPageSources";
+import domainSource from "../../../../examples/http-rpc/domain.lisp?raw";
+import httpSource from "../../../../examples/http-rpc/http.lisp?raw";
+import rpcSource from "../../../../examples/http-rpc/rpc.lisp?raw";
+import type { SourceFile } from "./protocol";
 
 export interface ReadingExample {
   readonly id: string;
   readonly label: string;
   readonly blurb: string;
-  readonly source: string;
-  /** Text to select when the example opens. */
+  /** The first file opens first. */
+  readonly files: readonly SourceFile[];
+  /** Text to select when the example opens, in the first file. */
   readonly focus?: string;
 }
 
+const single = (example: Omit<ReadingExample, "files"> & { readonly source: string }): ReadingExample => {
+  const { source, ...rest } = example;
+  return { ...rest, files: [{ id: "main.lisp", source }] };
+};
+
 export const readingExamples: readonly ReadingExample[] = [
-  {
+  single({
     id: "functions",
     label: "Plain functions",
     blurb: "Inferred without annotations: row-polymorphic records, generic maps, higher-order functions.",
@@ -31,33 +41,26 @@ export const readingExamples: readonly ReadingExample[] = [
 
 (let [scores [90 82 77]]
   (average scores))`,
-  },
-  {
+  }),
+  single({
     id: "effect",
     label: "Effect operation",
     blurb: "Every Effect form carries its success type, the errors it can fail with, and the services it needs.",
     focus: "(retry (Payments.charge",
     source: ordersSource,
-  },
+  }),
   {
-    id: "rpc",
-    label: "RPC group",
-    blurb: "A prelude form: rpc-group comes from forma:effect/rpc, with documented, typed slots.",
+    id: "service",
+    label: "RPC + HTTP · 3 files",
+    blurb: "examples/http-rpc: a domain module imported by an RPC group and an HTTP API. Click a type to jump between files.",
     focus: "(rpc \"ReserveSeats\"",
-    source: `; A workshop has twelve seats. A reservation claims 1–6 seats atomically.
-(type WorkshopId (String :pattern "^ws-[a-z]+$"))
-(type Seats (Int :min 1 :max 6))
-(type Reserve {:id WorkshopId :seats Seats})
-(type Workshop {:id WorkshopId :remaining Int})
-(error WorkshopNotFound {:id WorkshopId} :status 404)
-(error NotEnoughSeats {:id WorkshopId :requested Seats :remaining Int} :status 409)
-
-(rpc-group WorkshopRpc
-  (rpc "GetWorkshop" :payload {:id WorkshopId} :success Workshop :error WorkshopNotFound)
-  (rpc "ReserveSeats" :payload Reserve :success Workshop
-    :error (Union WorkshopNotFound NotEnoughSeats)))`,
+    files: [
+      { id: "rpc.lisp", source: rpcSource },
+      { id: "domain.lisp", source: domainSource },
+      { id: "http.lisp", source: httpSource },
+    ],
   },
-  {
+  single({
     id: "cluster",
     label: "Cluster entity",
     blurb: "An Effect Cluster entity from forma:effect/cluster: state, commands, and queries, each a typed slot.",
@@ -73,8 +76,8 @@ export const readingExamples: readonly ReadingExample[] = [
     :update {:count (+ state.count by)}
     :reply state.count)
   (query Count :success Int :reply state.count))`,
-  },
-  {
+  }),
+  single({
     id: "hole",
     label: "Typed hole",
     blurb: "A ?hole reports the type it needs and the names in scope that fit.",
@@ -84,5 +87,5 @@ export const readingExamples: readonly ReadingExample[] = [
 
 (: shout (-> String String))
 (define shout [name] (?fill name))`,
-  },
+  }),
 ];

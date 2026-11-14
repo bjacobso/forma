@@ -28,13 +28,15 @@ function Section({ title, aside, children }: { readonly title: string; readonly 
 
 const show = (ty: Ty) => textOf(printType(ty));
 
-export function Inspector({ subject, analysis, inspection, outline, onSelect, onJumpToName, onReplace }: {
+export function Inspector({ subject, analysis, inspection, outline, onSelect, onGoTo, onJumpToName, onReplace }: {
   readonly subject: Subject | null;
   readonly analysis: Analysis | null;
   readonly inspection: Inspection;
   readonly outline: readonly OutlineEntry[];
   readonly onSelect: (range: Range) => void;
   readonly onJumpToName: (name: string) => boolean;
+  /** Go to the definition of the name at an offset in the shown file. */
+  readonly onGoTo: (offset: number) => void;
   readonly onReplace: (range: Range, text: string) => void;
 }) {
   if (!analysis) return <div className="rd-inspector-empty"><span className="rd-pulse" />Loading the checker and preludes…</div>;
@@ -58,6 +60,7 @@ export function Inspector({ subject, analysis, inspection, outline, onSelect, on
         <button className="rd-link rd-form-name" onClick={() => onSelect(form)} type="button">({form.name} …)</button>
         {form.produces ? <span className="rd-muted">produces <code>{form.produces}</code></span> : null}
       </div>
+      {form.pattern ? <pre className="rd-pattern">{form.pattern}</pre> : null}
       {form.doc ? form.doc.split("\n\n").map((paragraph, index) => <p className="rd-doc" key={index}>{paragraph}</p>) : null}
       <table className="rd-slots">
         <tbody>
@@ -76,6 +79,7 @@ export function Inspector({ subject, analysis, inspection, outline, onSelect, on
           </tr>)}
         </tbody>
       </table>
+      <button className="rd-link rd-open-prelude" onClick={() => onGoTo(form.from + 1)} type="button">Open the definition in {form.prelude ?? "the prelude"}</button>
     </Section> : null;
   // A prelude sub-form has no type of its own; its slots say more.
   const formFirst = Boolean(form && form.from === subject.from && form.to === subject.to && !subject.exact);
@@ -114,9 +118,9 @@ export function Inspector({ subject, analysis, inspection, outline, onSelect, on
       </div>
       {definition.type && definition.type !== typed?.type ? <TypeTokens tokens={printType(friendlyVars(parseType(definition.type)), 38)} /> : null}
       <div className="rd-name-actions">
-        {definition.from !== undefined && definition.to !== undefined && (definition.from !== subject.from || definition.to !== subject.to)
-          ? <button className="rd-link" onClick={() => onSelect({ from: definition.from!, to: definition.to! })} type="button">Go to definition</button>
-          : definition.elsewhere ? <span className="rd-muted">defined in {definition.elsewhere}</span> : <span className="rd-muted">defined here</span>}
+        {definition.here ? <span className="rd-muted">defined here</span>
+          : definition.kind === "builtin" ? <span className="rd-muted">a builtin</span>
+          : <button className="rd-link" onClick={() => onGoTo(definition.at)} type="button">Go to definition{definition.elsewhere ? ` in ${definition.elsewhere}` : ""}</button>}
         <span className="rd-muted">{definition.references} {definition.references === 1 ? "reference" : "references"}</span>
       </div>
     </Section> : null}
