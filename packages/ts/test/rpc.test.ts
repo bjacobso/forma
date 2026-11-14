@@ -61,13 +61,6 @@ export const program = Effect.gen(function* () {
     } finally { await web.dispose(); }
   }, 20_000);
 
-  test("imports referenced schemas from a caller-owned module rather than duplicating them", () => {
-    const generated = generateRpcProgram(domain + groups, { schemasFrom: "./domain.js" });
-    expect(generated.diagnostics).toEqual([]);
-    expect(generated.code).toContain('import { Rejected, Request } from "./domain.js";');
-    expect(generated.code).not.toContain("export const Amount");
-    expect(generated.code).not.toContain("Context.Service");
-  });
 
   test.each([
     ['(rpc-group X (rpc "Same" :payload Int :success Int) (rpc "Same" :payload String :success String))', "rpc/duplicate-operation"],

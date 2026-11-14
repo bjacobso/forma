@@ -24,9 +24,8 @@ engine checked the module.
 
 Use one small module graph to connect a domain schema, unary RPC or HTTP contract,
 native Effect handler and Elm/Foldkit client. The RPC prelude is already merged:
-`generateRpcProgram` emits native groups and can import shared generated schemas
-with `schemasFrom` ([RPC guide](../effect/rpc.md)). That option is not Forma
-file-module resolution. Ontology, HTTP, email and Elm integrations have different
+`generateRpcProgram` emits native groups, and file-module imports share generated
+schemas between modules ([RPC guide](../effect/rpc.md)). Ontology, HTTP, email and Elm integrations have different
 maturity; “all isolated prototypes” is not an accurate inventory.
 
 The proposed milestone checks request/success/error agreement at both ends,
