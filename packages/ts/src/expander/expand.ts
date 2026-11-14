@@ -188,15 +188,8 @@ function expandExpr(
     if (head._tag === "Sym") {
       const binding = macroEnv.lookup(head.name);
       if (binding !== undefined && isKMacro(binding)) {
-        const args = expr.items.slice(1);
-        const result = evaluateMacro(binding, args, builtins, macroStepLimit, state.gensym);
-        const hygienic = binding.name.includes("__forma_")
-          ? hygienicExpansion(result, args, state)
-          : result;
-        const expanded = markExpansion(expr, hygienic, args);
-        tagExpandedExpr(expanded, { macroName: binding.name, loc: sourceLocOf(expr) }, args);
         return expandExpr(
-          normalizeCoreProgram([expanded])[0]!,
+          expandMacroCall(expr, binding, builtins, macroStepLimit, state),
           macroEnv,
           builtins,
           macroStepLimit,
@@ -700,6 +693,48 @@ function bindDestructurePattern(
     default:
       return;
   }
+}
+
+/** One macro call, expanded once: hygiene, provenance, and core normalization, without expanding the result. */
+function expandMacroCall(
+  expr: SExpr & { readonly _tag: "List" },
+  binding: KMacro,
+  builtins: Record<string, BuiltinFn>,
+  macroStepLimit: number,
+  state: ExpandState,
+): SExpr {
+  const args = expr.items.slice(1);
+  const result = evaluateMacro(binding, args, builtins, macroStepLimit, state.gensym);
+  const hygienic = binding.name.includes("__forma_") ? hygienicExpansion(result, args, state) : result;
+  const expanded = markExpansion(expr, hygienic, args);
+  tagExpandedExpr(expanded, { macroName: binding.name, loc: sourceLocOf(expr) }, args);
+  return normalizeCoreProgram([expanded])[0]!;
+}
+
+export interface ExpandOnceResult {
+  /** The macro that ran. */
+  readonly macro: string;
+  readonly expr: SExpr;
+}
+
+/**
+ * Expand `expr` once if it is a call to a macro in `macroEnv`, as one step of
+ * {@link expandProgramSync} does; the result's own macro calls stay unexpanded.
+ * Returns `undefined` when `expr` is not a macro call.
+ */
+export function expandMacroOnce(
+  expr: SExpr,
+  macroEnv: Env,
+  options: { readonly builtins?: Record<string, BuiltinFn>; readonly macroStepLimit?: number; readonly gensym?: GensymCounter } = {},
+): ExpandOnceResult | undefined {
+  if (expr._tag !== "List" || expr.items[0]?._tag !== "Sym") return undefined;
+  const binding = macroEnv.lookup(expr.items[0].name);
+  if (binding === undefined || !isKMacro(binding)) return undefined;
+  const state: ExpandState = { bindingCounter: 0, gensym: options.gensym ?? { next: 0 } };
+  return {
+    macro: binding.name,
+    expr: expandMacroCall(expr, binding, options.builtins ?? defaultBuiltins, options.macroStepLimit ?? DEFAULT_MACRO_STEP_LIMIT, state),
+  };
 }
 
 function evaluateMacro(

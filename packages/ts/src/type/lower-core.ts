@@ -276,6 +276,8 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
             "Legacy algebraic effect form 'perform' is no longer supported; use service method calls inside __operation.",
         });
       case "handle":
+        // forma:effect/http-api declares a `handle` form; prelude forms win.
+        if (_dslProvider?.isKnownForm(head.name)) break;
         throw new InferenceError({
           message:
             "Legacy algebraic effect form 'handle' is no longer supported; provide mechanics services at the runtime boundary.",

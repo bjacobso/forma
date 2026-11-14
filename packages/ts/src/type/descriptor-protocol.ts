@@ -82,6 +82,11 @@ export function descriptorApplication(
     if (!declarations) { declarations = new SimpleSemanticEnvironment(); environments.set(ctx,declarations); }
     const semanticEnv = declarations.childScope();
     for (const [name, scheme] of env) semanticEnv.bind(name, scheme.type);
+    // Type slots accept the program's own declarations, as in elaboration.
+    for (const name of (yield* Ref.get(ctx.typeAliases)).keys()) semanticEnv.setFact("type-kind", name, "type");
+    for (const name of (yield* Ref.get(ctx.adtRegistry)).keys()) semanticEnv.setFact("type-kind", name, "type");
+    for (const name of (yield* Ref.get(ctx.nominalRecords)).keys()) semanticEnv.setFact("type-kind", name, "type");
+    for (const name of yield* Ref.get(ctx.errorTypes)) semanticEnv.setFact("type-kind", name, "error");
     const normalized = normalizeForm({formName: expr.name, descriptor, expr: raw}, prelude.descriptions);
     const hookInput = {formName:expr.name, descriptor, normalizedSlots:normalized.slots,
       identifiers:normalized.identifiers, semanticEnv, loc:raw.loc, rawExpr:raw};
