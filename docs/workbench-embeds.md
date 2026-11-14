@@ -93,3 +93,19 @@ The iframe route is `/playground/embed/:exampleId`; the full-page source view is
 `/playground/live/:exampleId`. Both render the same `LiveWorkbench` component
 used on the playground homepage. The website worker serves cold loads of both
 routes from the playground app shell.
+
+For a short snippet in a post, the theme also registers `ReaderEmbed`, an iframe
+of the prototype reading editor's inline snippet (`/playground/embed/read`). It
+checks the source as the reader types it, shows types and prelude documentation on
+hover, puts the type at the caret under the code, and opens the inspector on demand:
+
+```vue
+<ReaderEmbed title="older.lisp" focus="(define older" source="(define older [person]
+  (assoc person :age (+ (get person :age) 1)))" />
+<ReaderEmbed example="cluster" />
+```
+
+`source` is the snippet's text, `example` names one of the reader's examples, and
+`focus` puts the caret at the start of the given text. The website's
+<a href="/playground/read/snippets" target="_self">snippets page</a> shows the same
+component inline, and how the reader's parts compose into other layouts.

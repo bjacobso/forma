@@ -81,6 +81,9 @@ function metaForPath(pathname: string): RouteMeta | null {
   if (pathname === "/read") {
     return { title: "Reading Forma", description: "Read Forma code with its types, effects, and prelude forms.", path: pathname };
   }
+  if (pathname === "/read/snippets" || pathname === "/embed/read") {
+    return { title: "Forma reader snippets", description: "Inline, checked Forma snippets with types on hover, for posts, docs, and demos.", path: pathname };
+  }
   if (pathname === "/custom") {
     return { title: "Build and share a Forma DSL", description: "Define a prelude, try an example, and share your language in a live playground.", path: pathname };
   }

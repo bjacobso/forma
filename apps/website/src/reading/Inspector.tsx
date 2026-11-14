@@ -1,5 +1,5 @@
-import type { ReactNode } from "react";
-import type { Analysis, Inspection, ReadingDiagnostic, TypedForm } from "./protocol";
+import { useEffect, useState, type ReactNode } from "react";
+import type { Analysis, ExpansionStep, Inspection, ReadingDiagnostic, TypedForm } from "./protocol";
 import type { Range } from "./structure";
 import { checkerOf, describeTag, effectOf, friendlyVars, parseType, printType, textOf, type Token, type Ty } from "./types";
 
@@ -28,7 +28,7 @@ function Section({ title, aside, children }: { readonly title: string; readonly 
 
 const show = (ty: Ty) => textOf(printType(ty));
 
-export function Inspector({ subject, analysis, inspection, outline, onSelect, onGoTo, onJumpToName, onReplace }: {
+export function Inspector({ subject, analysis, inspection, outline, onSelect, onGoTo, onJumpToName, onReplace, onFindReferences }: {
   readonly subject: Subject | null;
   readonly analysis: Analysis | null;
   readonly inspection: Inspection;
@@ -38,6 +38,8 @@ export function Inspector({ subject, analysis, inspection, outline, onSelect, on
   /** Go to the definition of the name at an offset in the shown file. */
   readonly onGoTo: (offset: number) => void;
   readonly onReplace: (range: Range, text: string) => void;
+  /** Find every occurrence of the name at an offset in the shown file. */
+  readonly onFindReferences?: ((offset: number) => void) | undefined;
 }) {
   if (!analysis) return <div className="rd-inspector-empty"><span className="rd-pulse" />Loading the checker and preludes…</div>;
   if (!subject) return <OutlineView outline={outline} diagnostics={analysis.diagnostics} onSelect={onSelect} />;
@@ -46,7 +48,7 @@ export function Inspector({ subject, analysis, inspection, outline, onSelect, on
   const ty = typed ? friendlyVars(parseType(typed.type)) : undefined;
   const effect = ty ? effectOf(ty) : undefined;
   const problems = analysis.diagnostics.filter(d => d.from < subject.to && d.to > subject.from || (d.from === d.to && d.from >= subject.from && d.from <= subject.to));
-  const { form, definition, expansion } = inspection;
+  const { form, definition, steps } = inspection;
   const firstLine = subject.text.split("\n")[0]!;
 
   const chip = (item: Ty, kind: "error" | "req" | "ok") => {
@@ -121,16 +123,16 @@ export function Inspector({ subject, analysis, inspection, outline, onSelect, on
         {definition.here ? <span className="rd-muted">defined here</span>
           : definition.kind === "builtin" ? <span className="rd-muted">a builtin</span>
           : <button className="rd-link" onClick={() => onGoTo(definition.at)} type="button">Go to definition{definition.elsewhere ? ` in ${definition.elsewhere}` : ""}</button>}
-        <span className="rd-muted">{definition.references} {definition.references === 1 ? "reference" : "references"}</span>
+        {onFindReferences
+          ? <button className="rd-link" onClick={() => onFindReferences(definition.at)} type="button">{definition.references} {definition.references === 1 ? "reference" : "references"} · across files</button>
+          : <span className="rd-muted">{definition.references} {definition.references === 1 ? "reference" : "references"}</span>}
       </div>
     </Section> : null}
 
 
     {formFirst ? null : formSection}
 
-    {expansion ? <Section title="Expands to" aside="kernel macros">
-      <pre className="rd-expansion">{expansion}</pre>
-    </Section> : null}
+    {steps?.length ? <Lowering key={`${subject.from}:${subject.text}`} source={subject.text} steps={steps} /> : null}
   </div>;
 }
 
@@ -166,4 +168,31 @@ function OutlineView({ outline, diagnostics, onSelect }: { readonly outline: rea
     </Section> : null}
     <p className="rd-muted rd-tip">Put the caret in a form, or select one with Alt-click, to see its type, effect, name, and prelude form.</p>
   </div>;
+}
+
+/**
+ * How a form lowers, one step at a time: each macro that runs, or a declaration's
+ * IR record and the TypeScript generated from it. Lines a macro step changed are marked.
+ */
+function Lowering({ source, steps }: { readonly source: string; readonly steps: readonly ExpansionStep[] }) {
+  const [at, setAt] = useState(steps.length);
+  useEffect(() => setAt(steps.length), [steps]);
+  const macro = steps[0]?.kind === "macro";
+  const shown = at === 0 ? { kind: "macro" as const, label: "source", text: source } : steps[at - 1]!;
+  const before = at <= 1 ? source : steps[at - 2]!.text;
+  const old = new Set(before.split("\n").map(line => line.trim()));
+  return <Section title={macro ? "Expands to" : "Lowers to"} aside={macro ? `${steps.length} macro ${steps.length === 1 ? "step" : "steps"}` : "IR, then TypeScript"}>
+    <ol className="rd-steps" aria-label="Steps">
+      <li><button aria-current={at === 0} onClick={() => setAt(0)} type="button">source</button></li>
+      {steps.map((step, index) => <li key={index}><button aria-current={at === index + 1} className={`rd-step-${step.kind}`} onClick={() => setAt(index + 1)} title={step.label} type="button">
+        {step.kind === "macro" ? <><span className="rd-step-n">{index + 1}</span>{step.label}</> : step.label}
+      </button></li>)}
+    </ol>
+    <pre className={`rd-expansion rd-expansion-${shown.kind}`}>{shown.text.split("\n").map((line, index) => <span className={shown.kind === "macro" && at > 0 && !old.has(line.trim()) ? "rd-changed" : undefined} key={index}>{line}{"\n"}</span>)}</pre>
+    {macro && at > 0 ? <div className="rd-step-nav">
+      <button className="rd-link" disabled={at === 0} onClick={() => setAt(at - 1)} type="button">← previous</button>
+      <span className="rd-muted">after <code>{steps[at - 1]!.label}</code></span>
+      <button className="rd-link" disabled={at === steps.length} onClick={() => setAt(at + 1)} type="button">next →</button>
+    </div> : null}
+  </Section>;
 }

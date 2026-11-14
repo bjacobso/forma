@@ -14,6 +14,12 @@ const DemoGallery = lazy(() =>
 const ReadingPage = lazy(() =>
   import("./reading/ReadingPage").then((module) => ({ default: module.ReadingPage })),
 );
+const SnippetsPage = lazy(() =>
+  import("./reading/SnippetsPage").then((module) => ({ default: module.SnippetsPage })),
+);
+const ReaderEmbedPage = lazy(() =>
+  import("./reading/ReaderEmbedPage").then((module) => ({ default: module.ReaderEmbedPage })),
+);
 const DemoPipeline = lazy(() =>
   import("./pages/DemoPipeline").then((module) => ({ default: module.DemoPipeline })),
 );
@@ -30,9 +36,11 @@ export function App() {
           <Route element={<PreludePlayground />} path="/custom" />
           <Route element={<PreludePlayground />} path="/p/:snapshotId" />
           <Route element={<PreludePlayground embedded />} path="/embed/custom" />
+          <Route element={<ReaderEmbedPage />} path="/embed/read" />
           <Route element={<WorkbenchPage embedded />} path="/embed/:exampleId" />
           <Route element={<WorkbenchPage />} path="/live/:exampleId" />
           <Route element={<ReadingPage />} path="/read" />
+          <Route element={<SnippetsPage />} path="/read/snippets" />
           <Route element={<DemoGallery />} path="/demo" />
           <Route element={<DemoPipeline />} path="/demo/:pipelineId" />
           <Route element={<Navigate replace to="/" />} path="*" />
