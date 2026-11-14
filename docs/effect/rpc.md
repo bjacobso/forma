@@ -48,22 +48,11 @@ For file-module programs, import schemas from their owning `.lisp` file and
 select `(import "forma:effect/rpc" [rpc-group rpc])`; see
 [linking file modules](./system.md#libraries-selected-by-file-imports).
 
-For legacy standalone generation, the output includes the domain schemas, errors, services and operations
-authored alongside the groups. To share exactly the same runtime schema values
-with an HTTP module:
-
-```ts
-const rpc = generateRpcProgram(domainSource + "\n" + rpcSource, {
-  sourceId: "accounts-rpc.lisp",
-  schemasFrom: "./accounts-http.js",
-});
-```
-
-`schemasFrom` is deprecated in favor of file-module imports. With this option, the output imports only schemas referenced by RPC contracts
-and emits the groups, not a second copy of the domain module. The source still
-needs those domain declarations for checking. The caller must provide a module
-exporting the corresponding generated schema names; TypeScript checks that module
-boundary. This option is not Forma file-module import resolution.
+Standalone `generateRpcProgram` output includes the domain schemas, errors,
+services and operations authored alongside the groups. To share the same runtime
+schema values with an HTTP module, put the domain in its own file module and
+import it from both; each generated module then imports the domain's generated
+module.
 
 To emit RPC groups in the same module as HTTP APIs and Cluster entities, use
 [`generateEffectSystem`](./system.md).

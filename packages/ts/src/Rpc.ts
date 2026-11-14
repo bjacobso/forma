@@ -5,7 +5,6 @@ import { bootstrapPreludes } from "./Preludes.js";
 import { emissionDatum, emissionSchema, emitFormTypeScript } from "./descriptor/form-emitter.js";
 import { linkEffectSystem, type EffectExtension } from "./effect-system/link.js";
 import { checkMechanicsDeclarations } from "./mechanics/check.js";
-import { schemaReferences } from "./mechanics/effect-schema.js";
 import { typeName } from "./mechanics/naming.js";
 import { arrayItems, isRecord } from "./mechanics/types.js";
 
@@ -13,12 +12,6 @@ export const bootstrapRpcPreludes = () => bootstrapPreludes(["compiler.lisp", "r
 
 export interface RpcProgramOptions {
   readonly sourceId?: string;
-  /** Import referenced domain schemas instead of emitting the domain module.
-   * The source must still include their declarations for checking. The caller
-   * must supply a module exporting the corresponding generated schema values.
-   * @deprecated Use a file module import for domain schemas instead.
-   */
-  readonly schemasFrom?: string;
 }
 
 export interface RpcProgramResult {
@@ -61,12 +54,9 @@ export const rpcExtension: EffectExtension = {
   },
   emit: (d, { prelude }) => {
     if (d.formName !== "rpc-group" || !isRecord(d.payload)) return [];
-    const references = operations(d.payload).flatMap(operation => fields.flatMap(field =>
-      operation[field] == null ? [] : schemaReferences(emissionSchema(emissionDatum(operation[field]!)))));
     return [{
       name: typeName(String(d.payload["name"])),
       code: emitFormTypeScript(prelude.descriptions.get(d.formName)!, d.payload, prelude.descriptions.list()),
-      references,
     }];
   },
   graph: (d, _context, add) => {
@@ -89,7 +79,6 @@ export const rpcExtension: EffectExtension = {
 export function generateRpcProgram(source: string, options: RpcProgramOptions = {}): RpcProgramResult {
   const { system: _, ...result } = linkEffectSystem(source, [rpcExtension], {
     sourceId: options.sourceId ?? "rpc.lisp", namespace: "rpc",
-    ...(options.schemasFrom !== undefined ? { schemasFrom: options.schemasFrom } : {}),
   });
   return result;
 }

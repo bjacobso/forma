@@ -85,8 +85,6 @@ export interface EmittedExport {
   readonly name: string;
   /** A TypeScript expression. */
   readonly code: string;
-  /** Domain schemas the expression refers to, for `schemasFrom`. */
-  readonly references?: readonly string[];
 }
 
 export interface EffectExtension {
@@ -108,8 +106,6 @@ export interface LinkOptions {
   readonly sourceId: string;
   /** Namespace of the linker's own parse and emit diagnostics. */
   readonly namespace: string;
-  /** @deprecated Use a file module import for domain schemas instead. */
-  readonly schemasFrom?: string;
 }
 
 export interface LinkedEffectSystem {
@@ -220,7 +216,6 @@ export function linkEffectSystem(source: string | ModuleGraph, extensions: reado
     });
     const names = new Set([...exports, ...effectNames, ...extensions.flatMap(e => Object.values(e.imports).flat())]);
     const chunks: string[] = [];
-    const references = new Set<string>();
     const owner = new Map(projected.declarations.flatMap(d => {
       const i = extensions.findIndex(e => e.forms.includes(d.formName));
       return i < 0 ? [] : [[d, i] as const];
@@ -236,7 +231,6 @@ export function linkEffectSystem(source: string | ModuleGraph, extensions: reado
           continue;
         }
         names.add(e.name);
-        e.references?.forEach(r => references.add(r));
         chunks.push(`export const ${e.name} = ${e.code};`);
       }
     }
@@ -249,20 +243,10 @@ export function linkEffectSystem(source: string | ModuleGraph, extensions: reado
     const imports = [...libraryImports].sort(([a], [b]) => a.localeCompare(b))
       .map(([from, imported]) => `import { ${[...imported].sort().join(", ")} } from ${JSON.stringify(from)};`);
     const usedEffect = effectNames.filter(n => uses(target, n));
-    let body: string;
-    if (options.schemasFrom !== undefined) {
-      const domain = [...references].map(typeName).sort();
-      body = [
-        ...(usedEffect.length ? [`import { ${usedEffect.join(", ")} } from "effect";`] : []),
-        ...imports,
-        ...(domain.length ? [`import { ${domain.join(", ")} } from ${JSON.stringify(options.schemasFrom)};`] : []),
-      ].join("\n");
-    } else {
-      const present = module.match(effectImport)?.[1]?.split(", ") ?? [];
-      const merged = [...new Set([...present, ...usedEffect])].sort();
-      const header = [...(merged.length ? [`import { ${merged.join(", ")} } from "effect";`] : []), ...imports].join("\n");
-      body = effectImport.test(module) ? module.replace(effectImport, header) : [header, module].filter(Boolean).join("\n\n");
-    }
+    const present = module.match(effectImport)?.[1]?.split(", ") ?? [];
+    const merged = [...new Set([...present, ...usedEffect])].sort();
+    const header = [...(merged.length ? [`import { ${merged.join(", ")} } from "effect";`] : []), ...imports].join("\n");
+    const body = effectImport.test(module) ? module.replace(effectImport, header) : [header, module].filter(Boolean).join("\n\n");
     const code = `${[body.trimEnd(), target].filter(Boolean).join("\n\n")}\n`;
     return result(code, systemGraph([...input?.dependencies ?? [], ...mechanics.declarations], mechanics.check, extensions, checked, owner, input !== undefined));
   } catch (error) {
