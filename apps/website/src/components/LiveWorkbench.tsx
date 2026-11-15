@@ -3,7 +3,7 @@
  * example has one thing to try: break the program, or watch a mistake get typed
  * and repaired. Errors, types, and generated code are the reader's own.
  */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Bug, Play, RotateCcw, Square } from "lucide-react";
 import { EngineClient } from "../engine/client";
 import type { Diagnostic } from "../engine/protocol";
@@ -14,12 +14,21 @@ import type { ReadingDiagnostic } from "../reading/protocol";
 import { typingEdit, workbenchExamples, type WorkbenchExample } from "../workbench/examples";
 import "../reading/reading.css";
 
-export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = false, embedded = false }: {
+export function LiveWorkbench({ initialExample = "contracts", initialSource, initiallyBroken = false, embedded = false, onStateChange, actions }: {
   initialExample?: string; initiallyBroken?: boolean; embedded?: boolean;
+  /** The source to open instead of the example's, such as a draft or a shared snapshot's. */
+  initialSource?: string | undefined;
+  /** Called with the example and its source after each change. */
+  onStateChange?: ((state: { readonly example: string; readonly source: string }) => void) | undefined;
+  /** More controls at the end of the example's actions, such as Share. */
+  actions?: ReactNode;
 }) {
   const initial = workbenchExamples.find(item => item.id === initialExample) ?? workbenchExamples[0]!;
   const [example, setExample] = useState<WorkbenchExample>(initial);
-  const [source, setSource] = useState(initiallyBroken ? initial.broken : initial.source);
+  const [source, setSource] = useState(initialSource ?? (initiallyBroken ? initial.broken : initial.source));
+  const onStateChangeRef = useRef(onStateChange);
+  onStateChangeRef.current = onStateChange;
+  useEffect(() => { onStateChangeRef.current?.({ example: example.id, source }); }, [example, source]);
   // Select the first error once the reader reports it: after Introduce error, or a broken start.
   const [revealError, setRevealError] = useState(initiallyBroken);
   const [playing, setPlaying] = useState(false);
@@ -76,6 +85,7 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
         {canBreak ? <button onClick={() => { stopReplay(); replaceSource(example.broken); setRevealError(true); }} type="button"><Bug size={14} />Introduce error</button> : null}
         {canBreak ? <button onClick={() => { if (playing) stopReplay(); else void watchTyping(); }} type="button">{playing ? <Square size={13} /> : <Play size={13} />}{playing ? "Stop" : "Watch typing"}</button> : null}
         <button onClick={() => { stopReplay(); setRevealError(false); replaceSource(example.source); }} type="button"><RotateCcw size={13} />Reset</button>
+        {actions}
       </div>
       <ReaderWorkspace />
       <QuickOpen />

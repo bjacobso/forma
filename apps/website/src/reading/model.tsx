@@ -141,6 +141,10 @@ export interface ReaderRootProps {
   readonly diagnostics?: boolean | readonly ReadingDiagnostic[] | undefined;
   /** The editor's accessible name. Default "Forma source". */
   readonly label?: string | undefined;
+  /** Bundled preludes to open as read-only tabs after `files`, by id such as `forma:cluster.lisp`. */
+  readonly preludeTabs?: readonly string[] | undefined;
+  /** The file to show first, which may be one of `preludeTabs`. Default the first file. */
+  readonly active?: string | undefined;
   /** Show the files for reading only, such as an excerpt of a prelude. Default false. */
   readonly readOnly?: boolean | undefined;
   readonly className?: string | undefined;
@@ -151,7 +155,7 @@ export interface ReaderRootProps {
  * Owns one reader. Give it a `key` that changes with `files` to load another set:
  * the files are read when it mounts.
  */
-export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", sidebar: initialSidebar = false, preludes = "effect", before, inlineTypes: initialInlineTypes = true, onChange, diagnostics = true, label = "Forma source", readOnly = false, className, children }: ReaderRootProps) {
+export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", sidebar: initialSidebar = false, preludes = "effect", before, inlineTypes: initialInlineTypes = true, onChange, diagnostics = true, label = "Forma source", preludeTabs = [], active: initialActive, readOnly = false, className, children }: ReaderRootProps) {
   const { theme } = useTheme();
   // Like `files`, the preludes are read when the reader mounts; the earlier code can change.
   const client = useMemo(() => new ReadingClient({ preludes, before }), []);
@@ -167,7 +171,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   themeRef.current = theme;
 
   const filesRef = useRef<readonly SourceFile[]>(initialFiles);
-  const activeRef = useRef<string>(initialFiles[0]!.id);
+  const activeRef = useRef<string>(initialFiles.find(f => f.id === initialActive)?.id ?? initialFiles[0]!.id);
   const states = useRef(new Map<string, EditorState>());
   const [fileIds, setFileIds] = useState<readonly string[]>(initialFiles.map(f => f.id));
   const [active, setActive] = useState(activeRef.current);
@@ -408,6 +412,12 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
     analyze(editor);
     refreshProject();
     focusText(editor, focus);
+    // Bundled preludes come from the worker, so their tabs open a moment later.
+    if (preludeTabs.length) void Promise.all(preludeTabs.filter(isPreludeFile).map(async id => ({ id, source: await client.prelude(id) }))).then(loaded => {
+      if (view.current !== editor) return;
+      loaded.forEach(addOpenFile);
+      if (initialActive && initialActive !== activeRef.current && filesRef.current.some(f => f.id === initialActive)) show(initialActive);
+    });
     return () => { editor.destroy(); if (view.current === editor) view.current = null; };
     // Mounted once per editor element; files, theme, and options reconfigure it.
   }, []);

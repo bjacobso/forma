@@ -1,4 +1,4 @@
-import { MAX_SNAPSHOT_BYTES, readSnapshot, snapshotIdPattern } from "./lib/playgroundSnapshot";
+import { MAX_SNAPSHOT_BYTES, readSnapshot, snapshotIdPattern, snapshotJson, snapshotPath } from "./lib/playgroundSnapshot";
 
 export interface PlaygroundStorage {
   get(key: string): Promise<{ text(): Promise<string> } | null>;
@@ -22,9 +22,9 @@ export async function playgroundApi(request: Request, env: PlaygroundEnv): Promi
   if (!env.PLAYGROUNDS) return Response.json({ error: "Playground storage is unavailable." }, { status: 503 });
   if (id) {
     if (request.method !== "GET" && request.method !== "HEAD") return new Response(null, { status: 405, headers: { Allow: "GET, HEAD" } });
-    const demo = await loadPlayground(env, id);
-    if (!demo) return Response.json({ error: "Playground not found." }, { status: 404 });
-    return new Response(request.method === "HEAD" ? null : JSON.stringify({ version: 1, ...demo }), {
+    const snapshot = await loadPlayground(env, id);
+    if (!snapshot) return Response.json({ error: "Playground not found." }, { status: 404 });
+    return new Response(request.method === "HEAD" ? null : snapshotJson(snapshot), {
       headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" },
     });
   }
@@ -47,20 +47,20 @@ export async function playgroundApi(request: Request, env: PlaygroundEnv): Promi
     length += value.byteLength;
     if (length > MAX_SNAPSHOT_BYTES) {
       await reader.cancel();
-      return Response.json({ error: "Playgrounds must fit within 128 KiB." }, { status: 413 });
+      return Response.json({ error: "Snapshots must fit within 128 KiB." }, { status: 413 });
     }
     chunks.push(value);
   }
   const bytes = new Uint8Array(length);
   let offset = 0;
   for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.byteLength; }
-  let demo;
-  try { demo = readSnapshot(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes))); }
+  let snapshot;
+  try { snapshot = readSnapshot(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes))); }
   catch { return Response.json({ error: "Invalid snapshot JSON." }, { status: 400 }); }
-  if (!demo) return Response.json({ error: "Expected a version 1 snapshot with a title, prelude, and source." }, { status: 400 });
-  const body = JSON.stringify({ version: 1, ...demo });
+  if (!snapshot) return Response.json({ error: "Expected a version 1 playground (title, prelude, source), reader (preludes, files, active), or workbench (example, source) snapshot." }, { status: 400 });
+  const body = snapshotJson(snapshot);
   const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(body));
   const snapshotId = Array.from(new Uint8Array(digest)).map(byte => byte.toString(16).padStart(2, "0")).join("").slice(0, 32);
   await env.PLAYGROUNDS.put(`v1/${snapshotId}.json`, body, { onlyIf: { etagDoesNotMatch: "*" }, httpMetadata: { contentType: "application/json" } });
-  return Response.json({ id: snapshotId, path: `/playground/p/${snapshotId}` }, { status: 201, headers: { "Cache-Control": "no-store" } });
+  return Response.json({ id: snapshotId, path: snapshotPath(snapshotId, snapshot) }, { status: 201, headers: { "Cache-Control": "no-store" } });
 }

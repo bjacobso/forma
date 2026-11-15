@@ -9,7 +9,7 @@
  *
  * For any other layout, put the parts from ./parts inside a <ReaderRoot>.
  */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { ReaderRoot, useReader } from "./model";
 import { CheckStatus, QuickOpen, ReaderEditor, ReaderInspector, ReaderPanel, ReaderSidebar, ReaderStatus, ReaderTabs, ReaderToolbar, RenameBar, TypeLine } from "./parts";
@@ -24,15 +24,22 @@ export interface FormaReaderProps {
   readonly sidebar?: boolean | undefined;
   /** The bundled preludes to check against. Default `effect`. */
   readonly preludes?: PreludeStack | undefined;
+  /** Bundled preludes to open as read-only tabs after `files`, such as `forma:cluster.lisp`. */
+  readonly preludeTabs?: readonly string[] | undefined;
+  /** The file to show first. Default the first file. */
+  readonly active?: string | undefined;
+  /** More parts inside the reader, such as a host's own controls. */
+  readonly children?: ReactNode;
 }
 
 /** The sidebar starts open when there is room for it beside the code and the inspector. */
 const roomy = () => typeof window !== "undefined" && window.innerWidth >= 1380;
 
-export function FormaReader({ files, focus, sidebar = roomy(), preludes }: FormaReaderProps) {
-  return <ReaderRoot className="rd-ide" files={files} focus={focus} preludes={preludes} sidebar={sidebar}>
+export function FormaReader({ files, focus, sidebar = roomy(), preludes, preludeTabs, active, children }: FormaReaderProps) {
+  return <ReaderRoot active={active} className="rd-ide" files={files} focus={focus} preludeTabs={preludeTabs} preludes={preludes} sidebar={sidebar}>
     <ReaderWorkspace />
     <QuickOpen />
+    {children}
   </ReaderRoot>;
 }
 

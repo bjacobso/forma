@@ -47,7 +47,25 @@ the surrounding page's setting. Theme messages accept only the same origin and
 the owning parent frame. Each frame reports its content height so the docs can
 stack the source and output on narrow screens without clipping diagnostics.
 Changing the theme reconfigures the editor without recreating it, losing focus,
-or clearing its undo history. Source drafts do not persist across reloads.
+or clearing its undo history.
+
+## Drafts and sharing
+
+On the <a href="/playground/live/contracts" target="_self">playground workbench</a>
+and the <a href="/playground/read" target="_self">reading editor</a>, edits are kept
+as a draft in this browser's local storage, so a reload restores them. The draft
+belongs to what the page opened (an example, a `?source=` link, or a shared
+snapshot), and **Discard draft** returns to it. Showing another file or opening a
+bundled prelude is not an edit.
+
+**Share** publishes a public, immutable snapshot after a confirmation and copies
+its link. A reader snapshot holds the open files in tab order, the file being
+shown, and the prelude stack; bundled preludes are kept by name. A workbench
+snapshot holds the example and its source. Snapshots use the custom playground's
+store and its 128 KiB limit, and open at `/playground/read?snapshot=<id>` and
+`/playground/live/<example>?snapshot=<id>`. Later edits are a draft of the
+snapshot until shared again, which creates a new link. The homepage workbench,
+embeds, and docs code blocks keep no drafts and have no Share button.
 
 The outline workbench is owned by Foldworks and uses its themes.
 

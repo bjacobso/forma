@@ -1,6 +1,7 @@
 import { galleryDescription, plainText, playgroundDescription } from "./lib/siteCopy";
 import { getPipeline } from "./pipelines";
 import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
+import { snapshotPath } from "./lib/playgroundSnapshot";
 import { loadPlayground, playgroundApi, type PlaygroundEnv } from "./playgroundStore";
 
 interface Env extends PlaygroundEnv {
@@ -54,9 +55,20 @@ export default {
     const sharedId = pathname?.match(/^\/p\/([a-f0-9]{32})$/)?.[1];
     if (pathname?.startsWith("/p/")) {
       try {
-        const demo = sharedId ? await loadPlayground(env, sharedId) : null;
-        if (!demo) return new Response("Playground not found.", { status: 404 });
-        meta = { title: `${demo.title} - Forma`, description: "Explore this language: edit its prelude and example, and inspect the typed IR in your browser.", path: pathname };
+        const snapshot = sharedId ? await loadPlayground(env, sharedId) : null;
+        if (!snapshot) return new Response("Playground not found.", { status: 404 });
+        // Reader and workbench snapshots open on their own pages.
+        if (snapshot.kind !== "custom") return Response.redirect(new URL(snapshotPath(sharedId!, snapshot), url).toString(), 302);
+        meta = { title: `${snapshot.title} - Forma`, description: "Explore this language: edit its prelude and example, and inspect the typed IR in your browser.", path: pathname };
+      } catch { return new Response("Playground storage is temporarily unavailable.", { status: 503 }); }
+    }
+    // A shared reader or workbench: a link to a missing snapshot is a 404, as for playgrounds.
+    const snapshotId = url.searchParams.get("snapshot");
+    if (meta && snapshotId !== null && (pathname === "/read" || /^\/(?:embed|live)\/(?!read$|custom$)[^/]+$/.test(pathname!))) {
+      try {
+        const snapshot = await loadPlayground(env, snapshotId);
+        if (!snapshot || snapshot.kind !== (pathname === "/read" ? "reader" : "workbench")) return new Response("Snapshot not found.", { status: 404 });
+        meta = { ...meta, title: snapshot.kind === "reader" ? "Shared Forma code - Forma" : "Shared Forma workbench - Forma", path: `${pathname}?snapshot=${snapshotId}` };
       } catch { return new Response("Playground storage is temporarily unavailable.", { status: 503 }); }
     }
     if (!meta) {

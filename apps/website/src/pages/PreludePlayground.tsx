@@ -8,7 +8,7 @@ import { EngineClient } from "../engine/client";
 import type { RunResult } from "../engine/protocol";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { decodePreludeDemo, defaultPreludeDemo, type PreludeDemo } from "../lib/preludeShare";
-import { MAX_SNAPSHOT_BYTES, readSnapshot } from "../lib/playgroundSnapshot";
+import { fetchSnapshot, publishSnapshot } from "../lib/shareSnapshot";
 import { HostThemeProvider } from "../lib/theme";
 import { ReaderRoot, useReader } from "../reading/model";
 import { ReaderEditor, TypeLine } from "../reading/parts";
@@ -25,11 +25,8 @@ export function PreludePlayground({ embedded = false }: { embedded?: boolean }) 
     if (!snapshotId) return;
     const controller = new AbortController();
     setLoadError(null);
-    void fetch(`/playground/api/playgrounds/${snapshotId}`, { signal: controller.signal }).then(async response => {
-      if (!response.ok) throw new Error(response.status === 404 ? "This playground could not be found." : "This playground could not be loaded. Try again shortly.");
-      const demo = readSnapshot(await response.json());
-      if (!demo) throw new Error("This playground has an unsupported snapshot format.");
-      if (!controller.signal.aborted) setLoaded({ id: snapshotId, demo });
+    void fetchSnapshot(snapshotId, "custom", controller.signal).then(({ title, prelude, source }) => {
+      if (!controller.signal.aborted) setLoaded({ id: snapshotId, demo: { title, prelude, source } });
     }).catch((reason: unknown) => { if (!controller.signal.aborted) setLoadError(reason instanceof Error ? reason.message : String(reason)); });
     return () => controller.abort();
   }, [snapshotId]);
@@ -114,13 +111,7 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   const share = async () => {
     setSaving(true); setShareStatus("");
     try {
-      const body = JSON.stringify({ version: 1, ...demo });
-      if (new TextEncoder().encode(body).byteLength > MAX_SNAPSHOT_BYTES) throw new Error("Playgrounds must fit within 128 KiB.");
-      const response = await fetch("/playground/api/playgrounds", { method: "POST", headers: { "Content-Type": "application/json" }, body });
-      if (!response.headers.get("Content-Type")?.includes("application/json")) throw new Error("Sharing requires the website Worker. The Vite server supports editing only.");
-      const snapshot = await response.json() as { path?: string; error?: string };
-      if (!response.ok || !snapshot.path) throw new Error(snapshot.error ?? "Could not save the playground. Try again.");
-      const url = new URL(snapshot.path, window.location.origin).href;
+      const url = await publishSnapshot({ kind: "custom", ...demo });
       window.history.replaceState(null, "", url);
       setShareUrl(url); setSharedDemo(JSON.stringify(demo));
       await copyLink(url);

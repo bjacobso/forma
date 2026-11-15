@@ -43,6 +43,11 @@ and the title in R2 and copies a short `/playground/p/<id>` URL. Anyone with
 the link can load the snapshot and edit a copy without an account. Sharing
 an edit creates a new snapshot; existing links keep their original content.
 The website Worker serves the saved title in social metadata on a cold request.
+The reading editor (`/playground/read`) and the workbench (`/playground/live/<id>`)
+share through the same store: their snapshots record a `kind` of `reader` (open
+files, active file, prelude stack) or `workbench` (example and source) and open on
+those pages with `?snapshot=<id>`; a missing snapshot is a 404. Both pages keep
+unshared edits as a local draft until discarded.
 
 Alchemy provisions a private `PLAYGROUNDS` R2 binding and a
 `PLAYGROUND_WRITES` rate limiter on the existing website Worker. Production

@@ -77,6 +77,27 @@
 .rd-examples button { padding: 7px 13px; border-radius: 7px; color: var(--rd-muted); font-size: 13px; font-weight: 560; transition: background .15s, color .15s; }
 .rd-examples button:hover { color: var(--rd-ink); }
 .rd-examples button.active { background: var(--rd-accent-soft); color: var(--rd-accent); }
+.rd-top-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 14px; }
+.rd-page-message { margin: 0; color: var(--rd-muted); font-size: 14px; }
+
+/* Drafts and sharing, on the reader page and in the workbench */
+.rd-share { position: relative; display: flex; flex: 1 1 auto; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 6px 8px; }
+.rd-share-note { color: var(--rd-muted); font-size: 12.5px; }
+.rd-share button { display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border: 1px solid var(--rd-line); border-radius: 8px; background: var(--rd-panel); color: var(--rd-ink); font-size: 12.5px; font-weight: 560; white-space: nowrap; cursor: pointer; }
+.rd-share button:hover:not(:disabled) { border-color: color-mix(in srgb, var(--rd-accent) 40%, var(--rd-line)); background: var(--rd-accent-soft); }
+.rd-share button:disabled { opacity: 0.6; cursor: default; }
+.rd-share button:focus-visible { outline: 2px solid var(--rd-accent); outline-offset: 2px; }
+.rd-share .rd-share-button { color: var(--rd-accent); }
+.rd-share-panel { position: absolute; top: calc(100% + 8px); right: 0; z-index: 40; display: grid; gap: 10px; width: min(400px, calc(100vw - 32px)); padding: 14px; border: 1px solid var(--rd-line); border-radius: 10px; background: var(--rd-panel); box-shadow: var(--rd-shadow); color: var(--rd-ink); font-size: 13px; text-align: left; }
+.rd-share-panel p { margin: 0; line-height: 1.5; }
+.rd-share-panel label { display: grid; gap: 5px; color: var(--rd-muted); font-size: 12px; font-weight: 560; }
+.rd-share-panel input { width: 100%; min-width: 0; padding: 6px 8px; border: 1px solid var(--rd-line); border-radius: 6px; background: var(--rd-bg); color: var(--rd-accent); font: 12px "IBM Plex Mono", ui-monospace, monospace; }
+.rd-share-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.rd-share .rd-share-actions button:first-child { border-color: var(--rd-accent); background: var(--rd-accent); color: var(--rd-panel); }
+.rd-share .rd-share-actions button:first-child:hover:not(:disabled) { background: color-mix(in srgb, var(--rd-accent) 88%, var(--rd-ink)); }
+.rd-share-panel .rd-share-status { color: var(--rd-muted); font-size: 12px; }
+.rd-share-status:empty { display: none; }
+@media (max-width: 640px) { .rd-share-panel { left: 0; width: auto; } }
 
 /* Workspace */
 .rd-ide { display: flex; flex: 1; flex-direction: column; min-height: 0; }

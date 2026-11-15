@@ -39,9 +39,40 @@ test("snapshots have stable content IDs and changing a file creates a new snapsh
   expect(env.PLAYGROUNDS.put).toHaveBeenCalledWith(expect.any(String), expect.any(String), expect.objectContaining({ onlyIf: { etagDoesNotMatch: "*" } }));
 });
 
+const reader = {
+  version: 1, kind: "reader", preludes: "effect",
+  files: [{ id: "main.lisp", source: '(import "./domain.lisp" [Order])' }, { id: "domain.lisp", source: "(export Order)" }, { id: "forma:cluster.lisp" }],
+  active: "forma:cluster.lisp",
+};
+const workbench = { version: 1, kind: "workbench", example: "orders", source: "(define x 1)" };
+
+test("reader and workbench snapshots share the store and open on their own pages", async () => {
+  const { env } = storage();
+  for (const [value, page] of [[reader, "/playground/read?snapshot="], [workbench, "/playground/live/orders?snapshot="]] as const) {
+    const saved = await (await save(env, value)).json() as { id: string; path: string };
+    expect(saved.path).toBe(`${page}${saved.id}`);
+    expect(await (await save(env, value)).json()).toEqual(saved);
+    expect(await (await playgroundApi(new Request(`https://forma-lang.com/playground/api/playgrounds/${saved.id}`), env)).json()).toEqual(value);
+  }
+  // The same files in another tab order, or with another file shown, are another snapshot.
+  const reordered = await (await save(env, { ...reader, active: "main.lisp" })).json() as { id: string };
+  expect(reordered.id).not.toBe((await (await save(env, reader)).json() as { id: string }).id);
+});
+
 test("rejects malformed, unsupported, oversized and cross-origin writes before storing", async () => {
   const { env } = storage();
-  for (const value of [null, { ...defaultPreludeDemo, version: 2 }, { ...defaultPreludeDemo, version: 1, title: "" }]) {
+  const malformedReaders = [
+    { ...reader, active: "missing.lisp" },
+    { ...reader, preludes: "unknown" },
+    { ...reader, files: [] },
+    { ...reader, files: [{ id: "forma:cluster.lisp" }] },
+    { ...reader, files: [...reader.files, { id: "main.lisp", source: "" }] },
+    { ...reader, files: [{ id: "main.lisp" }], active: "main.lisp" },
+    { ...reader, files: [{ id: "main.lisp", source: "" }, { id: "forma:kernel.lisp", source: "(edited)" }], active: "main.lisp" },
+    { ...workbench, example: "../orders" },
+    { ...workbench, kind: "custom" },
+  ];
+  for (const value of [null, { ...defaultPreludeDemo, version: 2 }, { ...defaultPreludeDemo, version: 1, title: "" }, ...malformedReaders]) {
     expect((await save(env, value)).status).toBe(400);
   }
   expect((await save(env, { version: 1, ...defaultPreludeDemo, source: "x".repeat(MAX_SNAPSHOT_BYTES) })).status).toBe(413);
@@ -78,6 +109,16 @@ test("the website serves saved titles as escaped social metadata and handles mis
   expect(await response.text()).toContain('<meta property="og:title" content="&lt;DSL &amp; &quot;friends&quot;&gt; - Forma" />');
   const missing = await worker.fetch(new Request(`https://forma-lang.com/playground/p/${"a".repeat(32)}`), website);
   expect(missing.status).toBe(404);
+  const sharedReader = await (await save(env, reader)).json() as { id: string; path: string };
+  const redirect = await worker.fetch(new Request(`https://forma-lang.com/playground/p/${sharedReader.id}`), website);
+  expect(redirect.status).toBe(302);
+  expect(redirect.headers.get("Location")).toBe(`https://forma-lang.com${sharedReader.path}`);
+  const page = await worker.fetch(new Request(`https://forma-lang.com${sharedReader.path}`), website);
+  expect(page.status).toBe(200);
+  expect(await page.text()).toContain('<meta property="og:title" content="Shared Forma code - Forma" />');
+  for (const path of [`/playground/read?snapshot=${"a".repeat(32)}`, `/playground/live/orders?snapshot=${sharedReader.id}`, "/playground/read?snapshot=bad-id"]) {
+    expect((await worker.fetch(new Request(`https://forma-lang.com${path}`), website)).status).toBe(404);
+  }
   env.PLAYGROUNDS.get.mockRejectedValue(new Error("offline"));
   expect((await worker.fetch(new Request(`https://forma-lang.com${saved.path}`), website)).status).toBe(503);
 });

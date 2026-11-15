@@ -35,8 +35,8 @@ export function encodePreludeDemo(demo: PreludeDemo): string {
 export function decodePreludeDemo(hash: string): PreludeDemo | null {
   if (!hash.startsWith("#demo=")) return null;
   try {
-    const value: unknown = JSON.parse(LZString.decompressFromEncodedURIComponent(hash.slice(6)) ?? "null");
-    return readSnapshot(value);
+    const snapshot = readSnapshot(JSON.parse(LZString.decompressFromEncodedURIComponent(hash.slice(6)) ?? "null"));
+    return snapshot?.kind === "custom" ? { title: snapshot.title, prelude: snapshot.prelude, source: snapshot.source } : null;
   } catch {
     return null;
   }
