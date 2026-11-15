@@ -25,8 +25,12 @@ export function splitTypeMetadata(t: SExpr): { type: SExpr; metadata: readonly (
   return {type:at===1 ? t.items[0]! : list(t,t.items.slice(0,at)),metadata};
 }
 
-export function stripTypeMetadata(t: SExpr): SExpr {
-  const base=splitTypeMetadata(t).type;
-  if (base._tag === "Map") return {...base, pairs: base.pairs.map(([k, v]) => [k, stripTypeMetadata(v)] as const)};
-  return base._tag === "List" ? {...base,items:base.items.map(stripTypeMetadata)} : base;
+/** Remove type metadata recursively, except keys in `keep`. */
+export function stripTypeMetadata(t: SExpr, keep?: ReadonlySet<string>): SExpr {
+  const split=splitTypeMetadata(t), base=split.type;
+  const kept=keep ? split.metadata.filter(([key]) => keep.has(name(key)!)).flat() : [];
+  const stripped: SExpr = base._tag === "Map" ? {...base, pairs: base.pairs.map(([k, v]) => [k, stripTypeMetadata(v, keep)] as const)}
+    : base._tag === "List" ? {...base,items:base.items.map(item => stripTypeMetadata(item, keep))} : base;
+  if (!kept.length) return stripped;
+  return list(t, stripped._tag === "List" ? [...stripped.items, ...kept] : [stripped, ...kept]);
 }

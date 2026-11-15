@@ -5,6 +5,50 @@ import { splitTypeMetadata } from "./domain.js";
 const legacy = new Map(Object.entries({Str:"String",Nil:"Unit",Boolean:"Bool",Array:"List",Vector:"List",Optional:"Option",Uint8Array:"Bytes",string:"String",integer:"Int",number:"Float",boolean:"Bool"}));
 export const schemaMetadata = new Set([":doc", ":pattern", ":title", ":identifier", ":min-length", ":max-length", ":min", ":max", ":finite"]);
 const fieldMetadata = new Set([":indexed", ":doc", ":default"]);
+/** Value refinements that constrain String, Int, Float, and List values. */
+export const refinementMetadata = new Set([":pattern", ":min-length", ":max-length", ":min", ":max", ":finite"]);
+/** A form's Type hole accepts field metadata and value refinements. */
+export const typeHoleMetadata = new Set([...fieldMetadata, ...refinementMetadata]);
+
+/**
+ * Refinements written on a type that cannot carry them, such as (String :min 1).
+ * `lookup` returns an alias's definition; a base it cannot resolve is not checked.
+ * The rules and messages match the mechanics schema check.
+ */
+export function refinementTargetErrors(expression: SExpr, lookup: (name: string) => SExpr | undefined): readonly { message: string; expression: SExpr }[] {
+  const base = (type: SExpr, seen: ReadonlySet<string>): SExpr | undefined => {
+    type = splitTypeMetadata(type).type;
+    if (head(type) === "Brand" && type._tag === "List" && type.items[1]) return base(type.items[1], seen);
+    const n = type._tag === "Sym" ? type.name : undefined;
+    if (!n || primitiveTypeNames.includes(n)) return type;
+    const definition = seen.has(n) ? undefined : lookup(n);
+    return definition && head(definition) !== "__type-function" ? base(definition, new Set([...seen, n])) : undefined;
+  };
+  const errors: { message: string; expression: SExpr }[] = [];
+  const visit = (node: SExpr): void => {
+    let split: ReturnType<typeof splitTypeMetadata>;
+    try { split = splitTypeMetadata(node); } catch { return; }
+    const keys = split.metadata.map(([key]) => [name(key)!, key] as const).filter(([key]) => refinementMetadata.has(key));
+    const refined = keys.length ? base(split.type, new Set()) : undefined;
+    if (refined) {
+      const n = refined._tag === "Sym" ? refined.name : undefined;
+      const text = n === "String", number = n === "Int" || n === "Float", array = head(refined) === "List";
+      for (const [key, at] of keys) {
+        const message = key === ":pattern" && !text ? ":pattern applies to String."
+          : (key === ":min-length" || key === ":max-length") && !(text || array) ? `${key} applies to String and List.`
+          : key === ":finite" && n !== "Float" ? ":finite applies to Float."
+          : (key === ":min" || key === ":max") && !number ? `${key} applies to Int and Float.`
+          : undefined;
+        if (message) errors.push({ message, expression: at });
+      }
+    }
+    const type = split.type;
+    const children = type._tag === "Map" ? type.pairs.map(([, value]) => value) : type._tag === "List" ? type.items.slice(1) : [];
+    children.forEach(visit);
+  };
+  visit(expression);
+  return errors;
+}
 
 /** Retire numeric aliases in contexts whose other legacy names are still accepted. */
 export function retiredNumericTypeErrors(expression: SExpr): readonly string[] {

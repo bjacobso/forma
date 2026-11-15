@@ -67,6 +67,39 @@ describe("refined fields in form contracts", () => {
     ]);
   });
 
+  test("Type holes accept refinements and reject them on types they do not apply to", () => {
+    const prelude = `(type Digits (Brand String))
+      (type IntakeIR {:kind "Intake" :fields Json})
+      (form (intake fields) :types {:fields (Record Type)} :ir IntakeIR {:kind "Intake" :fields fields})`;
+    expect(elaborate(prelude, '(intake {:allowances (Int :min 0 :max 99) :tags (List String :max-length 3) :zip (Digits :pattern "^[0-9]+$")})')).toEqual({
+      ok: true,
+      diagnostics: [],
+      payloads: [{ kind: "Intake", fields: [
+        [":allowances", ["Int", ":min", 0, ":max", 99]],
+        [":tags", ["List", "String", ":max-length", 3]],
+        [":zip", ["Digits", ":pattern", "^[0-9]+$"]],
+      ] }],
+    });
+    expect(elaborate(prelude, '(intake {:a (String :min 1) :b (Digits :max 9) :c (Int :finite true) :d (Bool :min-length 1)})').diagnostics).toEqual([
+      { message: ":min applies to Int and Float.", text: ":min" },
+      { message: ":max applies to Int and Float.", text: ":max" },
+      { message: ":finite applies to Float.", text: ":finite" },
+      { message: ":min-length applies to String and List.", text: ":min-length" },
+    ]);
+  });
+
+  test("type-definition keeps refinements only when asked", () => {
+    const prelude = `(type ShapeIR {:kind "Shape" :plain Json :refined Json})
+      (form (shape name) :types {:name Symbol} :ir ShapeIR
+        {:kind "Shape" :plain (type-definition name) :refined (type-definition name :refinements)})`;
+    expect(elaborate(prelude, '(type Allowances (Int :min 0 :doc "Count")) (shape Allowances)').payloads).toEqual([
+      { kind: "Shape", plain: "Int", refined: ["Int", ":min", 0] },
+    ]);
+    expect(elaborate(prelude, '(type Profile {:tags (List String :max-length 3 :doc "Tags") :name String}) (shape Profile)').payloads).toEqual([
+      { kind: "Shape", plain: { tags: ["List", "String"], name: "String" }, refined: { tags: ["List", "String", ":max-length", 3], name: "String" } },
+    ]);
+  });
+
   test("refinement metadata does not hide the base protocol type", () => {
     expect(protocolType(Effect.runSync(Reader.parseToSExpr('(String :pattern "^a")')))).toEqual({ type: "string" });
   });

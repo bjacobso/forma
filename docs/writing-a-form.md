@@ -55,6 +55,12 @@ the author wrote it, and the projected IR is checked against its declared
 refinements. A hole typed with an enum alias such as
 `(type Status (Union "active" "inactive"))` accepts only its members.
 
+Authors may write the same refinements in a `Type` hole, such as
+`(entity Person {:age (Int :min 0)})`, alongside the field metadata `:indexed`,
+`:doc`, and `:default`. A refinement must apply to its base type after aliases
+and brands are resolved: `(String :min 1)` reports `:min applies to Int and Float.`
+at `:min`. The hook receives the type syntax with its refinements.
+
 ## Checking and scope
 
 Add `:check` when the syntax needs rules beyond its hole types. The function
@@ -160,6 +166,7 @@ so reflection can see declarations written later in the program.
 | `(declarations-of 'entry)` | List of symbols declared by the named form, in declaration order; `[]` if none match. This selects the form name, not the declaration's result type. |
 | `(declaration-hole 'first :doc)` | The authored hole as data, or `nil` when absent. This includes optional positional docstrings. |
 | `(type-definition 'Profile)` | The author's type definition as data, falling back to the prelude's definition, or `nil` for an unknown name. Metadata such as `:doc` is stripped recursively; referenced aliases remain symbols. |
+| `(type-definition 'Allowances :refinements)` | The same definition, keeping the value refinements `:pattern`, `:min-length`, `:max-length`, `:min`, `:max`, and `:finite`, so `(type Allowances (Int :min 0 :doc "Count"))` returns `(Int :min 0)`. Other metadata is still stripped. |
 
 For example, given `(type Status (Union :draft :sent))`,
 `(type-definition 'Status)` returns `(Union :draft :sent)` as data. A record
