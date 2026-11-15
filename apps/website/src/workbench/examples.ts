@@ -33,12 +33,12 @@ export const workbenchExamples: readonly WorkbenchExample[] = [
     source: '(fn [order]\n  (+ (get order :subtotal) (get order :tax)))',
     broken: '(fn [order]\n  (+ (get order :subtotal) "oops"))',
     prompt: 'Replace a numeric field with "oops". Inference follows the body.', passes: ["parse", "expand", "typecheck"] },
-  { id: "macros", title: "Macros → values", file: "grades.lisp", source: getPipeline("full-pipeline").source,
+  { id: "macros", title: "Macros", file: "grades.lisp", source: getPipeline("full-pipeline").source,
     broken: getPipeline("full-pipeline").source.replace('(>= score 90)', '(>= score "90")'),
-    prompt: "Change the grade thresholds. See cond expand into the core and the result update.",
+    prompt: "Alt-click the cond form: the inspector steps through its expansion into the core.",
     passes: ["parse", "expand", "typecheck", "evaluate"] },
   { id: "strict", title: "Stricter checks", file: "strict.lisp", source: strictSource,
-    broken: strictSource, prompt: "Four mistakes: reference equality, object interpolation, fractional Int, and truthiness. Click a diagnostic to jump to its source.",
+    broken: strictSource, prompt: "Four mistakes: reference equality, object interpolation, fractional Int, and truthiness. Hover an underline to read it.",
     dialect: "effect", passes: ["parse", "typecheck"] },
 ];
 

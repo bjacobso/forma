@@ -7,25 +7,17 @@ outline editing, modules, the REPL, proposal review, and capability approvals.
 
 ## The authoring loop
 
-A useful embed needs one source revision and one analysis result. Red underlines,
-the problem list, the type inspector, IR, and generated code must all describe
-that revision. Debounce typing, ignore superseded responses, clear stale spans
-when the source changes, and put a watchdog around compiler execution. A failed
-check should preserve the body types available from that check and block code
-generation. It should never imply that an earlier output belongs to the new code.
+The workbench is the reader with examples to try. The reader checks each revision
+in a Web Worker: red underlines, the inspector, the type at the caret, and the
+generated TypeScript all describe the same revision, and stale results are
+dropped when the source changes. A file with errors generates nothing; the
+generated panel says why.
 
-The Effect demos call `generateEffectProgram` once per revision. The checker
-provides declared signatures and inferred body types, including the failures
-and method capabilities introduced by calls. The worker converts its type maps
-into serializable, located expression types before sending the result to the UI.
-The general-language examples use the engine's read, expand, typecheck, and
-bounded evaluation passes. General-engine expression types can be top-level
-summaries; the embed locates those using the corresponding reader form.
-
-Click a diagnostic or expression type to reveal its authored span. Source
-editing uses CodeMirror history, bracket matching, folding, and the existing
-Forma structural keymap. Analysis performs no service calls. The Effect embed
-checks and generates programs; it does not execute their I/O.
+The Effect examples use the Effect checker, which reports declared signatures
+and inferred body types, including the failures and service calls a body
+introduces. The email example shows the email compiler's diagnostics, because
+its lanes are declared by the email linker. Analysis performs no service calls;
+the Effect examples check and generate programs and do not execute their I/O.
 
 ## Demonstrating typing
 
@@ -38,22 +30,19 @@ that could overwrite someone's draft while they are reading.
 
 ## Layout
 
-The workbench is built from the reader's parts. The code pane is the reader:
-hover for types and prelude documentation, widen and narrow the selection by
-form, structural edits, and the type at the caret under the code. The lens
-beside it follows the selection: the selected form's type, effect, and prelude
-form; each operation's declared signature beside what its body infers; the
-generated Effect TypeScript, where the statements generated from the selected
-form are highlighted and clicking a statement selects its source; and the typed
-IR, expansion, or value for the general-language examples. The compiler's stages
-and problems sit under both, and clicking a problem selects its span. Code and
-lens share one fixed height, so changing the lens or the selection never moves
-the page.
+The workbench uses the reader page's layout: the example switcher, the code with
+its tabs, structural tools, and status line, and the inspector beside it. Each
+example has one prompt and up to three actions: Introduce error, Watch typing,
+and Reset. An introduced error is selected, so the inspector explains it. The
+bottom panel holds references and the generated Effect TypeScript, where the
+statements generated from the selected form are highlighted and clicking a
+statement selects its source. The workbench has one fixed height, so changing
+the example or the selection never moves the page.
 
 ## Themes
 
 The workbench follows the site's light or dark theme and draws with the reader's
-palette, so the code, the lens, and the hover cards agree. The docs embed follows
+palette. The docs embed follows
 the surrounding page's setting. Theme messages accept only the same origin and
 the owning parent frame. Each frame reports its content height so the docs can
 stack the source and output on narrow screens without clipping diagnostics.
@@ -65,7 +54,7 @@ The outline workbench is owned by Foldworks and uses its themes.
 ## What should come next
 
 The homepage now demonstrates contracts, failures at authored calls, generated
-Effect code, row inference, macro expansion, and pure evaluation. The ambition
+Effect code, row inference, and macro expansion. The ambition
 section links to the working structural editing and proposal-review experience.
 The next demonstrations should make the language-extension promise concrete:
 
@@ -98,7 +87,7 @@ The docs theme registers `WorkbenchEmbed`. For example:
 
 The iframe route is `/playground/embed/:exampleId`; the full-page source view is
 `/playground/live/:exampleId`. Both render the same `LiveWorkbench` component
-used on the playground homepage. The website worker serves cold loads of both
+used on the playground homepage, built from the same parts as the reader. The website worker serves cold loads of both
 routes from the playground app shell.
 
 ## Forma code blocks

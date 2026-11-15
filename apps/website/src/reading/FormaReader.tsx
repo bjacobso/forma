@@ -31,12 +31,13 @@ const roomy = () => typeof window !== "undefined" && window.innerWidth >= 1380;
 
 export function FormaReader({ files, focus, sidebar = roomy(), preludes }: FormaReaderProps) {
   return <ReaderRoot className="rd-ide" files={files} focus={focus} preludes={preludes} sidebar={sidebar}>
-    <IdeLayout />
+    <ReaderWorkspace />
     <QuickOpen />
   </ReaderRoot>;
 }
 
-function IdeLayout() {
+/** The full reader's layout inside a <ReaderRoot>: files, the code, and the inspector beside it. */
+export function ReaderWorkspace() {
   const reader = useReader();
   return <div className={`rd-workspace${reader.sidebar ? " with-sidebar" : ""}`}>
     {reader.sidebar ? <ReaderSidebar /> : null}

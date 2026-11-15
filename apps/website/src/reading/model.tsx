@@ -512,10 +512,18 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
     editor.focus();
   };
 
+  // A host that shows its own diagnostics counts them for the file it shows.
+  const shownProblems = useMemo<Problems>(() => typeof diagnostics === "boolean" && diagnostics ? problems : {
+    ...problems,
+    [active]: typeof diagnostics === "boolean"
+      ? { errors: 0, warnings: 0 }
+      : { errors: diagnostics.filter(d => d.severity === "error").length, warnings: diagnostics.filter(d => d.severity === "warning").length },
+  }, [problems, diagnostics, active]);
+
   const model: ReaderModel = {
     client, fileIds, active, readOnly: isPreludeFile(active),
     files: () => filesRef.current, show, open, openFile, back, canGoBack: backStack.length > 0, addFile, closeFile,
-    analysis, checking, problems, symbols, subject, inspection, breadcrumbs, outline,
+    analysis, checking, problems: shownProblems, symbols, subject, inspection, breadcrumbs, outline,
     inlineTypes, setInlineTypes: setInlineTypesState, sidebar, setSidebar, quickOpen, setQuickOpen, panel, setPanel,
     references, findReferences, generated, renaming, renameError, startRename, commitRename,
     mount, view: () => view.current, run, select, replace, goTo, jumpToName,

@@ -69,7 +69,7 @@ export function Breadcrumbs() {
 }
 
 /** Breadcrumbs, structural selection and edits, snippets, and the inline types switch. */
-export function ReaderToolbar({ edits = true, breadcrumbs = true }: { readonly edits?: boolean; readonly breadcrumbs?: boolean }) {
+export function ReaderToolbar({ edits = true }: { readonly edits?: boolean }) {
   const reader = useReader();
   const [menu, setMenu] = useState<readonly SnippetEntry[] | null>(null);
   const groups = useMemo(() => {
@@ -79,7 +79,7 @@ export function ReaderToolbar({ edits = true, breadcrumbs = true }: { readonly e
   }, [menu]);
   const readOnly = reader.readOnly;
   return <div className="rd-toolbar">
-    {breadcrumbs ? <Breadcrumbs /> : null}
+    <Breadcrumbs />
     <div className="rd-tools">
       <button onClick={reader.run(structuralCommands.widenSelection)} title={`Widen selection to the enclosing form (${ALT}↑)`} type="button"><ArrowUpFromLine size={14} /><span className="rd-tool-label">Widen</span></button>
       <button onClick={reader.run(structuralCommands.narrowSelection)} title={`Narrow selection (${ALT}↓)`} type="button"><ArrowDownToLine size={14} /><span className="rd-tool-label">Narrow</span></button>

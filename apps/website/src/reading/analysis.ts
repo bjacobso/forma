@@ -566,7 +566,9 @@ export function generated(files: readonly SourceFile[], file: string): Generated
     const code = (result.modules ? (result.modules.find(m => m.moduleId === file) ?? result.modules.at(-1))?.code : result.code) ?? "";
     if (!result.ok || !code) {
       const first = result.diagnostics.find(d => d.severity === "error");
-      value = none(`Only Effect declarations generate TypeScript: types, errors, services, effects, and the RPC, HTTP API, and Cluster forms.${first ? ` The generator stopped at: ${first.message}` : ""}`);
+      value = none(first
+        ? `Nothing is generated until the file checks. ${first.message}`
+        : "Only Effect declarations generate TypeScript: types, errors, services, effects, and the RPC, HTTP API, and Cluster forms.");
     } else {
       const declarations = result.declarations.filter(d => d.sourceId === file && d.span).map((d): GeneratedDeclaration => ({
         name: (d.summary.name ?? "").split("__forma_")[0]!,
