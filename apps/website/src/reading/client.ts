@@ -35,7 +35,8 @@ export class ReadingClient {
   readonly scope = `reader-${nextScope++}`;
   private disposed = false;
 
-  constructor(readonly setup: ReaderSetup = { preludes: "effect" }) {
+  /** Sent with every request; a reader updates `before` when its earlier code changes. */
+  constructor(public setup: ReaderSetup = { preludes: "effect" }) {
     shared.readers++;
     worker();
   }

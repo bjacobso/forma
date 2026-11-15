@@ -21,7 +21,7 @@ export function ReaderEmbedPage() {
   useEffect(() => {
     const receive = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== window.parent) return;
-      if (event.data?.type === "forma-workbench-theme" && (event.data.theme === "light" || event.data.theme === "dark")) setTheme(event.data.theme);
+      if (event.data?.type === "forma-workbench-theme" && (event.data.theme === "light" || event.data.theme === "dark")) setTheme(event.data.theme, false);
     };
     const element = root.current;
     const report = () => { if (element) window.parent.postMessage({ type: "forma-reader-height", height: Math.ceil(element.getBoundingClientRect().height) }, window.location.origin); };

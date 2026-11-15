@@ -99,10 +99,12 @@ let scope = "";
 let setup: ReaderSetup = { preludes: "effect" };
 export function inScope(name: string, reader: ReaderSetup = { preludes: "effect" }): void { scope = name; setup = reader; }
 
+/** The earlier code each workspace has loaded, which a reader can change. */
+const earlier = new WeakMap<AnalysisWorkspace, string>();
+
 function bundledWorkspace(): AnalysisWorkspace {
   const workspace = new AnalysisWorkspace();
   for (const name of PRELUDE_STACKS[setup.preludes]) workspace.setPrelude(`forma:${name}`, preludeSources[name]);
-  if (setup.before) workspace.setPrelude(EARLIER_FILE, setup.before);
   return workspace;
 }
 
@@ -114,6 +116,7 @@ function open(files: readonly SourceFile[], file: string): { readonly ws: Analys
   const key = setup.before ? `${scope}\0${file}` : `\0${setup.preludes}\0${isPrelude(file) ? "" : file}`;
   let ws = workspaces.get(key);
   if (!ws) { ws = bundledWorkspace(); workspaces.set(key, ws); }
+  if (setup.before && earlier.get(ws) !== setup.before) { ws.setPrelude(EARLIER_FILE, setup.before); earlier.set(ws, setup.before); }
   if (isPrelude(file)) return { ws, text: preludeText(file) };
   const byId = new Map(files.filter(f => !isPrelude(f.id)).map(f => [f.id, f] as const));
   const deps = dependencies(byId, file);

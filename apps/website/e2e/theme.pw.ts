@@ -19,8 +19,8 @@ for (const theme of ["light", "dark"] as const) {
     await expect(page.getByRole("heading", { name: "Contracts Generate Effect TypeScript" })).toBeVisible();
 
     await stageButton(page, "Source").click();
-    await expect(page.locator(".embedded-editor .cm-line").first()).toBeVisible();
-    const sourceReport = await analyzeEditor(page, ".embedded-editor .cm-editor");
+    await expect(page.locator(".source-reader .cm-line").first()).toBeVisible();
+    const sourceReport = await analyzeEditor(page, ".source-reader .cm-editor");
     expectReadableEditor(sourceReport);
 
     await stageButton(page, "Target").click();

@@ -14,6 +14,8 @@ export const isPreludeFile = (id: string) => id.startsWith("forma:");
  * picks one; `effect` is the default.
  */
 export const PRELUDE_STACKS = {
+  /** Only the kernel and compiler preludes, for a language defined in the reader's earlier code. */
+  core: ["kernel.lisp", "compiler.lisp"],
   effect: ["kernel.lisp", "compiler.lisp", "rpc.lisp", "http-api.lisp", "cluster.lisp"],
   ontology: ["kernel.lisp", "compiler.lisp", "ontology.lisp"],
   ui: ["kernel.lisp", "compiler.lisp", "ontology.lisp", "ui.lisp"],

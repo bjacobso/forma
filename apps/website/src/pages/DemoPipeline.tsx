@@ -16,13 +16,7 @@ import type { RunResult, TimedPassResult } from "../engine/protocol";
 import { hasErrors } from "../engine/protocol";
 import {
   astToSource,
-  collectAstSpans,
   passOf,
-  sameSpan,
-  spanContainsRange,
-  spanRange,
-  spanSize,
-  uniqueSpans,
   type SpanRange,
 } from "../lib/artifacts";
 import { InlineCodeText } from "../components/Dfn";
@@ -130,18 +124,6 @@ export function DemoPipeline() {
   const evaluateResult = passOf(results, "evaluate");
   const activeStages: StageKey[] = ["source", ...pipeline.passes, ...(pipeline.preview || pipeline.target ? ["target" as const] : [])];
   const pipelineIndex = pipelines.findIndex((item) => item.id === pipeline.id);
-  const selectableSpans = useMemo(
-    () =>
-      uniqueSpans([
-        ...collectAstSpans(parseResult?.ast),
-        ...(typecheckResult?.expressionTypes ?? []).map((item) => spanRange(item.span)),
-      ]),
-    [parseResult, typecheckResult],
-  );
-  const selectedInspection = useMemo(
-    () => inspectSelectedSpan(source, selectedSpan, typecheckResult),
-    [source, selectedSpan, typecheckResult],
-  );
   const selectedResult =
     selectedStage === "parse"
       ? parseResult
@@ -264,9 +246,10 @@ export function DemoPipeline() {
               target: pipeline.target,
               context: pipeline.context,
               selectedSpan,
-              selectedInspection,
-              selectableSpans,
               setSelectedSpan,
+              file: `${pipeline.id}.lisp`,
+              preludes: pipeline.preludes,
+              diagnostics: runResult?.diagnostics ?? [],
             })
           )}
         </div>
@@ -362,9 +345,10 @@ function renderOutputPane({
   target,
   context,
   selectedSpan,
-  selectedInspection,
-  selectableSpans,
   setSelectedSpan,
+  file,
+  preludes,
+  diagnostics,
 }: {
   readonly selectedStage: StageKey;
   readonly source: string;
@@ -377,21 +361,22 @@ function renderOutputPane({
   readonly target: ReturnType<typeof getPipeline>["target"];
   readonly context: ReturnType<typeof getPipeline>["context"];
   readonly selectedSpan: SpanRange | null;
-  readonly selectedInspection: SelectedInspection | null;
-  readonly selectableSpans: readonly SpanRange[];
   readonly setSelectedSpan: (span: SpanRange | null) => void;
+  readonly file: string;
+  readonly preludes: PipelineDef["preludes"];
+  readonly diagnostics: RunResult["diagnostics"];
 }) {
   switch (selectedStage) {
     case "source":
       return (
         <SourcePane
+          context={context}
+          diagnostics={diagnostics}
+          file={file}
           onChange={setSource}
           onSelectSpan={setSelectedSpan}
-          selectableSpans={selectableSpans}
-          context={context}
-          selectedExcerpt={selectedInspection?.excerpt}
+          preludes={preludes}
           selectedSpan={selectedSpan}
-          selectedType={selectedInspection?.type}
           source={source}
         />
       );
@@ -425,38 +410,4 @@ function renderOutputPane({
     case "target":
       return <TargetPane preview={preview} target={target} evaluation={evaluateResult} />;
   }
-}
-
-interface SelectedInspection {
-  readonly excerpt: string;
-  readonly type?: string | undefined;
-}
-
-function inspectSelectedSpan(
-  source: string,
-  selectedSpan: SpanRange | null,
-  typecheckResult: Extract<TimedPassResult, { readonly pass: "typecheck" }> | null,
-): SelectedInspection | null {
-  if (!selectedSpan) return null;
-  const typed = bestTypedExpression(selectedSpan, typecheckResult);
-  const span = typed ? spanRange(typed.span) : selectedSpan;
-  if (!span) return null;
-  const excerpt = source.slice(span[0], span[1]).replace(/\s+/g, " ").trim();
-  if (!excerpt) return null;
-  return {
-    excerpt,
-    ...(typed ? { type: typed.display } : {}),
-  };
-}
-
-function bestTypedExpression(
-  selectedSpan: SpanRange,
-  typecheckResult: Extract<TimedPassResult, { readonly pass: "typecheck" }> | null,
-) {
-  const expressionTypes = typecheckResult?.expressionTypes ?? [];
-  const exact = expressionTypes.find((item) => sameSpan(spanRange(item.span), selectedSpan));
-  if (exact) return exact;
-  return expressionTypes
-    .filter((item) => spanContainsRange(spanRange(item.span), selectedSpan))
-    .sort((a, b) => spanSize(spanRange(a.span) ?? [0, Number.MAX_SAFE_INTEGER]) - spanSize(spanRange(b.span) ?? [0, Number.MAX_SAFE_INTEGER]))[0];
 }

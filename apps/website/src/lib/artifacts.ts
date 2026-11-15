@@ -11,38 +11,6 @@ export function sameSpan(a: SpanRange | null, b: SpanRange | null): boolean {
   return Boolean(a && b && a[0] === b[0] && a[1] === b[1]);
 }
 
-export function spanContains(span: SpanRange | null, offset: number | null): boolean {
-  return Boolean(span && offset !== null && span[0] <= offset && offset <= span[1]);
-}
-
-export function spanSize(span: SpanRange): number {
-  return span[1] - span[0];
-}
-
-export function spanContainsRange(span: SpanRange | null, range: SpanRange | null): boolean {
-  return Boolean(span && range && span[0] <= range[0] && range[1] <= span[1]);
-}
-
-export function collectAstSpans(nodes: readonly AstNode[] | undefined): SpanRange[] {
-  if (!nodes) return [];
-  const spans: SpanRange[] = [];
-  for (const node of nodes) collectNodeSpans(node, spans);
-  return spans;
-}
-
-export function uniqueSpans(spans: readonly (SpanRange | null | undefined)[]): SpanRange[] {
-  const seen = new Set<string>();
-  const result: SpanRange[] = [];
-  for (const span of spans) {
-    if (!span) continue;
-    const key = `${span[0]}:${span[1]}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    result.push(span);
-  }
-  return result.sort((a, b) => spanSize(a) - spanSize(b));
-}
-
 export function passOf<P extends TimedPassResult["pass"]>(
   results: readonly TimedPassResult[],
   pass: P,
@@ -93,25 +61,5 @@ export function formatJsonish(value: unknown): string {
     return JSON.stringify(value, null, 2);
   } catch {
     return String(value);
-  }
-}
-
-function collectNodeSpans(node: AstNode, spans: SpanRange[]): void {
-  const span = spanRange(node.span);
-  if (span) spans.push(span);
-  switch (node.kind) {
-    case "list":
-    case "vector":
-    case "set":
-      for (const item of node.items) collectNodeSpans(item, spans);
-      break;
-    case "map":
-      for (const entry of node.entries) {
-        collectNodeSpans(entry.key, spans);
-        collectNodeSpans(entry.value, spans);
-      }
-      break;
-    default:
-      break;
   }
 }

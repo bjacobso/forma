@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { useParams, useSearchParams } from "react-router-dom";
-import { WorkbenchEditor } from "../components/WorkbenchEditor";
 import { DiagnosticList } from "../components/DiagnosticList";
 import { SExprTree } from "../components/SExprTree";
 import { TargetCodeView } from "../components/TargetCodeView";
@@ -10,6 +9,11 @@ import type { RunResult } from "../engine/protocol";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { decodePreludeDemo, defaultPreludeDemo, type PreludeDemo } from "../lib/preludeShare";
 import { MAX_SNAPSHOT_BYTES, readSnapshot } from "../lib/playgroundSnapshot";
+import { HostThemeProvider } from "../lib/theme";
+import { ReaderRoot, useReader } from "../reading/model";
+import { ReaderEditor, TypeLine } from "../reading/parts";
+import type { ReadingDiagnostic } from "../reading/protocol";
+import "../reading/reading.css";
 
 export function PreludePlayground({ embedded = false }: { embedded?: boolean }) {
   const { snapshotId } = useParams();
@@ -174,7 +178,8 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
         <div className={`studio-editors ${bothFiles ? "studio-editors-both" : ""}`}>
           {(["prelude", "source"] as const).map(key => <section key={key} id={key === "prelude" ? "prelude-editor" : "example-editor"} className={`studio-file ${file === key ? "studio-file-active" : ""}`} aria-label={key === "prelude" ? "Prelude" : "Example"}>
             <div className="studio-file-heading">{bothFiles ? `${key === "prelude" ? "Language definition" : "Program"} · ` : ""}{key === "prelude" ? "prelude.lisp" : "example.lisp"}<span>Editable</span></div>
-            <WorkbenchEditor ariaLabel={key === "prelude" ? "Prelude source" : "Example source"} source={key === "prelude" ? demo.prelude : demo.source} mode={theme} palette="ocean" reveal={reveal?.file === key ? reveal.span : null} onInspect={() => setFile(key)} diagnostics={validating || error ? [] : diagnostics.filter(d => key === "prelude" ? d.span?.sourceId === "prelude.lisp" : d.span?.sourceId !== "prelude.lisp")} onChange={value => edit({ ...demo, [key]: value })} />
+            <StudioEditor before={key === "source" ? demo.prelude : undefined} file={key === "prelude" ? "prelude.lisp" : "example.lisp"} label={key === "prelude" ? "Prelude source" : "Example source"} source={key === "prelude" ? demo.prelude : demo.source} theme={theme} reveal={reveal?.file === key ? reveal.span : null}
+              diagnostics={validating || error ? [] : diagnostics.filter(d => key === "prelude" ? d.span?.sourceId === "prelude.lisp" : d.span?.sourceId !== "prelude.lisp")} onFocus={() => setFile(key)} onChange={value => edit({ ...demo, [key]: value })} />
           </section>)}
         </div>
       </section>
@@ -215,6 +220,46 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
     </section>
     <footer className="studio-footer"><span>Runs in your browser · Language definition → program → checked data</span><span>Your application owns execution and business meaning.</span></footer>
   </main>;
+}
+
+/**
+ * One file in the reader: types on hover, structural selection and edits, and the
+ * type at the caret. The program is checked with the language definition in
+ * scope; both show this playground's compiler diagnostics.
+ */
+function StudioEditor({ file, label, source, before, diagnostics, reveal, theme, onChange, onFocus }: {
+  readonly file: string; readonly label: string; readonly source: string; readonly before: string | undefined;
+  readonly diagnostics: RunResult["diagnostics"]; readonly reveal: SpanRange | null; readonly theme: "light" | "dark";
+  readonly onChange: (source: string) => void; readonly onFocus: () => void;
+}) {
+  // The reader reads its file when it mounts, so a source it did not write (Reset, Introduce error) mounts a fresh one.
+  const fromReader = useRef(source);
+  const [revision, setRevision] = useState(0);
+  useEffect(() => {
+    if (source === fromReader.current) return;
+    fromReader.current = source;
+    setRevision(value => value + 1);
+  }, [source]);
+  const shown = diagnostics.flatMap((d): ReadingDiagnostic[] => d.span ? [{
+    from: d.span.startOffset, to: d.span.endOffset, severity: d.severity === "error" ? "error" : d.severity === "warning" ? "warning" : "info", code: d.code, message: d.message,
+  }] : []);
+  return <div className="studio-reader-host" onFocus={onFocus}>
+    <HostThemeProvider fixed={theme}>
+      <ReaderRoot before={before} className="studio-reader" diagnostics={shown} files={[{ id: file, source }]} inlineTypes={false} key={revision} label={label} preludes="core"
+        onChange={(_, next) => { fromReader.current = next; onChange(next); }}>
+        <ReaderEditor />
+        <TypeLine />
+        <Reveal span={reveal} />
+      </ReaderRoot>
+    </HostThemeProvider>
+  </div>;
+}
+
+/** Selects a span the inspector or the problems list revealed. */
+function Reveal({ span }: { readonly span: SpanRange | null }) {
+  const reader = useReader();
+  useEffect(() => { if (span) reader.select({ from: span[0], to: span[1] }); }, [span?.[0], span?.[1]]);
+  return null;
 }
 
 /** Render the prelude's data without assuming domain-specific field names or behavior. */

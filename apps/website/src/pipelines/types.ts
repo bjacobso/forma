@@ -1,3 +1,4 @@
+import type { PreludeStack } from "../reading/protocol";
 import type { PassName } from "@formalang/ts/engine";
 
 export type StageKey = "source" | PassName | "target";
@@ -67,6 +68,8 @@ export interface PipelineDef {
   readonly source: string;
   readonly passes: readonly PassName[];
   readonly context?: PipelineContext | undefined;
+  /** The bundled preludes the reader checks the source against. Default `effect`. */
+  readonly preludes?: PreludeStack | undefined;
   readonly preview?: PipelinePreview | undefined;
   readonly target?: PipelineTarget | undefined;
   readonly variants?: readonly PipelineVariant[] | undefined;

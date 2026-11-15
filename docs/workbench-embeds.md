@@ -123,7 +123,7 @@ Words after the language set a block's options:
   files can import each other.
 - `preludes=ontology` checks against another bundled prelude stack: `effect`
   (the default, with RPC, HTTP API, and Cluster), `ontology`, `ui`, `email`,
-  or `elm`.
+  `elm`, or `core` (the kernel and compiler preludes only).
 - `fragment` keeps a block static, for an excerpt or code in another Lisp.
 
 A page's `formaBlocks` frontmatter sets how its blocks relate. `separate`, the

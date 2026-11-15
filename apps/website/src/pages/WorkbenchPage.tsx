@@ -14,7 +14,7 @@ export function WorkbenchPage({ embedded = false }: { embedded?: boolean }) {
     if (!embedded) return;
     const receive = (event: MessageEvent) => {
       if (event.origin !== window.location.origin || event.source !== window.parent) return;
-      if (event.data?.type === "forma-workbench-theme" && (event.data.theme === "light" || event.data.theme === "dark")) setTheme(event.data.theme);
+      if (event.data?.type === "forma-workbench-theme" && (event.data.theme === "light" || event.data.theme === "dark")) setTheme(event.data.theme, false);
     };
     const element = document.querySelector(".wb");
     const reportHeight = () => { if (element) window.parent.postMessage({ type: "forma-workbench-height", height: Math.ceil(element.getBoundingClientRect().height) }, window.location.origin); };
@@ -26,6 +26,6 @@ export function WorkbenchPage({ embedded = false }: { embedded?: boolean }) {
     return () => { observer.disconnect(); window.removeEventListener("message", receive); };
   }, [embedded, setTheme]);
   return <main className={embedded ? "workbench-embed-page" : "workbench-page"}>
-    <LiveWorkbench key={exampleId} initialExample={exampleId} initiallyBroken={search.get("broken") === "1"} embedded={embedded} compact={embedded && search.get("compact") === "1"} />
+    <LiveWorkbench key={exampleId} initialExample={exampleId} initiallyBroken={search.get("broken") === "1"} embedded={embedded} />
   </main>;
 }

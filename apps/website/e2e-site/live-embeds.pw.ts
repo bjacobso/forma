@@ -35,7 +35,7 @@ for (const route of ["/effect", "/elm", "/email"]) {
   });
 }
 
-test("homepage embeds both live playgrounds and keeps the hero within its columns", async ({ page }) => {
+test("the homepage embeds the reader workbench and keeps the hero within its columns", async ({ page }) => {
   await page.goto("/");
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 950 });
@@ -48,40 +48,26 @@ test("homepage embeds both live playgrounds and keeps the hero within its column
   await expect(page.locator(".forma-home iframe")).toHaveCount(1);
   await expect(page.locator(".fh-hero").getByRole("link", { name: "Build a domain language", exact: true })).toHaveAttribute("href", "/playground/custom");
   await expect(page.locator(".fh-hero").getByRole("link", { name: "Explore the Lisp typechecker", exact: true })).toHaveAttribute("href", "/playground/live/inference");
+  await expect(page.locator(".fh-live").getByRole("link", { name: "domain language playground" })).toHaveAttribute("href", "/playground/custom");
   await page.getByRole("link", { name: "Try the live playground below" }).click();
   const frame = page.frameLocator(".fh-hero__demo iframe");
-  await expect(frame.locator(".studio-validation")).toContainText("Program checks");
-  await expect(frame.getByRole("button", { name: "Create public snapshot" })).toHaveCount(0);
-  await expect(frame.getByRole("button", { name: "Compiler internals" })).toHaveCount(0);
-  await frame.getByRole("tab", { name: "Language definition", exact: true }).click();
-  await expect(frame.getByRole("textbox", { name: "Prelude source", exact: true })).toBeVisible();
+  await expect(frame.locator(".rd-check")).toContainText("Types check");
+  await expect(frame.getByRole("navigation", { name: "Examples" }).getByRole("button", { name: "Order payments" })).toHaveAttribute("aria-pressed", "true");
   await frame.getByRole("button", { name: "Introduce error" }).click();
   await expect(frame.locator(".cm-lintRange-error")).toBeVisible();
-  await expect(frame.getByRole("tabpanel")).toContainText("Fix the diagnostics");
-  await frame.getByRole("textbox", { name: "Example source", exact: true }).fill('(workflow demo (step test "process.test"))');
-  await expect(frame.locator(".studio-validation")).toContainText("Program checks");
-  await expect(frame.locator(".studio-result")).toContainText('"demo"');
+  await expect(frame.locator(".rd-inspector")).toContainText("signature declares only [OrderNotFound]");
   await frame.getByRole("button", { name: "Reset", exact: true }).click();
-  await expect(frame.locator(".studio-result")).toContainText('"release"');
+  await expect(frame.locator(".rd-check")).toContainText("Types check");
+  await frame.getByRole("navigation", { name: "Examples" }).getByRole("button", { name: "Effect contracts" }).click();
+  await frame.getByRole("button", { name: "Toggle the bottom panel" }).click();
+  await expect(frame.getByRole("region", { name: "Generated TypeScript" })).toContainText("yield* consoleService.print(message)");
   const dark = await page.locator("html").evaluate(e => e.classList.contains("dark"));
   await page.getByRole("switch", { name: /Switch to (dark|light) theme/ }).click();
-  await expect(frame.locator(".prelude-playground")).toHaveAttribute("data-theme", dark ? "light" : "dark");
-  await expect(page.getByRole("link", { name: "Open full playground" })).toHaveAttribute("href", "/playground/custom");
-  await page.getByRole("combobox", { name: "Live playground example" }).selectOption("contracts");
-  await expect(frame.locator(".rd-check")).toContainText("Types check");
-  await expect(frame.getByRole("navigation", { name: "Examples" })).toHaveCount(0);
-  await frame.getByRole("button", { name: "Introduce error" }).click();
-  await expect(frame.locator(".cm-lintRange-error")).toBeVisible();
-  await frame.getByRole("button", { name: "Toggle the bottom panel" }).click();
-  await expect(frame.getByRole("region", { name: "Generated TypeScript" })).toContainText("Nothing is generated until the file checks");
-  await frame.getByRole("button", { name: "Reset", exact: true }).click();
-  await expect(frame.getByRole("region", { name: "Generated TypeScript" })).toContainText("yield* consoleService.print(message)");
   await expect(frame.locator("html")).toHaveAttribute("data-theme", dark ? "light" : "dark");
-  await expect(page.getByRole("link", { name: "Open full playground" })).toHaveAttribute("href", "/playground/live/contracts");
-  await page.getByRole("combobox", { name: "Live playground example" }).selectOption("custom");
-  await expect(frame.locator(".studio-validation")).toContainText("Program checks");
-  const height = await frame.locator(".live-workbench").evaluate(e => Math.ceil(e.getBoundingClientRect().height));
+  await expect(page.getByRole("link", { name: "Open this example in its own page" })).toHaveAttribute("href", "/playground/live/orders");
+  const height = await frame.locator(".wb").evaluate(e => Math.ceil(e.getBoundingClientRect().height));
   await expect(page.locator(".fh-hero__demo iframe")).toHaveCSS("height", `${height}px`);
+  await page.locator(".fh-hero__demo iframe").screenshot({ path: `${screenshots}/homepage-embed.png` });
 });
 
 test("homepage domain stories show checked repairs and honest consumer boundaries", async ({ page }) => {

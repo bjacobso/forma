@@ -1,101 +1,75 @@
-import { useEffect, useMemo, useRef } from "react";
-import { LispEditor, type LispEditorRef } from "@formalang/editor/react";
-import { sameSpan, spanContains, spanSize, type SpanRange } from "../lib/artifacts";
-import { useTheme } from "../lib/theme";
+/**
+ * An example's source in the reader: types on hover, structural selection and
+ * edits, and the type at the caret under the code. The selection follows the
+ * stage panels, and the panels follow the selection.
+ */
+import { useEffect, useRef, useState } from "react";
+import type { Diagnostic } from "../engine/protocol";
+import { sameSpan, type SpanRange } from "../lib/artifacts";
 import type { PipelineContext } from "../pipelines/types";
+import { ReaderRoot, useReader } from "../reading/model";
+import { Breadcrumbs, CheckStatus, ReaderEditor, TypeLine } from "../reading/parts";
+import type { PreludeStack, ReadingDiagnostic } from "../reading/protocol";
+import "../reading/reading.css";
 
-export function SourcePane({
-  source,
-  readOnly = false,
-  onChange,
-  selectedSpan,
-  selectedExcerpt,
-  selectedType,
-  selectableSpans = [],
-  context,
-  onSelectSpan,
-}: {
+export function SourcePane({ source, file, preludes, diagnostics, onChange, selectedSpan, onSelectSpan, context }: {
   readonly source: string;
-  readonly readOnly?: boolean;
-  readonly onChange?: (source: string) => void;
-  readonly selectedSpan?: SpanRange | null;
-  readonly selectedExcerpt?: string | undefined;
-  readonly selectedType?: string | undefined;
-  readonly selectableSpans?: readonly SpanRange[];
+  readonly file: string;
+  readonly preludes?: PreludeStack | undefined;
+  /** The engine's diagnostics, so the code agrees with the stages beside it. */
+  readonly diagnostics: readonly Diagnostic[];
+  readonly onChange: (source: string) => void;
+  readonly selectedSpan: SpanRange | null;
+  readonly onSelectSpan: (span: SpanRange | null) => void;
   readonly context?: PipelineContext | undefined;
-  readonly onSelectSpan?: (span: SpanRange | null) => void;
 }) {
-  const { theme } = useTheme();
-  const editorRef = useRef<LispEditorRef | null>(null);
-  const lastSelected = useRef<SpanRange | null>(null);
-  const orderedSpans = useMemo(
-    () => [...selectableSpans].sort((a, b) => spanSize(a) - spanSize(b)),
-    [selectableSpans],
-  );
-
+  // The reader reads its files when it mounts, so a source the reader did not
+  // write (Reset, another variant) mounts a fresh one.
+  const fromReader = useRef(source);
+  const [revision, setRevision] = useState(0);
   useEffect(() => {
-    const view = editorRef.current?.getEditor();
-    if (!view || !selectedSpan || sameSpan(selectedSpan, lastSelected.current)) return;
-    lastSelected.current = selectedSpan;
-    const from = Math.max(0, Math.min(selectedSpan[0], view.state.doc.length));
-    const to = Math.max(from, Math.min(selectedSpan[1], view.state.doc.length));
-    view.dispatch({
-      selection: { anchor: from, head: to },
-    });
-  }, [selectedSpan]);
+    if (source === fromReader.current) return;
+    fromReader.current = source;
+    setRevision(value => value + 1);
+  }, [source]);
+  const shown = diagnostics.flatMap((d): ReadingDiagnostic[] => d.span ? [{
+    from: d.span.startOffset, to: d.span.endOffset, severity: d.severity === "error" ? "error" : d.severity === "warning" ? "warning" : "info", code: d.code, message: d.message,
+  }] : []);
 
+  return <div className="source-pane">
+    <ReaderRoot className="rd-snippet source-reader" diagnostics={shown} files={[{ id: file, source }]} inlineTypes={false} key={revision} preludes={preludes}
+      onChange={(_, next) => { fromReader.current = next; onChange(next); }}>
+      <header className="rd-snippet-head"><Breadcrumbs /><CheckStatus /></header>
+      <ReaderEditor fit="content" />
+      <TypeLine />
+      <FollowSelection selectedSpan={selectedSpan} onSelectSpan={onSelectSpan} />
+    </ReaderRoot>
+    {context ? <aside className="source-context" aria-label={context.label}>
+      <div className="pane-heading"><span>{context.label}</span></div>
+      <ReaderRoot className="rd-snippet rd-bare" diagnostics={false} files={[{ id: "context.lisp", source: context.code }]} inlineTypes={false} preludes={preludes} readOnly>
+        <ReaderEditor fit="content" />
+      </ReaderRoot>
+    </aside> : null}
+  </div>;
+}
+
+/** Selects the span a stage panel picked, and reports the form the reader selects. */
+function FollowSelection({ selectedSpan, onSelectSpan }: { readonly selectedSpan: SpanRange | null; readonly onSelectSpan: (span: SpanRange | null) => void }) {
+  const reader = useReader();
+  const last = useRef<SpanRange | null>(null);
   useEffect(() => {
-    const view = editorRef.current?.getEditor();
-    if (!view || !onSelectSpan || orderedSpans.length === 0) return;
-    const onMouseMove = (event: MouseEvent) => {
-      const offset = view.posAtCoords({ x: event.clientX, y: event.clientY });
-      if (offset === null) return;
-      onSelectSpan(orderedSpans.find((span) => spanContains(span, offset)) ?? null);
-    };
-    view.dom.addEventListener("mousemove", onMouseMove);
-    return () => view.dom.removeEventListener("mousemove", onMouseMove);
-  }, [onSelectSpan, orderedSpans]);
-
-  return (
-    <div className="source-pane">
-      <LispEditor
-        ariaLabel="Forma source"
-        className="embedded-editor"
-        lineNumbers
-        maxHeight={620}
-        minHeight={360}
-        onChange={onChange}
-        ref={editorRef}
-        readOnly={readOnly}
-        showStatusBar={false}
-        theme={theme === "dark" ? "app-dark" : "light"}
-        value={source}
-      />
-      <div className="source-status" aria-live="polite">
-        {selectedExcerpt ? (
-          <>
-            <code>{selectedExcerpt}</code>
-            {selectedType ? (
-              <>
-                <span>:</span>
-                <b>{selectedType}</b>
-              </>
-            ) : (
-              <span>span {selectedSpan?.[0]}:{selectedSpan?.[1]}</span>
-            )}
-          </>
-        ) : (
-          <span>Hover an expression to inspect its span and type.</span>
-        )}
-      </div>
-      {context ? (
-        <aside className="source-context" aria-label={context.label}>
-          <div className="pane-heading">
-            <span>{context.label}</span>
-          </div>
-          <pre>{context.code}</pre>
-        </aside>
-      ) : null}
-    </div>
-  );
+    const view = reader.view();
+    if (!view || !selectedSpan || sameSpan(selectedSpan, last.current)) return;
+    last.current = selectedSpan;
+    const from = Math.min(selectedSpan[0], view.state.doc.length);
+    view.dispatch({ selection: { anchor: from, head: Math.min(Math.max(from, selectedSpan[1]), view.state.doc.length) }, scrollIntoView: true });
+  }, [selectedSpan, reader]);
+  const subject = reader.subject;
+  useEffect(() => {
+    const span: SpanRange | null = subject ? [subject.from, subject.to] : null;
+    if (sameSpan(span, last.current)) return;
+    last.current = span;
+    if (span) onSelectSpan(span);
+  }, [subject?.from, subject?.to]);
+  return null;
 }
