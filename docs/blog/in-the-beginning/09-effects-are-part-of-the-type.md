@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: Effects Are Part of the Type
 description: Part 9 of From Lists to Languages. Give function types a row of effects, infer them with row-polymorphic unification, add Unit, when, catch, and race, and let a host reject a program that needs a capability it doesn't have, before it runs.
+formaBlocks: static
 ---
 
 # Effects Are Part of the Type

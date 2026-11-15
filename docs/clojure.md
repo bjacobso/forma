@@ -24,7 +24,7 @@ pageClass: forma-index
 <div class="fh-window">
 <div class="fh-window__bar"><span class="fh-window__dots" aria-hidden="true"><i></i><i></i><i></i></span><span>orders.lisp</span><span>a conformance fixture</span></div>
 
-<<< @/snippets/clojure/orders.excerpt.lisp
+<<< @/snippets/clojure/orders.excerpt.lisp{lisp fragment}
 
 </div>
 <p class="fh-hero__note">Stage 0 of <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> · <a href="#stops">where Clojure habits stop</a></p>
@@ -68,7 +68,7 @@ The library exists because of one small engine change. Forma used to reject `def
 </div>
 <div class="fh-window fh-window--full"><div class="fh-window__bar"><span>preludes/modules/clojure.lisp</span><span>bundled library, verbatim</span></div>
 
-<<< @/../preludes/modules/clojure.lisp
+<<< @/../preludes/modules/clojure.lisp{lisp fragment}
 
 </div>
 <div class="fh-facts">
@@ -87,7 +87,7 @@ The library exists because of one small engine change. Forma used to reject `def
 </div>
 <div class="fh-window fh-window--full"><div class="fh-window__bar"><span>conformance/clojure-spellings/orders.lisp</span><span>the source</span></div>
 
-<<< @/../conformance/clojure-spellings/orders.lisp
+<<< @/../conformance/clojure-spellings/orders.lisp{lisp fragment}
 
 <div class="fh-window__bar fh-window__bar--run"><span>the checked interface</span><span>inferred, not written</span></div>
 

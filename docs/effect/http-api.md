@@ -10,7 +10,7 @@ which has an older `api` form for portable HTTP descriptions.
 
 ## Write an API in Forma
 
-```lisp
+```lisp fragment
 (type UserId (Brand String))
 (type User {:id UserId :name String})
 (error UserNotFound {:id UserId} :status 404)
@@ -113,7 +113,7 @@ still packages under the derived IR contracts.
 Add `:emit` to an ordinary form. It receives projected IR and returns a
 quasiquoted TypeScript expression:
 
-```lisp
+```lisp fragment
 (form (message name text)
   :types {:name (Declares Message) :text String}
   :ir MessageIR

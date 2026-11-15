@@ -276,9 +276,25 @@ function prose(text: string): string {
   return escape(text).replace(/`([^`]+)`/gu, "<code>$1</code>");
 }
 
-function fence(code: string): string {
+/**
+ * The reader's prelude stack for each prelude's checked examples (see
+ * formaFences.ts). Other code on a prelude page is an excerpt of the prelude
+ * itself, so it stays static.
+ */
+const readerStacks: Readonly<Record<string, string>> = {
+  kernel: "effect", compiler: "effect", rpc: "effect", "http-api": "effect", cluster: "effect",
+  ontology: "ui", ui: "ui", email: "email", elm: "elm",
+};
+
+/** Entries whose examples need instances or an action runtime the reader does not load. */
+const staticExamples = new Set([
+  "ontology/form-link", "ontology/form-permission", "ontology/form-document-completion-completion",
+  "ontology/form-constraint-child-resolution", "ontology/form-action",
+]);
+
+function fence(code: string, options = "fragment"): string {
   const ticks = code.includes("```") ? "````" : "```";
-  return `${ticks}lisp\n${code}\n${ticks}`;
+  return `${ticks}lisp ${options}\n${code}\n${ticks}`;
 }
 
 function sourceLink(prelude: Prelude, line: number): string {
@@ -302,7 +318,9 @@ function renderEntry(prelude: Prelude, entry: Entry): string {
     if (ir) parts.push(`<p class="fp-ir" v-pre>${ir.charAt(0).toUpperCase()}${ir.slice(1)}</p>`);
   }
   if (entry.examples?.length) {
-    parts.push(`<p class="fp-ir" v-pre>Example</p>\n\n${entry.examples.map(fence).join("\n\n")}\n`);
+    const stack = readerStacks[prelude.slug];
+    const options = stack && !staticExamples.has(`${prelude.slug}/${entry.id}`) ? `preludes=${stack}` : "fragment";
+    parts.push(`<p class="fp-ir" v-pre>Example</p>\n\n${entry.examples.map(example => fence(example, options)).join("\n\n")}\n`);
   }
   if (entry.kind === "function") {
     parts.push(`<pre class="fp-sig" v-pre>${escape(entry.signature ?? entry.pattern ?? entry.name)}</pre>`);

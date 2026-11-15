@@ -36,7 +36,7 @@ Runtime.run(Runtime.makeElement({
 
 ## Complete source
 
-<<< @/snippets/elm/counter.lisp
+<<< @/snippets/elm/counter.lisp{lisp preludes=elm}
 
 ## Forms
 

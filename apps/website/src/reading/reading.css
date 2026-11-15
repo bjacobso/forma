@@ -1,5 +1,19 @@
 /* Reading editor: code first, with the checker's answers one glance away. */
 
+/*
+ * The element defaults the reader's parts assume, which the playground gets from
+ * Tailwind's preflight. A snippet mounted in another site's shadow root has only
+ * these. :where() keeps them below every rule that styles a part.
+ */
+:where(.rd-reader), :where(.rd-reader) *, :where(.rd-reader) ::before, :where(.rd-reader) ::after { box-sizing: border-box; }
+:where(.rd-reader) :where(h1, h2, h3, h4, h5, p, ul, ol, dl, dd, figure, pre, blockquote) { margin: 0; }
+:where(.rd-reader) :where(h1, h2, h3, h4, h5) { font-size: inherit; font-weight: inherit; }
+:where(.rd-reader) :where(ul, ol) { padding: 0; list-style: none; }
+:where(.rd-reader) :where(button, input, select) { margin: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; }
+:where(.rd-reader) :where(button) { cursor: pointer; }
+:where(.rd-reader) :where(a) { color: inherit; text-decoration: inherit; }
+:where(.rd-reader) :where(code, kbd, pre) { font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 1em; }
+
 .rd-page, .rd-reader, .rd-article, .rd-embed {
   --rd-bg: #fbf9f4;
   --rd-panel: #ffffff;
@@ -33,7 +47,7 @@
   background: var(--rd-bg);
 }
 
-:root[data-theme="dark"] :is(.rd-page, .rd-reader, .rd-article, .rd-embed) {
+:root:is([data-theme="dark"], .dark) :is(.rd-page, .rd-reader, .rd-article, .rd-embed), .rd-reader[data-theme="dark"] {
   --rd-bg: #121613;
   --rd-panel: #181d19;
   --rd-ink: #e9ece5;
@@ -372,6 +386,28 @@ button.rd-slot-value:hover { color: var(--rd-accent); text-decoration: underline
 .rd-snippet-inspector { border-top: 1px solid var(--rd-line); }
 .rd-snippet-inspector .rd-subject { position: static; }
 .rd-composed .rd-snippet-inspector { max-height: 520px; overflow-y: auto; }
+
+/*
+ * Bare snippets live in a host's own code block, such as the docs': no card, the
+ * host's background, and the host's code metrics (VitePress's by default), so the
+ * static block the host renders first and the reader that replaces it line up.
+ */
+.rd-snippet.rd-bare { margin: 0; overflow: visible; border: 0; border-radius: 0; background: transparent; text-align: left; }
+.rd-bare .rd-editor .cm-scroller { font-size: var(--rd-code-size, 13px); line-height: var(--rd-code-line-height, 1.8); }
+.rd-bare .rd-editor .cm-content { padding: var(--rd-code-padding, 20px 0); font-size: inherit; }
+.rd-bare .rd-editor .cm-line { padding: 0 var(--rd-code-inset, 24px); }
+.rd-bare .rd-editor .cm-gutters { display: none; }
+.rd-bare .rd-typeline { padding: 0 12px 0 var(--rd-code-inset, 24px); }
+.rd-typeline-aside { display: flex; flex: none; align-items: center; gap: 10px; margin-left: auto; }
+.rd-typeline-source + .rd-typeline-aside { margin-left: 4px; }
+.rd-typeline-aside .rd-check { font-size: 11.5px; }
+.rd-bare-toggle { display: inline-flex; align-items: center; gap: 3px; padding: 2px 4px; color: var(--rd-muted); font-size: 11.5px; }
+.rd-bare-toggle:hover, .rd-bare .rd-bare-open:hover { color: var(--rd-ink); }
+.rd-bare-toggle[aria-expanded="true"] svg { transform: rotate(180deg); }
+.rd-bare .rd-bare-open { padding: 2px 4px; color: var(--rd-muted); text-decoration: none; }
+/* Until someone reads a bare snippet, it shows no caret marks, like the static code it replaced. */
+.rd-bare .cm-editor:not(.cm-focused) :is(.cm-matchingBracket, .cm-nonmatchingBracket) { background: none; outline: none; }
+.rd-bare .rd-snippet-inspector { max-height: 480px; overflow-y: auto; }
 
 /* The snippets article */
 .rd-article { max-width: 760px; margin: 0 auto; padding: 40px 22px 80px; background: var(--rd-bg); line-height: 1.6; }

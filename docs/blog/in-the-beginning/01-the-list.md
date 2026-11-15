@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: Start with a List
 description: Part 1 of From Lists to Languages. Build the smallest Lisp imaginable, numbers, symbols, lists, and an evaluator, and see why code-as-data matters more than parentheses.
+formaBlocks: static
 ---
 
 # Start with a List

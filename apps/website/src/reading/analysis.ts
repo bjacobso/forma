@@ -14,15 +14,13 @@ import { formatSExpr, formatSExprMany } from "@formalang/ts/formatter";
 import { ModuleError, relativeModuleId, resolveModuleGraph, sourceModuleResolver } from "@formalang/ts/modules";
 import { preludeSources } from "@formalang/ts/preludes";
 import { parse as read, toSExprMany } from "@formalang/ts/reader";
-import { BUNDLED_PRELUDES } from "./protocol";
+import { EARLIER_FILE, PRELUDE_STACKS } from "./protocol";
 import type {
-  Analysis, CompletionEntry, Completions, ExpansionStep, FileSymbol, FormInfo, Generated, GeneratedChunk, GeneratedDeclaration, Inspection, Location, Occurrence, Problems, ReadingDiagnostic, References, RenameEdits, SnippetEntry, SourceFile,
+  Analysis, CompletionEntry, Completions, ExpansionStep, FileSymbol, FormInfo, Generated, GeneratedChunk, GeneratedDeclaration, Inspection, Location, Occurrence, PreludeStack, Problems, ReaderSetup, ReadingDiagnostic, References, RenameEdits, SnippetEntry, SourceFile,
 } from "./protocol";
 
-const BUNDLED = BUNDLED_PRELUDES;
-type Bundled = (typeof BUNDLED)[number];
 const isPrelude = (id: string) => id.startsWith("forma:");
-export const preludeText = (id: string): string => preludeSources[id.slice("forma:".length) as Bundled] ?? "";
+export const preludeText = (id: string): string => id === EARLIER_FILE ? setup.before ?? "" : (preludeSources as Readonly<Record<string, string>>)[id.slice("forma:".length)] ?? "";
 const fileLabel = (id: string) => id.replace(/^forma:/, "");
 
 /** Kernel forms whose second element is the name they define. */
@@ -92,23 +90,28 @@ function dependencies(files: ReadonlyMap<string, SourceFile>, id: string): strin
 const workspaces = new Map<string, AnalysisWorkspace>();
 
 /**
- * Several readers can share one worker, such as the snippets of a blog post. Each
- * request names its reader, so their files, which may share ids such as `main.lisp`,
- * keep separate workspaces. The scope only picks a cache entry: `open` loads the
- * requested files into it either way.
+ * Several readers can share one worker, such as the blocks of a docs page. Each
+ * request names its reader and its setup. The two only pick a cache entry: `open`
+ * loads the requested files into it either way. A reader with earlier code has
+ * workspaces of its own, which `dispose` drops.
  */
 let scope = "";
-export function inScope(name: string): void { scope = name; }
+let setup: ReaderSetup = { preludes: "effect" };
+export function inScope(name: string, reader: ReaderSetup = { preludes: "effect" }): void { scope = name; setup = reader; }
 
 function bundledWorkspace(): AnalysisWorkspace {
   const workspace = new AnalysisWorkspace();
-  for (const name of BUNDLED) workspace.setPrelude(`forma:${name}`, preludeSources[name]);
+  for (const name of PRELUDE_STACKS[setup.preludes]) workspace.setPrelude(`forma:${name}`, preludeSources[name]);
+  if (setup.before) workspace.setPrelude(EARLIER_FILE, setup.before);
   return workspace;
 }
 
 /** The workspace that analyzes `file` with its imports in scope. */
 function open(files: readonly SourceFile[], file: string): { readonly ws: AnalysisWorkspace; readonly text: string } {
-  const key = isPrelude(file) ? "" : `${scope}\0${file}`;
+  // Rebuilding the preludes is the slow part (a second or so for the larger stacks); setting a
+  // document is fast. So readers with the same preludes and no earlier code, such as a docs
+  // page's blocks, share a workspace per file id: each request sets the file and its imports.
+  const key = setup.before ? `${scope}\0${file}` : `\0${setup.preludes}\0${isPrelude(file) ? "" : file}`;
   let ws = workspaces.get(key);
   if (!ws) { ws = bundledWorkspace(); workspaces.set(key, ws); }
   if (isPrelude(file)) return { ws, text: preludeText(file) };
@@ -147,7 +150,7 @@ export function analyze(files: readonly SourceFile[], file: string): Analysis {
   const { ws, text } = open(files, file);
   const analysis = ws.analysis(file);
   // Hole candidates: helpers the bundled preludes define for themselves are not useful fills.
-  const bundledOnly = new Set(ws.symbols().definitions.filter(d => d.scope === "global" && isPrelude(d.sourceId)).map(d => d.name));
+  const bundledOnly = new Set(ws.symbols().definitions.filter(d => d.scope === "global" && isPrelude(d.sourceId) && d.sourceId !== EARLIER_FILE).map(d => d.name));
   for (const d of ws.symbols().definitions) if (!isPrelude(d.sourceId)) bundledOnly.delete(d.name);
   const diagnostics = analysis.diagnostics.map((d): ReadingDiagnostic => {
     const details = (d.details ?? {}) as Record<string, unknown>;
@@ -664,8 +667,8 @@ function loweringSteps(files: readonly SourceFile[], file: string, source: strin
 }
 
 /** Which bundled prelude declares a form. */
-function preludeOf(name: string): Bundled | undefined {
-  return BUNDLED.find(prelude => preludeSources[prelude].includes(`(form (${name} `) || preludeSources[prelude].includes(`(form (${name})`));
+function preludeOf(name: string): (typeof PRELUDE_STACKS)[PreludeStack][number] | undefined {
+  return PRELUDE_STACKS[setup.preludes].find(prelude => preludeSources[prelude].includes(`(form (${name} `) || preludeSources[prelude].includes(`(form (${name})`));
 }
 
 /** Docstrings keep their source indentation; reflow them into paragraphs. */

@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: One Program, Many Interpretations
 description: Part 10 of From Lists to Languages. Build a formatter, an analyzer, a hover tool, and a documentation generator whose examples are checked, over the representations the language already has, and combine them into one report with Effect.
+formaBlocks: static
 ---
 
 # One Program, Many Interpretations

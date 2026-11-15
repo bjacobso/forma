@@ -80,7 +80,7 @@ pageClass: forma-index forma-elm
 </div>
 <div class="fh-window"><div class="fh-window__bar"><span>counter.lisp</span><span>complete checked source</span></div>
 
-<<< @/snippets/elm/counter.lisp
+<<< @/snippets/elm/counter.lisp{lisp preludes=elm}
 
 </div>
 </div>

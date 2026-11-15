@@ -1,6 +1,7 @@
 ---
 title: Domain modeling in Forma
 description: Design a business workflow with types, in the style of Domain Modeling Made Functional. Simple types, choices, constrained values, state transitions, workflows as pipelines, typed errors, explicit dependencies, and serialization, all checked and compiled to Effect TypeScript.
+formaBlocks: continued
 ---
 
 # Domain modeling in Forma
@@ -575,7 +576,7 @@ and no `AcknowledgmentSent`. With a café that has no account, it fails with
 Larkspur starts shipping pallets to larger customers by freight. The domain
 expert describes a new kind of delivery, and the model changes in one place:
 
-```lisp
+```lisp fragment
 (type Delivery
   (Tagged
     (Pickup {:roastery String})

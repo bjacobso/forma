@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: A Language for Building Languages
 description: Part 12 of From Lists to Languages. Declare forms in the language itself, build a vendor-review policy language from them, run it with Effect services a host provides, and see how the pieces add up to a language-building platform.
+formaBlocks: static
 ---
 
 # A Language for Building Languages

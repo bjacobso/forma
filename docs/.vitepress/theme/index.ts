@@ -5,7 +5,7 @@ import DefaultTheme from "vitepress/theme-without-fonts";
 import Layout from "./Layout.vue";
 import PreludeCards from "./PreludeCards.vue";
 import WorkbenchEmbed from "./WorkbenchEmbed.vue";
-import ReaderEmbed from "./ReaderEmbed.vue";
+import FormaBlock from "./FormaBlock.vue";
 import BlogPosts from "./BlogPosts.vue";
 import HomepageStories from "./HomepageStories.vue";
 
@@ -16,7 +16,7 @@ export default {
   Layout,
   enhanceApp({ app }) {
     app.component("WorkbenchEmbed", WorkbenchEmbed);
-    app.component("ReaderEmbed", ReaderEmbed);
+    app.component("FormaBlock", FormaBlock);
     app.component("PreludeCards", PreludeCards);
     app.component("HomepageStories", HomepageStories);
     app.component("BlogPosts", BlogPosts);

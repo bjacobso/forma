@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: The Environment Is Not the World
 description: Part 4 of From Lists to Languages. Add lambda, closures, and lexical scope, and separate the names a program defines from the capabilities a host grants through Effect services.
+formaBlocks: static
 ---
 
 # The Environment Is Not the World

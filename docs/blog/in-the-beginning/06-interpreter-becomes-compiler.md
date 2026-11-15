@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: The Interpreter Becomes a Compiler
 description: Part 6 of From Lists to Languages. Elaborate surface syntax into a small typed core with resolved names, run core with an evaluator that trusts it, and save compiled core as a Schema-checked artifact.
+formaBlocks: static
 ---
 
 # The Interpreter Becomes a Compiler

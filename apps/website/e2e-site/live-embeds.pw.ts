@@ -16,8 +16,8 @@ for (const route of ["/effect", "/elm", "/email"]) {
     await expect(frame.getByRole("status")).toHaveText("1 error · 0 warnings");
     const dark = await page.locator("html").evaluate(element => element.classList.contains("dark"));
     await page.getByRole("switch", { name: /Switch to (dark|light) theme/ }).click();
-    await expect(frame.getByRole("combobox", { name: "Workbench appearance" })).toHaveValue(dark ? "light" : "dark");
-    const reportedHeight = await frame.locator(".live-workbench").evaluate(element => Math.ceil(element.getBoundingClientRect().height));
+    await expect(frame.locator("html")).toHaveAttribute("data-theme", dark ? "light" : "dark");
+    const reportedHeight = await frame.locator(".wb").evaluate(element => Math.ceil(element.getBoundingClientRect().height));
     await expect(page.locator(".fh-hero__demo iframe")).toHaveCSS("height", `${reportedHeight}px`);
     await page.locator(".fh-hero__demo iframe").screenshot({ path: `${screenshots}/${route === "/" ? "homepage" : `${route.slice(1)}-page`}-embed.png` });
     await page.screenshot({ path: `${screenshots}/${route === "/" ? "homepage" : `${route.slice(1)}-page`}.png`, fullPage: true });
@@ -27,7 +27,7 @@ for (const route of ["/effect", "/elm", "/email"]) {
       for (const theme of ["light", "dark"] as const) {
         const isDark = await page.locator("html").evaluate(element => element.classList.contains("dark"));
         if (isDark !== (theme === "dark")) await page.getByRole("switch", { name: /Switch to (dark|light) theme/ }).click();
-        await expect(frame.getByRole("combobox", { name: "Workbench appearance" })).toHaveValue(theme);
+        await expect(frame.locator("html")).toHaveAttribute("data-theme", theme);
         await page.screenshot({ path: `${screenshots}/elm-${theme}.png`, fullPage: true });
       }
     }
@@ -69,7 +69,7 @@ test("homepage embeds both live playgrounds and keeps the hero within its column
   await expect(page.getByRole("link", { name: "Open full playground" })).toHaveAttribute("href", "/playground/custom");
   await page.getByRole("combobox", { name: "Live playground example" }).selectOption("contracts");
   await expect(frame.getByRole("status")).toHaveText("0 errors · 0 warnings");
-  await expect(frame.getByRole("combobox", { name: "Workbench example", exact: true })).toHaveCount(0);
+  await expect(frame.getByRole("navigation", { name: "Examples" })).toHaveCount(0);
   await expect(frame.getByRole("tab", { name: "Typed IR", exact: true })).toHaveCount(0);
   await frame.getByRole("button", { name: "Introduce error" }).click();
   await expect(frame.locator(".cm-lintRange-error")).toBeVisible();
