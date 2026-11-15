@@ -16,7 +16,7 @@ export function WorkbenchPage({ embedded = false }: { embedded?: boolean }) {
       if (event.origin !== window.location.origin || event.source !== window.parent) return;
       if (event.data?.type === "forma-workbench-theme" && (event.data.theme === "light" || event.data.theme === "dark")) setTheme(event.data.theme);
     };
-    const element = document.querySelector(".live-workbench");
+    const element = document.querySelector(".wb");
     const reportHeight = () => { if (element) window.parent.postMessage({ type: "forma-workbench-height", height: Math.ceil(element.getBoundingClientRect().height) }, window.location.origin); };
     const observer = new ResizeObserver(reportHeight);
     if (element) observer.observe(element);

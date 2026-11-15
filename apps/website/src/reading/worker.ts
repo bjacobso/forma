@@ -6,7 +6,7 @@ import type { ReadingRequest, ReadingResponse } from "./protocol";
 const ctx = self as unknown as DedicatedWorkerGlobalScope;
 
 async function answer(request: ReadingRequest): Promise<ReadingResponse> {
-  inScope(request.scope);
+  inScope(request.scope, request.setup);
   switch (request.kind) {
     case "analyze": return { id: request.id, kind: "analyze", analysis: analyze(request.files, request.file) };
     case "inspect": return { id: request.id, kind: "inspect", inspection: inspect(request.files, request.file, request.from, request.to) };

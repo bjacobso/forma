@@ -1,3 +1,7 @@
+---
+formaBlocks: continued
+---
+
 # Writing a form
 
 Use `form` for new definitions. `define-form` is legacy, retained only for
@@ -74,7 +78,7 @@ that module imports. If a hook fails while running, the module reports
 is reported in one run. See [Authoring your own program](./authoring.md) for
 the file commands that elaborate forms and list their IR.
 
-```lisp
+```lisp fragment
 (form (greeting name message {:keys [doc]})
   :types {:name (Declares Greeting) :message String :doc (Option String)}
   :ir GreetingIR
@@ -132,7 +136,7 @@ effect variables in these signatures are quantified: each use instantiates
 them freshly, independently of other bindings using the same variable names.
 Each entry maps a hole name to a function returning a record of names and quoted types:
 
-```lisp
+```lisp fragment
 :types {:where (Expr Bool)}
 :scope {:where (fn [holes] {:active (quote Bool)})}
 ```
@@ -197,7 +201,7 @@ operations. Generated Effect TypeScript exposes these operations through the
 Put a docstring immediately after the form pattern. Use `:examples` for a vector
 of programs, each represented by a vector of source forms:
 
-```lisp
+```lisp fragment
 (form (greeting name message {:keys [doc]})
   "Declare a greeting."
   :examples [[(greeting welcome "Ada")]]
@@ -279,7 +283,7 @@ processes can reuse it.
 A form can carry constant metadata for editors, hosts, and other consumers. The
 compiler treats namespace names and their contents as data:
 
-```lisp
+```lisp fragment
 (form (greeting name message {:keys [doc]})
   "Declare a greeting."
   :extensions {:catalog/display {:label "Greeting" :category :copy

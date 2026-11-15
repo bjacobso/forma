@@ -21,6 +21,8 @@
 :root {
   --vp-font-family-base: "DM Sans Variable", "DM Sans", system-ui, sans-serif;
   --vp-font-family-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  /* The playground reader's sans, for live Forma blocks. */
+  --forma-sans: var(--vp-font-family-base);
   --vp-c-brand-1: #1f5fd1;
   --vp-c-brand-2: #174ba8;
   --vp-c-brand-3: #133f8f;

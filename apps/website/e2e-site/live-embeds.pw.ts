@@ -10,24 +10,24 @@ for (const route of ["/effect", "/elm", "/email"]) {
     page.on("response", response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
     await page.goto(route);
     const frame = page.frameLocator(".fh-hero__demo iframe");
-    await expect(frame.getByRole("status")).toHaveText("0 errors · 0 warnings");
+    await expect(frame.locator(".rd-check")).toContainText("Types check");
     await frame.getByRole("button", { name: "Introduce error" }).click();
     await expect(frame.locator(".cm-lintRange-error")).toBeVisible();
-    await expect(frame.getByRole("status")).toHaveText("1 error · 0 warnings");
+    await expect(frame.locator(".rd-check")).toContainText("1 error");
     const dark = await page.locator("html").evaluate(element => element.classList.contains("dark"));
     await page.getByRole("switch", { name: /Switch to (dark|light) theme/ }).click();
-    await expect(frame.getByRole("combobox", { name: "Workbench appearance" })).toHaveValue(dark ? "light" : "dark");
-    const reportedHeight = await frame.locator(".live-workbench").evaluate(element => Math.ceil(element.getBoundingClientRect().height));
+    await expect(frame.locator("html")).toHaveAttribute("data-theme", dark ? "light" : "dark");
+    const reportedHeight = await frame.locator(".wb").evaluate(element => Math.ceil(element.getBoundingClientRect().height));
     await expect(page.locator(".fh-hero__demo iframe")).toHaveCSS("height", `${reportedHeight}px`);
     await page.locator(".fh-hero__demo iframe").screenshot({ path: `${screenshots}/${route === "/" ? "homepage" : `${route.slice(1)}-page`}-embed.png` });
     await page.screenshot({ path: `${screenshots}/${route === "/" ? "homepage" : `${route.slice(1)}-page`}.png`, fullPage: true });
     if (route === "/elm") {
       await frame.getByRole("button", { name: "Reset", exact: true }).click();
-      await expect(frame.getByRole("status")).toHaveText("0 errors · 0 warnings");
+      await expect(frame.locator(".rd-check")).toContainText("Types check");
       for (const theme of ["light", "dark"] as const) {
         const isDark = await page.locator("html").evaluate(element => element.classList.contains("dark"));
         if (isDark !== (theme === "dark")) await page.getByRole("switch", { name: /Switch to (dark|light) theme/ }).click();
-        await expect(frame.getByRole("combobox", { name: "Workbench appearance" })).toHaveValue(theme);
+        await expect(frame.locator("html")).toHaveAttribute("data-theme", theme);
         await page.screenshot({ path: `${screenshots}/elm-${theme}.png`, fullPage: true });
       }
     }
@@ -68,15 +68,14 @@ test("homepage embeds both live playgrounds and keeps the hero within its column
   await expect(frame.locator(".prelude-playground")).toHaveAttribute("data-theme", dark ? "light" : "dark");
   await expect(page.getByRole("link", { name: "Open full playground" })).toHaveAttribute("href", "/playground/custom");
   await page.getByRole("combobox", { name: "Live playground example" }).selectOption("contracts");
-  await expect(frame.getByRole("status")).toHaveText("0 errors · 0 warnings");
-  await expect(frame.getByRole("combobox", { name: "Workbench example", exact: true })).toHaveCount(0);
-  await expect(frame.getByRole("tab", { name: "Typed IR", exact: true })).toHaveCount(0);
+  await expect(frame.locator(".rd-check")).toContainText("Types check");
+  await expect(frame.getByRole("navigation", { name: "Examples" })).toHaveCount(0);
   await frame.getByRole("button", { name: "Introduce error" }).click();
   await expect(frame.locator(".cm-lintRange-error")).toBeVisible();
-  await frame.getByRole("tab", { name: "Effect TypeScript", exact: true }).click();
-  await expect(frame.getByRole("tabpanel")).toContainText("Generation is blocked until the program checks.");
+  await frame.getByRole("button", { name: "Toggle the bottom panel" }).click();
+  await expect(frame.getByRole("region", { name: "Generated TypeScript" })).toContainText("Nothing is generated until the file checks");
   await frame.getByRole("button", { name: "Reset", exact: true }).click();
-  await expect(frame.getByRole("tabpanel")).toContainText("yield* consoleService.print(message)");
+  await expect(frame.getByRole("region", { name: "Generated TypeScript" })).toContainText("yield* consoleService.print(message)");
   await expect(frame.locator("html")).toHaveAttribute("data-theme", dark ? "light" : "dark");
   await expect(page.getByRole("link", { name: "Open full playground" })).toHaveAttribute("href", "/playground/live/contracts");
   await page.getByRole("combobox", { name: "Live playground example" }).selectOption("custom");
@@ -146,10 +145,10 @@ test("homepage domain stories show checked repairs and honest consumer boundarie
 
 test("the production worker serves cold embed and full-page workbench routes", async ({ page }) => {
   await page.goto("/playground/live/orders");
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
+  await expect(page.locator(".rd-check")).toContainText("Types check");
   await page.reload();
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
+  await expect(page.locator(".rd-check")).toContainText("Types check");
   await page.goto("/playground/embed/contracts?broken=1");
-  await expect(page.getByRole("status")).toHaveText("1 error · 0 warnings");
+  await expect(page.locator(".rd-check")).toContainText("1 error");
   await expect(page.locator(".cm-lintRange-error")).toBeVisible();
 });

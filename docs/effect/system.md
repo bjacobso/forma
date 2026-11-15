@@ -18,7 +18,7 @@ extension. The mechanics checker has no RPC, HTTP, or Cluster cases.
 
 ## One domain, three interfaces
 
-```lisp
+```lisp fragment
 (type AccountId (Brand String))
 (type Amount (Int :min 1 :max 1000))
 (type Balance {:id AccountId :balance Int})
@@ -79,7 +79,7 @@ import syntax as `forma:kernel`:
 (type Greeting {:message String})
 ```
 
-```lisp
+```lisp fragment
 ; rpc.lisp
 (import "./domain.lisp" [Greeting])
 (import "forma:effect/rpc" [rpc-group rpc])

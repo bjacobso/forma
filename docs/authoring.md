@@ -1,3 +1,7 @@
+---
+formaBlocks: continued
+---
+
 # Authoring your own program
 
 This page is for people writing Forma outside this repository's own tests and
@@ -151,7 +155,7 @@ literal is checked against a named record type, an omitted optional field
 becomes `None` and a plain value becomes `(Some value)`. This works for record
 types declared in the same file and for imported ones:
 
-```lisp
+```lisp fragment
 (import "./types.lisp" [Vendor])
 (: beacon Vendor)
 (define beacon {:name "Beacon" :risk :low})   ; :reviewed-on is None
@@ -219,7 +223,7 @@ Write ordinary checked Forma in `.lisp` files and import the test library.
 Use `forma:test` in both repository checkouts and installed npm distributions;
 no copying or dependency declaration is needed:
 
-```lisp
+```lisp fragment
 (import "forma:test" [test is is=])
 (import "./policy.lisp" [can-activate? acme])
 
@@ -357,7 +361,7 @@ a review on day 364 is current and one on day 365 is expired.
 
 Use `?` or `?name` in expression position while writing a program:
 
-```lisp
+```lisp fragment
 (: repair (-> Int Int))
 (define repair [amount] ?todo)
 ```

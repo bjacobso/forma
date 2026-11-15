@@ -249,7 +249,7 @@ reflection result shapes, and examples.
 Entities use short field names and derive attribute namespaces. References use
 `(Id Entity)`; an optional entity attribute uses `(Option T)`.
 
-```lisp
+```lisp fragment
 (entity Department {:name String})
 (entity Employee
   {:name String :department (Id Department) :active (Option Bool)})

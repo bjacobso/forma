@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: Types Before Execution
 description: Part 5 of From Lists to Languages. Represent types with Effect Schema, infer them with unification, and reject ill-typed programs before they run, with errors that point at the call site.
+formaBlocks: static
 ---
 
 # Types Before Execution

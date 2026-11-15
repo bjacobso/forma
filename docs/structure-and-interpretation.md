@@ -1,6 +1,7 @@
 ---
 title: Structure and Interpretation of Forma Programs
 description: An introduction to Forma in the spirit of SICP. Functions, processes, data abstraction, symbolic data, state, streams, interpreters, macros, and typed forms, with every example run on the current engine.
+formaBlocks: continued
 ---
 
 # Structure and Interpretation of Forma Programs
@@ -540,7 +541,7 @@ constructor and selectors in a [module](./modules.md) and export only them.
 Square brackets build lists. A list's elements share a type, so `[1 2 3]` is a
 `(List Int)`. `map` and `filter` are built in, and patterns take lists apart:
 
-```lisp
+```lisp fragment
 (map (fn [x] (* x x)) [1 2 3 4 5])        ; => (1 4 9 16 25)
 (filter (fn [x] (> x 2)) [1 2 3 4 5])     ; => (3 4 5)
 (first [1 2 3])                           ; => 1
@@ -672,7 +673,7 @@ SICP's predicates `number?`, `variable?`, `sum?`, and `product?`, and its
 selectors `addend` and `multiplicand`, become patterns. The differentiation rules
 read almost exactly as they do in calculus:
 
-```lisp
+```lisp fragment
 (: deriv (-> Expr Symbol Expr))
 (define deriv [expr var]
   (match expr
@@ -715,7 +716,7 @@ at once, and literal patterns pick out zeros and ones:
     (Product {:left u :right v}) (str "(* " (show u) " " (show v) ")")))
 ```
 
-```lisp
+```lisp fragment
 (define x (Expr.Var {:name 'x}))
 (define y (Expr.Var {:name 'y}))
 (define three (Expr.Num {:value 3}))
@@ -911,7 +912,7 @@ fixing all three.
 
 Now try the obvious constructor:
 
-```lisp
+```lisp fragment
 (: cons-stream (-> a (Flow a) (Flow a)))
 (define cons-stream [head tail]
   (Flow.Cell {:head head :tail (fn [_] tail)}))
@@ -939,7 +940,7 @@ which is then checked and evaluated in its place. `(cons-stream n
 nothing is computed until that function is called. With the macro in place,
 the rest of SICP's stream program runs as written:
 
-```lisp
+```lisp fragment
 (: integers-from (-> Int (Flow Int)))
 (define integers-from [n] (cons-stream n (integers-from (+ n 1))))
 
@@ -990,7 +991,7 @@ built for exactly this.
 Here is an evaluator for a small language of arithmetic with local names. The
 language's syntax is a type:
 
-```lisp
+```lisp fragment
 (type Expr
   (Tagged
     (Lit {:value Int})
@@ -1006,7 +1007,7 @@ An environment maps names to values. Looking up a missing name returns `None`,
 so the evaluator has to say what an unbound variable means. Here, evaluation
 returns a `Result`: `(Ok value)` or `(Err message)`.
 
-```lisp
+```lisp fragment
 (: combine (-> (-> Int Int Int) (Result Int String) (Result Int String)
                (Result Int String)))
 (define combine [op left right]
@@ -1033,7 +1034,7 @@ returns a `Result`: `(Ok value)` or `(Err message)`.
         (Ok value) (interpret body (assoc env name value)))))
 ```
 
-```lisp
+```lisp fragment
 (define program
   (Expr.Let {:name "x" :bound (Expr.Lit {:value 6})
              :body (Expr.Mul {:left (Expr.Var {:name "x"})
@@ -1139,7 +1140,7 @@ Elaboration turns each one into checked data:
 
 Mistakes are reported in the author's terms, at the author's text:
 
-```lisp
+```lisp fragment
 (course intro "Building Abstractions with Functions" :credits 4 :requires [])
 (course data "Building Abstractions with Data" :credits 9 :requires [intro])
 (course interp "Metalinguistic Abstraction" :credits 4 :requires [intro dta])

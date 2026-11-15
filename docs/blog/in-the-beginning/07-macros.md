@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: Macros Are Programs About Programs
 description: Part 7 of From Lists to Languages. Add quasiquotation and pattern-based macros written in the language, expand them before the compiler, make them hygienic by renaming, and see why homoiconicity alone isn't enough.
+formaBlocks: static
 ---
 
 # Macros Are Programs About Programs

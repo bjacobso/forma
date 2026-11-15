@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: Errors Are Not Exceptions
 description: Part 3 of From Lists to Languages. Rewrite the evaluator as Effect<Value, EvalError, Environment>, with Schema-backed tagged errors that point at source, selective recovery, and a clear line between program errors and interpreter bugs.
+formaBlocks: static
 ---
 
 # Errors Are Not Exceptions

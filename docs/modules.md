@@ -6,18 +6,19 @@ RFC 0002 implements isolated file modules and a stage 2 compile-time library
 slice in the TypeScript engine. A file's definitions are private. Source loading registers files;
 it does not publish their bindings into a host session.
 
-```lisp
-;; identity.lisp
+```lisp file=identity.lisp
 (export identity)
 (define identity [value] value)
+```
 
-;; names.lisp
+```lisp file=names.lisp
 (export Name label)
 (type Name (Brand String))
 (: label (-> Name String))
 (define label [name] (str "Hello, " name))
+```
 
-;; main.lisp
+```lisp fragment file=main.lisp
 (import "./identity.lisp" [identity])
 (import "./names.lisp" :as names)
 (export greeting)
@@ -30,19 +31,19 @@ Named imports expose only the selected exports. Namespace aliases use `/`;
 Each imported polymorphic function is instantiated independently at each call.
 A barrel preserves those identities:
 
-```lisp
+```lisp fragment
 ;; public.lisp
 (export-from "./names.lisp" [Name label])
 ```
 
 Exporting a tagged type makes its constructors available through that type:
 
-```lisp
-;; status.lisp
+```lisp file=status.lisp
 (export Status)
 (type Status (Tagged (Ready {:message String}) Empty))
+```
 
-;; reader.lisp
+```lisp file=reader.lisp
 (import "./status.lisp" [Status])
 (Status.Ready {:message "Ready"})
 ;; Ready is not a bare imported name.
@@ -98,7 +99,7 @@ definition-site identity; caller syntax retains caller bindings. The implemented
 hygiene covers generated `fn` and `let` binders; other binding constructs still
 need further work.
 
-```lisp
+```lisp fragment
 ;; stripe.lisp
 (export price)
 (type PriceDecl Symbol)
@@ -181,7 +182,7 @@ A package declares its public files and dependency source map in `forma.json`:
 }
 ```
 
-```lisp
+```lisp fragment
 (import "@acme/flows" [flow])       ; the "." export
 (import "@acme/flows/ir" [FlowIR])  ; the "./ir" export
 ```

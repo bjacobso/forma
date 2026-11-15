@@ -2,6 +2,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { decodeSource, FormaReader } from "./FormaReader";
 import { readingExamples, type ReadingExample } from "./examples";
+import { isPreludeStack } from "./protocol";
 import "./reading.css";
 
 export function ReadingPage() {
@@ -9,6 +10,7 @@ export function ReadingPage() {
   const [search, setSearch] = useSearchParams();
   // ?source= opens a shared or embedded snippet; ?example= one of the examples.
   const shared = search.get("source") ? decodeSource(search.get("source")!) : undefined;
+  const preludes = search.get("preludes");
   const exampleId = readingExamples.some(example => example.id === search.get("example")) ? search.get("example")! : readingExamples[0]!.id;
   const example: ReadingExample = shared !== undefined
     ? { id: "shared", label: "Shared", blurb: "A snippet opened from a link.", files: [{ id: "main.lisp", source: shared }], focus: search.get("focus") ?? undefined }
@@ -25,6 +27,6 @@ export function ReadingPage() {
         {readingExamples.map(candidate => <button aria-pressed={candidate.id === example.id} className={candidate.id === example.id ? "active" : ""} key={candidate.id} onClick={() => setSearch({ example: candidate.id })} type="button">{candidate.label}</button>)}
       </nav>
     </header>
-    <FormaReader files={example.files} focus={example.focus} key={shared !== undefined ? `shared:${search.get("source")}` : example.id} />
+    <FormaReader files={example.files} focus={example.focus} preludes={shared !== undefined && isPreludeStack(preludes) ? preludes : undefined} key={shared !== undefined ? `shared:${search.get("source")}` : example.id} />
   </main>;
 }

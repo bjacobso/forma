@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: The Prelude Is the Language
 description: Part 8 of From Lists to Languages. Shrink the compiler to a kernel of numbers, names, and calls; build quote, lambda, a generalizing let, if, and match as typed forms in a prelude; then build a small pricing language on the same kernel.
+formaBlocks: static
 ---
 
 # The Prelude Is the Language

@@ -7,25 +7,17 @@ outline editing, modules, the REPL, proposal review, and capability approvals.
 
 ## The authoring loop
 
-A useful embed needs one source revision and one analysis result. Red underlines,
-the problem list, the type inspector, IR, and generated code must all describe
-that revision. Debounce typing, ignore superseded responses, clear stale spans
-when the source changes, and put a watchdog around compiler execution. A failed
-check should preserve the body types available from that check and block code
-generation. It should never imply that an earlier output belongs to the new code.
+The workbench is the reader with examples to try. The reader checks each revision
+in a Web Worker: red underlines, the inspector, the type at the caret, and the
+generated TypeScript all describe the same revision, and stale results are
+dropped when the source changes. A file with errors generates nothing; the
+generated panel says why.
 
-The Effect demos call `generateEffectProgram` once per revision. The checker
-provides declared signatures and inferred body types, including the failures
-and method capabilities introduced by calls. The worker converts its type maps
-into serializable, located expression types before sending the result to the UI.
-The general-language examples use the engine's read, expand, typecheck, and
-bounded evaluation passes. General-engine expression types can be top-level
-summaries; the embed locates those using the corresponding reader form.
-
-Click a diagnostic or expression type to reveal its authored span. Source
-editing uses CodeMirror history, bracket matching, folding, and the existing
-Forma structural keymap. Analysis performs no service calls. The Effect embed
-checks and generates programs; it does not execute their I/O.
+The Effect examples use the Effect checker, which reports declared signatures
+and inferred body types, including the failures and service calls a body
+introduces. The email example shows the email compiler's diagnostics, because
+its lanes are declared by the email linker. Analysis performs no service calls;
+the Effect examples check and generate programs and do not execute their I/O.
 
 ## Demonstrating typing
 
@@ -36,29 +28,33 @@ example, or editing the source interrupts playback. With reduced motion enabled,
 the repair is applied without character delays. There is no automatic typing
 that could overwrite someone's draft while they are reading.
 
+## Layout
+
+The workbench uses the reader page's layout: the example switcher, the code with
+its tabs, structural tools, and status line, and the inspector beside it. Each
+example has one prompt and up to three actions: Introduce error, Watch typing,
+and Reset. An introduced error is selected, so the inspector explains it. The
+bottom panel holds references and the generated Effect TypeScript, where the
+statements generated from the selected form are highlighted and clicking a
+statement selects its source. The workbench has one fixed height, so changing
+the example or the selection never moves the page.
+
 ## Themes
 
-Appearance and syntax colors are separate choices: Light or Dark, and Forma,
-Ocean, or Orchid. The source and generated-code editors share the selected
-palette. `editorAppearance(mode, palette)` is exported by
-`@forma-language/forma/editor/codemirror`; `LispEditor` also accepts `syntaxPalette`.
-Reconfigure a CodeMirror `Compartment` to change appearance without recreating
-the editor, losing focus, or clearing its undo history.
+The workbench follows the site's light or dark theme and draws with the reader's
+palette. The docs embed follows
+the surrounding page's setting. Theme messages accept only the same origin and
+the owning parent frame. Each frame reports its content height so the docs can
+stack the source and output on narrow screens without clipping diagnostics.
+Changing the theme reconfigures the editor without recreating it, losing focus,
+or clearing its undo history. Source drafts do not persist across reloads.
 
-The docs embed follows the surrounding page's light/dark setting and offers
-its own controls. Theme messages accept only the same origin and the owning
-parent frame. Each frame reports its content height so the docs can stack the
-source and output on narrow screens without clipping diagnostics. Theme and
-palette preferences persist locally; source drafts do not persist across reloads.
-
-The outline workbench is owned by Foldworks and uses its themes. Extending these palette controls to
-that app requires mapping the same semantic colors to its source, outline,
-inspector, diff, and diagnostic tokens; these embeds do not add that integration.
+The outline workbench is owned by Foldworks and uses its themes.
 
 ## What should come next
 
 The homepage now demonstrates contracts, failures at authored calls, generated
-Effect code, row inference, macro expansion, and pure evaluation. The ambition
+Effect code, row inference, and macro expansion. The ambition
 section links to the working structural editing and proposal-review experience.
 The next demonstrations should make the language-extension promise concrete:
 
@@ -75,9 +71,9 @@ The next demonstrations should make the language-extension promise concrete:
 
 To support those consistently, both editor surfaces need shared dialect-aware
 host analysis, scoped completion and definition lookup, stable source mapping,
-a common theme contract, and generated artifacts in the host result. Source
-maps back from generated TypeScript, persistent drafts, and execution traces
-remain follow-ups. Effect and general HM analysis still have different contracts;
+a common theme contract, and generated artifacts in the host result. The
+generated TypeScript links back to source per declaration, not per expression;
+finer source maps, persistent drafts, and execution traces remain follow-ups. Effect and general HM analysis still have different contracts;
 the Effect embeds choose the Effect checker explicitly.
 
 ## Embedding
@@ -91,21 +87,47 @@ The docs theme registers `WorkbenchEmbed`. For example:
 
 The iframe route is `/playground/embed/:exampleId`; the full-page source view is
 `/playground/live/:exampleId`. Both render the same `LiveWorkbench` component
-used on the playground homepage. The website worker serves cold loads of both
+used on the playground homepage, built from the same parts as the reader. The website worker serves cold loads of both
 routes from the playground app shell.
 
-For a short snippet in a post, the theme also registers `ReaderEmbed`, an iframe
-of the prototype reading editor's inline snippet (`/playground/embed/read`). It
-checks the source as the reader types it, shows types and prelude documentation on
-hover, puts the type at the caret under the code, and opens the inspector on demand:
+## Forma code blocks
 
-```vue
-<ReaderEmbed title="older.lisp" focus="(define older" source="(define older [person]
-  (assoc person :age (+ (get person :age) 1)))" />
-<ReaderEmbed example="cluster" />
+Every `lisp` or `forma` code fence in these docs is a live block. The page
+loads with the highlighted code; as a block nears the viewport, the playground's
+prototype reading editor replaces it at the same size. The reader checks the code
+as you edit it, shows types and prelude documentation on hover, widens and narrows
+the selection by form (<kbd>Alt</kbd>+<kbd>↑</kbd> and <kbd>Alt</kbd>+<kbd>↓</kbd>),
+puts the type at the caret under the code, and opens the inspector on demand. All
+blocks on a page share one checker. The website's
+<a href="/playground/read/snippets" target="_self">snippets page</a> shows the same
+reader inline, and how its parts compose into other layouts.
+
+Words after the language set a block's options:
+
+````md
+```lisp file=helpers.lisp
+(export [double])
+(define double [n] (* n 2))
 ```
 
-`source` is the snippet's text, `example` names one of the reader's examples, and
-`focus` puts the caret at the start of the given text. The website's
-<a href="/playground/read/snippets" target="_self">snippets page</a> shows the same
-component inline, and how the reader's parts compose into other layouts.
+```lisp preludes=ontology
+(entity Person {:name String})
+```
+
+```lisp fragment
+(f 5)
+```
+````
+
+- `file=name.lisp` names the block's file. Blocks on one page that name their
+  files can import each other.
+- `preludes=ontology` checks against another bundled prelude stack: `effect`
+  (the default, with RPC, HTTP API, and Cluster), `ontology`, `ui`, `email`,
+  or `elm`.
+- `fragment` keeps a block static, for an excerpt or code in another Lisp.
+
+A page's `formaBlocks` frontmatter sets how its blocks relate. `separate`, the
+default, checks each block alone. `continued` puts every earlier block without a
+file name in scope, for a page that builds one program step by step. `static`
+keeps every block on the page static. The website's `docs-blocks` test checks
+every live block, so a block that stops checking fails CI.

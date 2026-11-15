@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: Giving the List a Schema
 description: Part 2 of From Lists to Languages. Give s-expressions a recursive Effect Schema, add source spans, and turn parsing into a Schema transformation that reports structured diagnostics.
+formaBlocks: static
 ---
 
 # Giving the List a Schema

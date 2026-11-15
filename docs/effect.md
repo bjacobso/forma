@@ -143,7 +143,7 @@ pageClass: forma-index forma-effect
 <div>
 <p class="fh-file">strict.lisp</p>
 
-<<< @/snippets/effect/strict.lisp
+<<< @/snippets/effect/strict.lisp{lisp fragment}
 
 </div>
 <div>

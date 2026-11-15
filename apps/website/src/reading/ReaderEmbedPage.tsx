@@ -6,7 +6,7 @@ import { readingExamples } from "./examples";
 import "./reading.css";
 
 /**
- * A snippet for an iframe, such as the docs' <ReaderEmbed>: ?source= (base64url) or
+ * A snippet for an iframe on another site: ?source= (base64url) or
  * ?example=, with optional ?focus= and ?title=. It follows the parent's theme and
  * reports its height, with the same messages as the workbench embed.
  */

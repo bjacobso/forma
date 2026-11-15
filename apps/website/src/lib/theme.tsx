@@ -40,6 +40,24 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
+/**
+ * Follows the host page's `dark` class instead of setting it, for components
+ * mounted into another site, such as reader snippets in the docs. A `fixed`
+ * theme ignores the page, such as for code blocks that are dark in both themes.
+ */
+export function HostThemeProvider({ fixed, children }: { readonly fixed?: SiteTheme | undefined; readonly children: ReactNode }) {
+  const hostTheme = (): SiteTheme => fixed ?? (document.documentElement.classList.contains("dark") ? "dark" : "light");
+  const [theme, setTheme] = useState<SiteTheme>(hostTheme);
+  useEffect(() => {
+    if (fixed) return;
+    const observer = new MutationObserver(() => setTheme(hostTheme()));
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, [fixed]);
+  const value = useMemo<SiteThemeContext>(() => ({ theme, setTheme: () => {}, toggleTheme: () => {} }), [theme]);
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+}
+
 export function useTheme(): SiteThemeContext {
   const context = useContext(ThemeContext);
   if (!context) throw new Error("useTheme must be used within ThemeProvider");

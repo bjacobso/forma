@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { defineConfig, type DefaultTheme, type HeadConfig, type PageData } from "vitepress";
 
 import { groupTitles, loadPreludes, type PreludeGroup } from "./preludes.ts";
+import { fenceOptions, pageMode } from "./formaFences.ts";
 
 // Static samples use the editor's restrained dark syntax palette in both page themes.
 const codeTheme = {
@@ -77,6 +78,28 @@ export default defineConfig({
     languages: ["json", "lisp", "scheme", "sh", "ts"],
     // `.lisp` modules are Forma source; highlight them as the Lisp they are.
     languageAlias: { forma: "lisp" },
+    config(md) {
+      // Live Forma blocks (see formaFences.ts): the highlighted <pre> goes inside a
+      // <FormaBlock>, which swaps it for the playground's reader in the browser.
+      const fence = md.renderer.rules.fence!;
+      md.renderer.rules.fence = (tokens, idx, options, env, self) => {
+        const block = fenceOptions(tokens[idx]!.info);
+        const html = fence(tokens, idx, options, env, self);
+        if (!block?.live || pageMode(env.frontmatter) === "static") return html;
+        const start = html.indexOf("<pre");
+        const end = html.lastIndexOf("</pre>");
+        if (start < 0 || end < start) return html;
+        const attrs = [
+          `code="${Buffer.from(tokens[idx]!.content).toString("base64url")}"`,
+          ...(block.file ? [`file="${block.file}"`] : []),
+          ...(block.preludes ? [`preludes="${block.preludes}"`] : []),
+          ...(pageMode(env.frontmatter) === "continued" ? ["continued"] : []),
+        ];
+        // A named block's label is its file name rather than its language.
+        const head = block.file ? html.slice(0, start).replace(/<span class="lang">[^<]*<\/span>/, `<span class="lang">${block.file}</span>`) : html.slice(0, start);
+        return `${head}<FormaBlock ${attrs.join(" ")}>${html.slice(start, end + 6)}</FormaBlock>${html.slice(end + 6)}`;
+      };
+    },
   },
   transformPageData(pageData) {
     // Generated prelude pages carry their metadata as route params.

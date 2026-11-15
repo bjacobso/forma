@@ -1,8 +1,8 @@
 import type {
-  Analysis, Completions, FileSymbol, Generated, Inspection, Location, Problems, ReadingRequest, ReadingResponse, References, RenameEdits, SnippetEntry, SourceFile,
+  Analysis, Completions, FileSymbol, Generated, Inspection, Location, Problems, ReaderSetup, ReadingRequest, ReadingResponse, References, RenameEdits, SnippetEntry, SourceFile,
 } from "./protocol";
 
-type Request = ReadingRequest extends infer R ? R extends ReadingRequest ? Omit<R, "id" | "scope"> : never : never;
+type Request = ReadingRequest extends infer R ? R extends ReadingRequest ? Omit<R, "id" | "scope" | "setup"> : never : never;
 
 /**
  * Every reader on a page shares one analysis worker, so a blog post with many
@@ -35,7 +35,7 @@ export class ReadingClient {
   readonly scope = `reader-${nextScope++}`;
   private disposed = false;
 
-  constructor() {
+  constructor(readonly setup: ReaderSetup = { preludes: "effect" }) {
     shared.readers++;
     worker();
   }
@@ -44,7 +44,7 @@ export class ReadingClient {
     const id = shared.nextId++;
     return new Promise(resolve => {
       shared.pending.set(id, resolve);
-      worker().postMessage({ ...request, id, scope: this.scope });
+      worker().postMessage({ ...request, id, scope: this.scope, setup: this.setup });
     });
   }
 

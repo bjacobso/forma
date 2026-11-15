@@ -26,7 +26,7 @@ test("generates prelude reference pages from their sources", async ({ page }) =>
   await expect(tag).toContainText("Predicates take the contact first; rules omit it.");
 
   const frame = page.frameLocator(".vp-doc iframe").first();
-  await expect(frame.getByRole("status")).toHaveText("0 errors · 0 warnings");
+  await expect(frame.locator(".rd-check")).toContainText("Types check");
 
   await page.goto("/preludes/ontology");
   const query = page.locator(".fp-entry").filter({ has: page.locator("#form-query") });

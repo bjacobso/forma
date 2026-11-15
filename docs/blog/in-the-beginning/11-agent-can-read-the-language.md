@@ -2,6 +2,7 @@
 date: 2026-11-07
 title: The Agent Can Read the Language
 description: Part 11 of From Lists to Languages. Give a coding agent tools instead of a text buffer, including a report on the file, types at positions, a rename the checker proves safe, structured replacement, and a sandboxed REPL, each with a Schema for its input and output.
+formaBlocks: static
 ---
 
 # The Agent Can Read the Language

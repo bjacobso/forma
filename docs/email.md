@@ -22,7 +22,7 @@ pageClass: forma-index forma-email
 <div class="fh-hero__side">
 <div class="fh-window"><div class="fh-window__bar"><span class="fh-window__dots" aria-hidden="true"><i></i><i></i><i></i></span><span>warmup.lisp</span><span>checked by the prototype</span></div>
 
-<<< @/snippets/email/rule.lisp
+<<< @/snippets/email/rule.lisp{lisp preludes=email}
 
 </div>
 <p class="fh-hero__note">Prelude-defined vocabulary · TypeScript engine only · <a href="#limits">current limits</a></p>
@@ -66,7 +66,7 @@ None of this is built into the compiler. The words a rule can use (`send`, `tag?
 </div>
 <div class="fh-window fh-window--full"><div class="fh-window__bar"><span>email.lisp</span><span>bundled prelude, verbatim</span></div>
 
-<<< @/../preludes/email.lisp
+<<< @/../preludes/email.lisp{lisp fragment}
 
 </div>
 </div>

@@ -1,5 +1,5 @@
 /** The reader's parts. Each reads the reader it is inside with useReader(), so layouts compose them freely. */
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { javascript } from "@codemirror/lang-javascript";
 import { Compartment, EditorState, RangeSetBuilder, StateEffect, StateField } from "@codemirror/state";
 import { Decoration, EditorView, lineNumbers } from "@codemirror/view";
@@ -11,7 +11,7 @@ import {
 import { useTheme } from "../lib/theme";
 import { Inspector, TypeTokens } from "./Inspector";
 import { ALT, MOD, useReader, type EditorFit } from "./model";
-import { BUNDLED_PRELUDES, isPreludeFile, type FileSymbol, type Occurrence, type SnippetEntry } from "./protocol";
+import { isPreludeFile, PRELUDE_STACKS, type FileSymbol, type Occurrence, type SnippetEntry } from "./protocol";
 import { structuralCommands } from "./structure";
 import { checkerOf, describeTag, effectOf, friendlyVars, parseType, printType, textOf } from "./types";
 
@@ -139,7 +139,8 @@ export function ReaderInspector() {
 }
 
 /** One line under an inline snippet: the type of the form under the caret, and its Effect rows. */
-export function TypeLine() {
+/** The type of the form under the caret or pointer, on one line; `children` go at its end. */
+export function TypeLine({ children }: { readonly children?: ReactNode }) {
   const { subject, analysis, inspection } = useReader();
   const typed = subject?.typed;
   const ty = typed ? friendlyVars(parseType(typed.type)) : undefined;
@@ -158,6 +159,7 @@ export function TypeLine() {
       </>
       : form ? <><span className="rd-typeline-kind">prelude form</span><code>({form.name} …)</code>{form.produces ? <span className="rd-muted">produces <code>{form.produces}</code></span> : null}</>
       : <span className="rd-muted">Hover or click a form to see its type.</span>}
+    {children ? <span className="rd-typeline-aside">{children}</span> : null}
   </div>;
 }
 
@@ -182,7 +184,7 @@ export function ReaderSidebar() {
       </ul>
       <h4>Bundled preludes</h4>
       <ul className="rd-tree">
-        {BUNDLED_PRELUDES.map(name => <li key={name}>
+        {PRELUDE_STACKS[reader.client.setup.preludes].map(name => <li key={name}>
           <button aria-current={`forma:${name}` === reader.active} onClick={() => void reader.openFile(`forma:${name}`)} type="button"><Lock size={12} /><span className="rd-tree-name">{name}</span></button>
         </li>)}
       </ul>
@@ -230,7 +232,7 @@ export function QuickOpen() {
   const input = useRef<HTMLInputElement>(null);
   useEffect(() => { if (reader.quickOpen) { setQuery(""); setCursor(0); setTimeout(() => input.current?.focus(), 0); } }, [reader.quickOpen]);
   const items = useMemo(() => {
-    const files = [...reader.fileIds.filter(id => !isPreludeFile(id)), ...BUNDLED_PRELUDES.map(name => `forma:${name}`)]
+    const files = [...reader.fileIds.filter(id => !isPreludeFile(id)), ...PRELUDE_STACKS[reader.client.setup.preludes].map(name => `forma:${name}`)]
       .map(id => ({ key: `file:${id}`, label: id, detail: isPreludeFile(id) ? "bundled prelude" : "file", type: undefined as string | undefined, go: () => void reader.openFile(id) }));
     const symbols = reader.symbols.map(symbol => ({
       key: `symbol:${symbol.file}:${symbol.from}`, label: symbol.name, detail: `${symbol.form} · ${symbol.file}`, type: symbol.type,
@@ -301,7 +303,7 @@ export function ReaderPanel() {
       <span className="rd-files-gap" />
       <button aria-label="Close the panel" className="rd-icon" onClick={() => reader.setPanel(null)} type="button"><X size={13} /></button>
     </header>
-    <div className="rd-panel-body">{reader.panel === "references" ? <ReferencesList /> : <OutputView />}</div>
+    <div className="rd-panel-body">{reader.panel === "references" ? <ReferencesList /> : <GeneratedCode />}</div>
   </section>;
 }
 
@@ -354,8 +356,9 @@ const linkedField = StateField.define({
 /**
  * The file's generated Effect TypeScript. The statements generated from the form at
  * the caret are highlighted; clicking a statement selects the form it came from.
+ * The reader generates it while its panel is `output`.
  */
-function OutputView() {
+export function GeneratedCode() {
   const reader = useReader();
   const { theme } = useTheme();
   const host = useRef<HTMLDivElement>(null);

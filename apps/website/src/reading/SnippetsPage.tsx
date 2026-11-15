@@ -42,8 +42,14 @@ import { Breadcrumbs, CheckStatus, ReaderEditor, ReaderInspector } from "./readi
   <ReaderInspector />
 </ReaderRoot>`;
 
-const embed = `<!-- Any docs page or blog post (VitePress) -->
-<ReaderEmbed title="counter.lisp" focus="(command Increment" source="(entity Counter …)" />`;
+const embed = `<!-- Any docs page or blog post: a lisp fence is a live block -->
+\`\`\`lisp file=counter.lisp
+(entity Counter …)
+\`\`\`
+
+// Any page on this origin: the same snippet, mounted in a shadow root
+const { mountSnippet } = await import("/playground/reader-embed.js");
+await mountSnippet(element, { source, chrome: "bare", theme: "dark" });`;
 
 /** The reader's parts in prose: inline snippets, a custom layout, and the docs embed. */
 export function SnippetsPage() {
@@ -82,8 +88,9 @@ export function SnippetsPage() {
 
     <h2>In the docs and the blog</h2>
     <p>
-      The VitePress site embeds a snippet with <code>&lt;ReaderEmbed&gt;</code>, an iframe of <code>/playground/embed/read</code> that follows the
-      page's light or dark setting and sizes itself to its content.
+      Every <code>lisp</code> code block on the docs site is this snippet in its <code>bare</code> form: the page loads the highlighted
+      code, and the reader replaces it at the same size as it scrolls into view. All the blocks on a page share one checker. The
+      docs load the reader from <code>/playground/reader-embed.js</code>, which any page on this origin can use.
     </p>
     <pre className="rd-usage">{embed}</pre>
   </main>;

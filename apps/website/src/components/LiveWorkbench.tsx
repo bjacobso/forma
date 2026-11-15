@@ -1,16 +1,18 @@
-import { useEffect, useRef, useState } from "react";
-import type { SyntaxPalette } from "@formalang/editor/codemirror";
+/**
+ * The playground's workbench is the reader with a few examples to try. Each
+ * example has one thing to try: break the program, or watch a mistake get typed
+ * and repaired. Errors, types, and generated code are the reader's own.
+ */
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Bug, Play, RotateCcw, Square } from "lucide-react";
 import { EngineClient } from "../engine/client";
-import type { Diagnostic, RunResult } from "../engine/protocol";
-import { astToSource, passOf, type SpanRange } from "../lib/artifacts";
-import { useTheme } from "../lib/theme";
+import type { Diagnostic } from "../engine/protocol";
+import { ReaderWorkspace } from "../reading/FormaReader";
+import { ReaderRoot, useReader } from "../reading/model";
+import { QuickOpen } from "../reading/parts";
+import type { ReadingDiagnostic } from "../reading/protocol";
 import { typingEdit, workbenchExamples, type WorkbenchExample } from "../workbench/examples";
-import { TargetCodeView } from "./TargetCodeView";
-import { WorkbenchEditor } from "./WorkbenchEditor";
-import { FORMA_WORKBENCH_URL } from "../lib/workbenchLocation";
-
-const noDiagnostics: readonly Diagnostic[] = [];
-type OutputTab = "types" | "generated" | "read" | "expand" | "value" | "ir";
+import "../reading/reading.css";
 
 export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = false, embedded = false, compact = false }: {
   initialExample?: string; initiallyBroken?: boolean; embedded?: boolean; compact?: boolean;
@@ -18,178 +20,115 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
   const initial = workbenchExamples.find(item => item.id === initialExample) ?? workbenchExamples[0]!;
   const [example, setExample] = useState<WorkbenchExample>(initial);
   const [source, setSource] = useState(initiallyBroken ? initial.broken : initial.source);
-  const [palette, setPalette] = useState<SyntaxPalette>(() => {
-    const stored = localStorage.getItem("forma-syntax-palette");
-    return stored === "ocean" || stored === "orchid" ? stored : "forma";
-  });
-  const { theme, setTheme } = useTheme();
-  const [tab, setTab] = useState<OutputTab>("types");
-  const [result, setResult] = useState<RunResult | null>(null);
-  const [status, setStatus] = useState<"compiling" | "ready" | "failed">("compiling");
-  const [failure, setFailure] = useState<string | null>(null);
-  const [offset, setOffset] = useState(0);
-  const [reveal, setReveal] = useState<SpanRange | null>(null);
-  const [focusOnReveal, setFocusOnReveal] = useState(false);
-  const pendingErrorReveal = useRef(initiallyBroken);
+  // Select the first error once the reader reports it: after Introduce error, or a broken start.
+  const [revealError, setRevealError] = useState(initiallyBroken);
   const [playing, setPlaying] = useState(false);
-  const [replayNote, setReplayNote] = useState<string | null>(null);
-  const client = useRef<EngineClient | null>(null);
-  const revision = useRef(0);
+  const [note, setNote] = useState<string | null>(null);
   const replay = useRef(0);
   const sourceRef = useRef(source);
   sourceRef.current = source;
   const timeouts = useRef<Set<number>>(new Set());
+  useEffect(() => () => { replay.current++; timeouts.current.forEach(timer => window.clearTimeout(timer)); }, []);
 
-  useEffect(() => {
-    client.current ??= new EngineClient();
-    const token = ++revision.current;
-    setStatus("compiling");
-    setFailure(null);
-    setResult(null);
-    const timer = window.setTimeout(() => {
-      client.current!.run(source, example.passes, example.file, example.dialect).then(next => {
-        if (token !== revision.current) return;
-        setResult(next); setStatus("ready");
-        if (pendingErrorReveal.current) {
-          pendingErrorReveal.current = false;
-          const span = next.diagnostics.find(diagnostic => diagnostic.severity === "error" && diagnostic.span)?.span;
-          if (span) { setFocusOnReveal(false); setReveal([span.startOffset, span.endOffset]); }
-        }
-      }).catch((error: Error) => {
-        if (token !== revision.current) return;
-        setFailure(error.message); setStatus("failed");
-      });
-    }, 180);
-    return () => window.clearTimeout(timer);
-  }, [source, example]);
-  useEffect(() => () => {
-    revision.current++; replay.current++;
-    timeouts.current.forEach(timer => window.clearTimeout(timer));
-    client.current?.dispose();
-  }, []);
+  // Email rules check against lanes the email linker declares, which the reader does not
+  // see, so for them the reader shows the email compiler's diagnostics.
+  const emailDiagnostics = useEmailDiagnostics(example, source);
 
-  const stopReplay = () => { pendingErrorReveal.current = false; replay.current++; setPlaying(false); setReplayNote(null); };
-  const replaceSource = (next: string) => {
-    if (next === sourceRef.current) return;
-    revision.current++;
-    setResult(null); setFailure(null); setStatus("compiling");
-    sourceRef.current = next; setSource(next);
-  };
+  const replaceSource = (next: string) => { sourceRef.current = next; setSource(next); };
+  const stopReplay = () => { replay.current++; setPlaying(false); setNote(null); };
   const watchTyping = async () => {
     const token = ++replay.current;
-    setPlaying(true); setTab("types"); replaceSource(example.source);
+    setPlaying(true); setRevealError(false); replaceSource(example.source);
     const edit = typingEdit(example.source, example.broken);
     const wait = (ms: number) => new Promise<boolean>(resolve => {
       const timer = window.setTimeout(() => { timeouts.current.delete(timer); resolve(replay.current === token); }, ms);
       timeouts.current.add(timer);
     });
-    setReplayNote("The signature checks. Now introduce a mistake…");
+    setNote("The program checks. Now a mistake…");
     if (!(await wait(900))) return;
-    setFocusOnReveal(false);
-    setReveal([edit.from, edit.validEnd]);
-    replaceSource(example.broken);
-    setReplayNote("The compiler reports the mistake at its source. The generated output is blocked.");
+    replaceSource(example.broken); setRevealError(true);
+    setNote("The checker points at the mistake. Hover it, or read it in the inspector.");
     if (!(await wait(2600))) return;
-    setReplayNote("Repairing the signature, one character at a time…");
+    setNote("Repairing it, one character at a time…");
     replaceSource(edit.prefix + edit.suffix);
     for (let index = 1; index <= edit.repair.length; index++) {
       if (!(await wait(window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 65))) return;
       replaceSource(edit.prefix + edit.repair.slice(0, index) + edit.suffix);
     }
     if (!(await wait(650))) return;
-    setReplayNote("The program checks again. Explore the inferred types or generated output.");
-    setPlaying(false);
+    setNote(null); setPlaying(false);
   };
+  const choose = (next: WorkbenchExample) => { stopReplay(); setRevealError(false); setExample(next); replaceSource(next.source); };
+  const canBreak = example.source !== example.broken;
 
-  const diagnostics = result?.diagnostics ?? noDiagnostics;
-  const errors = diagnostics.filter(d => d.severity === "error").length;
-  const types = passOf(result?.passResults ?? [], "typecheck");
-  const parsed = passOf(result?.passResults ?? [], "parse");
-  const expanded = passOf(result?.passResults ?? [], "expand");
-  const evaluated = passOf(result?.passResults ?? [], "evaluate");
-  const expressionTypes = (types?.expressionTypes ?? []).map(item => ({
-    ...item, span: item.span ?? parsed?.ast[item.formIndex]?.span,
-  }));
-  const inspected = expressionTypes.filter(item => item.span && item.span.startOffset <= offset && offset <= item.span.endOffset)
-    .sort((a, b) => (a.span!.endOffset - a.span!.startOffset) - (b.span!.endOffset - b.span!.startOffset))[0];
-  const tabs: { id: OutputTab; label: string }[] = [
-    { id: "types", label: "Inferred types" },
-    ...(example.dialect ? [{ id: "generated" as const, label: "Effect TypeScript" }, ...(!compact ? [{ id: "ir" as const, label: "Typed IR" }] : [])] : []),
-    ...(!compact ? [{ id: "read" as const, label: "Read" }] : []),
-    ...(!compact && !example.dialect ? [{ id: "expand" as const, label: "Expand" }, { id: "value" as const, label: "Value" }] : []),
-  ];
-  const activeTab = tabs.some(item => item.id === tab) ? tab : "types";
-  const revealSpan = (span: Diagnostic["span"]) => { if (span) { setFocusOnReveal(true); setReveal([span.startOffset, span.endOffset]); } };
-
-  return <section className={`live-workbench ${embedded ? "live-workbench-embedded" : ""}`} aria-label="Live Forma workbench">
-    <header className="workbench-toolbar">
-      <div className="workbench-title"><span className={`workbench-dot ${errors || failure ? "has-error" : ""}`} /><strong>Forma workbench</strong><span>Live compiler</span></div>
-      {!compact ? <div className="workbench-settings">
-        <label>Appearance<select aria-label="Workbench appearance" value={theme} onChange={event => setTheme(event.target.value as "light" | "dark")}><option value="light">Light</option><option value="dark">Dark</option></select></label>
-        <label>Syntax<select aria-label="Syntax palette" value={palette} onChange={event => { const next = event.target.value as SyntaxPalette; setPalette(next); localStorage.setItem("forma-syntax-palette", next); }}><option value="forma">Forma</option><option value="ocean">Ocean</option><option value="orchid">Orchid</option></select></label>
-      </div> : null}
-    </header>
-    <div className="workbench-example-bar">
-      {!compact ? <label>Example<select aria-label="Workbench example" value={example.id} onChange={event => {
-        stopReplay(); const next = workbenchExamples.find(item => item.id === event.target.value)!;
-        setExample(next); replaceSource(next.source); setReveal(null); setOffset(0); setTab("types");
-      }}>{workbenchExamples.map(item => <option key={item.id} value={item.id}>{item.title}</option>)}</select></label> : null}
-      <div className="workbench-actions">
-        {example.source !== example.broken ? <button type="button" onClick={() => { stopReplay(); pendingErrorReveal.current = true; replaceSource(example.broken); setTab("types"); }}>Introduce error</button> : null}
-        {example.source !== example.broken ? <button type="button" onClick={() => { if (playing) stopReplay(); else void watchTyping(); }}>{playing ? "Stop typing" : "Watch typing"}</button> : null}
-        <button type="button" onClick={() => { stopReplay(); replaceSource(example.source); setReveal(null); }}>Reset</button>
+  return <section aria-label="Live Forma workbench" className={`wb${embedded ? " wb-embedded" : ""}${compact ? " wb-compact" : ""}`}>
+    <ReaderRoot className="rd-ide wb-reader" diagnostics={emailDiagnostics ?? true} files={[{ id: example.file, source }]} key={example.id}
+      preludes={example.dialect === "email" ? "email" : "effect"} onChange={(_, next) => {
+        if (next === sourceRef.current) return;
+        stopReplay(); replaceSource(next);
+      }}>
+      <SyncSource latest={sourceRef} revealError={revealError} onRevealed={() => setRevealError(false)} source={source} />
+      {!compact ? <nav aria-label="Examples" className="rd-examples">
+        {workbenchExamples.map(item => <button aria-pressed={item.id === example.id} className={item.id === example.id ? "active" : ""} key={item.id} onClick={() => choose(item)} type="button">{item.title}</button>)}
+      </nav> : null}
+      <div className="wb-try">
+        <p aria-live="polite">{note ?? example.prompt}</p>
+        {canBreak ? <button onClick={() => { stopReplay(); replaceSource(example.broken); setRevealError(true); }} type="button"><Bug size={14} />Introduce error</button> : null}
+        {canBreak ? <button onClick={() => { if (playing) stopReplay(); else void watchTyping(); }} type="button">{playing ? <Square size={13} /> : <Play size={13} />}{playing ? "Stop" : "Watch typing"}</button> : null}
+        <button onClick={() => { stopReplay(); setRevealError(false); replaceSource(example.source); }} type="button"><RotateCcw size={13} />Reset</button>
       </div>
-    </div>
-    <p className="workbench-prompt">{replayNote ?? example.prompt} <span>You can edit the source at any time.</span></p>
-    <div className="workbench-panes">
-      <div className="workbench-input">
-        <div className="workbench-file"><span>{example.file}</span><span className="workbench-check-state" data-state={status === "compiling" ? "checking" : failure ? "failed" : errors ? "error" : "checked"}>{status === "compiling" ? "Checking…" : failure ? "Unavailable" : errors ? "× Check failed" : "✓ Checked"}</span><span>Editable</span></div>
-        <WorkbenchEditor source={source} mode={theme} palette={palette} diagnostics={diagnostics} inspection={inspected?.span ? { span: [inspected.span.startOffset, inspected.span.endOffset], display: inspected.display } : undefined} reveal={reveal} focusOnReveal={focusOnReveal} onInspect={setOffset} onChange={next => {
-          if (next === sourceRef.current) return;
-          stopReplay(); replaceSource(next);
-        }} />
-        <div className="workbench-inspection" aria-label="Type at cursor" aria-live="polite">
-          <span>At your cursor / hover</span>
-          {inspected?.span ? <><code className="workbench-inspected-source">{source.slice(inspected.span.startOffset, inspected.span.endOffset)}</code><code>{inspected.display}</code></> : <p>Place the cursor in an expression to inspect its inferred type.</p>}
-        </div>
-      </div>
-      <div className="workbench-output">
-        <div className="workbench-tabs" role="tablist" aria-label="Compiler output">{tabs.map((item, index) => <button id={`tab-${item.id}`} role="tab" aria-selected={activeTab === item.id} tabIndex={activeTab === item.id ? 0 : -1} aria-controls="workbench-output-panel" key={item.id} type="button" onClick={() => setTab(item.id)} onKeyDown={event => {
-          const next = event.key === "ArrowRight" ? (index + 1) % tabs.length : event.key === "ArrowLeft" ? (index + tabs.length - 1) % tabs.length : event.key === "Home" ? 0 : event.key === "End" ? tabs.length - 1 : null;
-          if (next === null) return;
-          event.preventDefault(); setTab(tabs[next]!.id);
-          event.currentTarget.parentElement?.querySelectorAll<HTMLButtonElement>("button")[next]?.focus();
-        }}>{item.label}</button>)}</div>
-        <div className="workbench-output-content" id="workbench-output-panel" role="tabpanel" aria-labelledby={`tab-${activeTab}`}>
-          {status === "compiling" ? <p className="workbench-empty">Compiling current source…</p> : failure ? <p className="workbench-empty">{failure}</p> : activeTab === "types" ? <>
-            {(result?.contracts?.length ?? 0) > 0 ? result!.contracts!.map(contract => <article className="workbench-contract" key={contract.name}><strong>{contract.name}</strong><span>Declared signature</span><code>{contract.declared}</code><span>Inferred from the body</span><code>{contract.inferred}</code></article>) : <article className="workbench-contract"><span>Inferred from the program</span><code>{types?.display ?? "Type inference is blocked by an earlier diagnostic."}</code></article>}
-            {expressionTypes.length ? <details><summary>{expressionTypes.length} expression types</summary><div className="workbench-type-list">{expressionTypes.map(item => <button key={item.expressionId} type="button" onClick={() => revealSpan(item.span)}><code>{item.span ? source.slice(item.span.startOffset, item.span.endOffset) : `Form ${item.formIndex + 1}`}</code><b>{item.display}</b></button>)}</div></details> : null}
-          </> : activeTab === "generated" ? result?.generatedCode ? <TargetCodeView code={result.generatedCode} language="typescript" palette={palette} /> : <p className="workbench-empty">Generation is blocked until the program checks. Fix the diagnostics below.</p>
-            : activeTab === "ir" ? <TargetCodeView code={JSON.stringify(result?.declarations ?? [], null, 2)} language="json" palette={palette} />
-            : activeTab === "read" ? <pre>{astToSource(parsed?.ast) || "Reading is blocked by a syntax error."}</pre>
-            : activeTab === "expand" ? <pre>{astToSource(expanded?.ast) || "Expansion has not completed."}</pre>
-            : <pre>{evaluated?.printed ?? (example.passes.includes("evaluate") ? "Evaluation is blocked until the program checks." : "This example demonstrates inference; it does not evaluate a function.")}</pre>}
-        </div>
-      </div>
-    </div>
-    <div className="workbench-diagnostics" aria-label="Compiler diagnostics">
-      <div className="workbench-diagnostic-heading"><strong>Problems</strong><span role="status">{status === "compiling" ? "Checking…" : failure ? "Compiler unavailable" : `${errors} ${errors === 1 ? "error" : "errors"} · ${diagnostics.filter(d => d.severity === "warning").length} warnings`}</span><span>{result ? `${Math.round(result.passResults.reduce((sum, pass) => sum + pass.durationMs, 0))} ms` : ""}</span></div>
-      {diagnostics.map((diagnostic, index) => {
-        const span = diagnostic.span;
-        const lineStart = span ? source.lastIndexOf("\n", span.startOffset - 1) + 1 : 0;
-        const nextNewline = span ? source.indexOf("\n", span.startOffset) : -1;
-        const lineEnd = nextNewline === -1 ? source.length : nextNewline;
-        const line = span ? source.slice(0, span.startOffset).split("\n").length : null;
-        return <button className={`workbench-diagnostic ${diagnostic.severity}`} key={index} type="button" disabled={!span} onClick={() => revealSpan(span)}>
-          <span className="workbench-diagnostic-meta"><strong>{diagnostic.severity === "error" ? "Error" : diagnostic.severity === "warning" ? "Warning" : "Info"} · {diagnostic.code}</strong><span>{span ? `${example.file}:${line}:${span.startOffset - lineStart + 1}` : "No source location"}</span></span>
-          <span className="workbench-diagnostic-message">{diagnostic.message}</span>
-          {span ? <span className="workbench-diagnostic-source"><span aria-hidden="true">{line}</span><code>{source.slice(lineStart, span.startOffset)}<mark>{source.slice(span.startOffset, Math.min(span.endOffset, lineEnd)) || " "}</mark>{source.slice(Math.max(span.startOffset, Math.min(span.endOffset, lineEnd)), lineEnd)}</code></span> : null}
-          <span className="workbench-diagnostic-action">{diagnostic.phase ? `${diagnostic.phase} · ` : ""}{span ? "Show in source ↗" : "Compiler diagnostic"}</span>
-        </button>;
-      })}
-      {errors > 0 ? <details className="workbench-guidance"><summary>Example guidance <span>Authored, not an automatic fix</span></summary><p>{example.prompt}</p><p>Reset restores the original example; it does not apply a compiler-suggested repair.</p></details> : null}
-      {status === "ready" && !diagnostics.length ? <p className="workbench-clean">Program checks. All output above comes from this source.</p> : null}
-    </div>
-    <footer className="workbench-footer"><span>Runs in your browser · @forma-language/forma{example.dialect === "email" ? " · email.lisp prelude · Effect checker" : example.dialect ? " · Effect checker" : ""}</span>{compact ? <span>Your host supplies execution and authorization.</span> : <a href={FORMA_WORKBENCH_URL} target={embedded ? "_top" : undefined}>Structural workbench in Foldworks ↗</a>}</footer>
+      <ReaderWorkspace />
+      <QuickOpen />
+    </ReaderRoot>
   </section>;
+}
+
+/** The email compiler's diagnostics for an email example, in the reader's terms; undefined for other examples. */
+function useEmailDiagnostics(example: WorkbenchExample, source: string): readonly ReadingDiagnostic[] | undefined {
+  const client = useRef<EngineClient | null>(null);
+  const [found, setFound] = useState<readonly Diagnostic[]>([]);
+  const email = example.dialect === "email";
+  useEffect(() => {
+    if (!email) return;
+    client.current ??= new EngineClient();
+    let live = true;
+    const timer = window.setTimeout(() => {
+      client.current!.run(source, example.passes, example.file, example.dialect).then(result => { if (live) setFound(result.diagnostics); }).catch(() => undefined);
+    }, 180);
+    return () => { live = false; window.clearTimeout(timer); };
+  }, [email, source, example]);
+  useEffect(() => () => client.current?.dispose(), []);
+  return useMemo(() => email ? found.flatMap((d): ReadingDiagnostic[] => d.span ? [{
+    from: d.span.startOffset, to: d.span.endOffset, severity: d.severity === "error" ? "error" : d.severity === "warning" ? "warning" : "info", code: d.code, message: d.message,
+  }] : []) : undefined, [email, found]);
+}
+
+/** Keeps the reader's text in step with the workbench's (Reset, Introduce error, Watch typing), and selects a revealed error. */
+function SyncSource({ source, latest, revealError, onRevealed }: {
+  source: string; latest: { readonly current: string }; revealError: boolean; onRevealed: () => void;
+}) {
+  const reader = useReader();
+  useEffect(() => {
+    // Compare with the workbench's latest text, not this render's prop: a render that began
+    // before the reader reported an edit can commit after it, and must not undo the edit.
+    const target = latest.current;
+    const view = reader.view();
+    const current = view?.state.doc.toString();
+    if (!view || current === undefined || current === target) return;
+    // Replace only the changed middle, so the caret and scroll stay put while the replay types.
+    let from = 0;
+    while (from < current.length && from < target.length && current[from] === target[from]) from++;
+    let end = 0;
+    while (end < current.length - from && end < target.length - from && current[current.length - 1 - end] === target[target.length - 1 - end]) end++;
+    view.dispatch({ changes: { from, to: current.length - end, insert: target.slice(from, target.length - end) } });
+  }, [source, reader, latest]);
+  useEffect(() => {
+    if (!revealError || reader.checking) return;
+    const error = reader.analysis?.diagnostics.find(d => d.severity === "error");
+    if (!error) return;
+    const view = reader.view();
+    view?.dispatch({ selection: { anchor: error.from, head: error.to }, scrollIntoView: true });
+    onRevealed();
+  }, [revealError, reader.analysis, reader.checking]);
+  return null;
 }

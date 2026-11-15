@@ -17,7 +17,7 @@ import { useTheme } from "../lib/theme";
 import { ReadingClient } from "./client";
 import type { OutlineEntry, Subject } from "./Inspector";
 import {
-  isPreludeFile, type Analysis, type FileSymbol, type Generated, type Inspection, type Location, type Problems, type References, type SnippetEntry, type SourceFile,
+  isPreludeFile, type Analysis, type PreludeStack, type ReadingDiagnostic, type FileSymbol, type Generated, type Inspection, type Location, type Problems, type References, type SnippetEntry, type SourceFile,
 } from "./protocol";
 import { currentAnalysis, describedAt, ensureLibraryImport, semantics, setAnalysis, setInlineTypes, typedFor } from "./semantics";
 import { ancestry, formLabel, innermostForm, selectForm, structure, topLevelForms, type Range } from "./structure";
@@ -42,6 +42,13 @@ const editorTheme = (fit: EditorFit) => EditorView.theme({
   ".cm-tooltip": { border: "none", backgroundColor: "transparent" },
   ".cm-tooltip-hover": { border: "none", backgroundColor: "transparent", boxShadow: "none" },
 });
+
+/** Underlines diagnostics, kept inside the document. */
+const lint = (state: EditorState, diagnostics: readonly ReadingDiagnostic[]) => setDiagnostics(state, diagnostics.flatMap(d => {
+  const length = state.doc.length;
+  if (d.from > length) return [];
+  return [{ from: d.from, to: Math.min(length, Math.max(d.to, Math.min(d.from + 1, length))), severity: d.severity, message: d.message, source: d.code }];
+}));
 
 /** Bundled preludes open read-only. */
 const readOnlyState = [EditorState.readOnly.of(true), EditorState.transactionFilter.of(tr => (tr.docChanged ? [] : tr))];
@@ -115,6 +122,20 @@ export interface ReaderRootProps {
   readonly focusAs?: "selection" | "caret" | undefined;
   /** Open the files sidebar at first. */
   readonly sidebar?: boolean | undefined;
+  /** The bundled preludes to check against. Default `effect`. */
+  readonly preludes?: PreludeStack | undefined;
+  /** Code in scope for every file and not shown, such as the earlier blocks of a docs page. */
+  readonly before?: string | undefined;
+  /** Show each definition's type inline at first. Default true. */
+  readonly inlineTypes?: boolean | undefined;
+  /** Called after each edit of a file, with its text. */
+  readonly onChange?: ((file: string, source: string) => void) | undefined;
+  /**
+   * The diagnostics to show: the reader's own (true, the default), none, or a
+   * host's own list for the active file, such as when a linker checks the code
+   * with vocabulary the reader does not see.
+   */
+  readonly diagnostics?: boolean | readonly ReadingDiagnostic[] | undefined;
   readonly className?: string | undefined;
   readonly children: ReactNode;
 }
@@ -123,9 +144,10 @@ export interface ReaderRootProps {
  * Owns one reader. Give it a `key` that changes with `files` to load another set:
  * the files are read when it mounts.
  */
-export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", sidebar: initialSidebar = false, className, children }: ReaderRootProps) {
+export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", sidebar: initialSidebar = false, preludes = "effect", before, inlineTypes: initialInlineTypes = true, onChange, diagnostics = true, className, children }: ReaderRootProps) {
   const { theme } = useTheme();
-  const client = useMemo(() => new ReadingClient(), []);
+  // Like `files`, the preludes and earlier code are read when the reader mounts.
+  const client = useMemo(() => new ReadingClient({ preludes, before }), []);
   useEffect(() => () => client.dispose(), [client]);
 
   const view = useRef<EditorView | null>(null);
@@ -149,7 +171,11 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   const [checking, setChecking] = useState(true);
   const [selection, setSelection] = useState(0);
   const [inspection, setInspection] = useState<Inspection>({});
-  const [inlineTypes, setInlineTypesState] = useState(true);
+  const [inlineTypes, setInlineTypesState] = useState(initialInlineTypes);
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
+  const diagnosticsRef = useRef(diagnostics);
+  diagnosticsRef.current = diagnostics;
   const inlineRef = useRef(inlineTypes);
   inlineRef.current = inlineTypes;
   const [sidebar, setSidebar] = useState(initialSidebar);
@@ -176,17 +202,24 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
     }, 350);
   }, [client]);
 
+  // A host's own diagnostics follow its checks, not the reader's.
+  useEffect(() => {
+    const editor = view.current;
+    if (!editor || typeof diagnostics === "boolean") return;
+    editor.dispatch(lint(editor.state, diagnostics));
+    setAnalysisState(current => current && { ...current, diagnostics });
+  }, [diagnostics]);
+
   const analyze = useCallback((editor: EditorView) => {
     window.clearTimeout(timer.current);
     setChecking(true);
     timer.current = window.setTimeout(async () => {
       const file = activeRef.current;
-      const result = await client.analyze(filesRef.current, file);
+      const analyzed = await client.analyze(filesRef.current, file);
+      const shown = diagnosticsRef.current;
+      const result = shown === true ? analyzed : { ...analyzed, diagnostics: shown === false ? [] : shown };
       if (view.current !== editor || activeRef.current !== file || editor.state.doc.toString() !== result.source) return;
-      editor.dispatch(
-        { effects: setAnalysis.of(result) },
-        setDiagnostics(editor.state, result.diagnostics.map(d => ({ from: d.from, to: Math.max(d.to, Math.min(d.from + 1, editor.state.doc.length)), severity: d.severity, message: d.message, source: d.code }))),
-      );
+      editor.dispatch({ effects: setAnalysis.of(result) }, lint(editor.state, result.diagnostics));
       setAnalysisState(result);
       setChecking(false);
     }, 120);
@@ -351,6 +384,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
           filesRef.current = filesRef.current.map(f => (f.id === activeRef.current ? { ...f, source } : f));
           analyze(update.view);
           refreshProject();
+          onChangeRef.current?.(activeRef.current, source);
         }
         if (update.docChanged || update.selectionSet) setSelection(version => version + 1);
       }),
@@ -478,10 +512,18 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
     editor.focus();
   };
 
+  // A host that shows its own diagnostics counts them for the file it shows.
+  const shownProblems = useMemo<Problems>(() => typeof diagnostics === "boolean" && diagnostics ? problems : {
+    ...problems,
+    [active]: typeof diagnostics === "boolean"
+      ? { errors: 0, warnings: 0 }
+      : { errors: diagnostics.filter(d => d.severity === "error").length, warnings: diagnostics.filter(d => d.severity === "warning").length },
+  }, [problems, diagnostics, active]);
+
   const model: ReaderModel = {
     client, fileIds, active, readOnly: isPreludeFile(active),
     files: () => filesRef.current, show, open, openFile, back, canGoBack: backStack.length > 0, addFile, closeFile,
-    analysis, checking, problems, symbols, subject, inspection, breadcrumbs, outline,
+    analysis, checking, problems: shownProblems, symbols, subject, inspection, breadcrumbs, outline,
     inlineTypes, setInlineTypes: setInlineTypesState, sidebar, setSidebar, quickOpen, setQuickOpen, panel, setPanel,
     references, findReferences, generated, renaming, renameError, startRename, commitRename,
     mount, view: () => view.current, run, select, replace, goTo, jumpToName,
@@ -499,6 +541,6 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   };
 
   return <ReaderContext.Provider value={model}>
-    <div className={`rd-reader${className ? ` ${className}` : ""}`} onKeyDown={onKeyDown}>{children}</div>
+    <div className={`rd-reader${className ? ` ${className}` : ""}`} data-theme={theme} onKeyDown={onKeyDown}>{children}</div>
   </ReaderContext.Provider>;
 }

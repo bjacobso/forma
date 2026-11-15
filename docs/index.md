@@ -53,11 +53,11 @@ pageClass: forma-index
 <div class="fh-window">
 <div class="fh-window__bar"><span>preludes/ontology.lisp</span><span>the definition</span></div>
 
-<<< @/snippets/home/define-entity.lisp{6,18,24,31}
+<<< @/snippets/home/define-entity.lisp{6,18,24,31 lisp fragment}
 
 <div class="fh-window__bar fh-window__bar--run"><span>schema.lisp</span><span>the use</span></div>
 
-<<< @/snippets/home/entities.lisp
+<<< @/snippets/home/entities.lisp{lisp preludes=ontology}
 
 </div>
 <p>The form resolves <code>Employee</code>, checks <code>:where</code> as a <code>Bool</code> with the entity's fields in scope, and projects the selected fields into typed IR. The projection is checked against the form's declared IR type, so a prelude can't emit a payload its contract doesn't describe. <a href="/playground/demo/entities" target="_self">Open this example →</a></p>
@@ -143,7 +143,7 @@ pageClass: forma-index
 
 ::: code-group
 
-<<< @/snippets/clojure/orders.excerpt.lisp [orders.lisp]
+<<< @/snippets/clojure/orders.excerpt.lisp{lisp fragment} [orders.lisp]
 
 <<< @/snippets/clojure/orders.checked.txt [checked interface]
 

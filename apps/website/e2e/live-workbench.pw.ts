@@ -1,121 +1,104 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { resolve } from "node:path";
 import { ordersSource } from "../src/effectPageSources";
 
 const screenshots = resolve(import.meta.dirname, "../../../.context");
+const check = (page: Page) => page.locator(".wb .rd-check");
+const editor = (page: Page) => page.getByRole("textbox", { name: "Forma source" });
 
-test("diagnostics underline authored calls and generated output follows repairs and edits", async ({ page }) => {
+test("an introduced error is underlined, explained in the inspector, and blocks generated code until reset", async ({ page }) => {
   const errors: string[] = [];
   page.on("pageerror", error => errors.push(error.message));
   await page.goto("/playground/embed/orders");
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
+  await expect(check(page)).toContainText("Types check");
   await page.getByRole("button", { name: "Introduce error" }).click();
-  await expect(page.getByRole("status")).toHaveText("1 error · 0 warnings");
+  await expect(check(page)).toContainText("1 error");
   await expect(page.locator(".cm-lintRange-error")).toBeVisible();
-  await expect(page.locator(".workbench-contract")).toContainText("PaymentDeclined");
-  await expect(page.locator(".workbench-check-state")).toHaveText("× Check failed");
-  await expect(page.locator(".workbench-diagnostic-meta")).toContainText(/orders\.lisp:\d+:\d+/);
-  await expect(page.locator(".workbench-diagnostic-source mark")).not.toBeEmpty();
-  const beforeGuidance = await page.getByRole("textbox", { name: "Forma source" }).innerText();
-  await page.getByText("Example guidance", { exact: false }).click();
-  await expect(page.locator(".workbench-guidance")).toContainText("Authored, not an automatic fix");
-  await expect(page.getByRole("textbox", { name: "Forma source" })).toHaveText(beforeGuidance, { useInnerText: true });
-  await page.getByRole("tab", { name: "Effect TypeScript" }).click();
-  await expect(page.getByRole("tabpanel")).toContainText("Generation is blocked");
-  await page.locator(".workbench-diagnostic").click();
-  await expect(page.getByRole("textbox", { name: "Forma source" })).toBeFocused();
+  // The error is selected, so the inspector explains it.
+  await expect(page.locator(".rd-inspector")).toContainText("signature declares only [OrderNotFound]");
+  await page.getByRole("button", { name: "Toggle the bottom panel" }).click();
+  const panel = page.getByRole("region", { name: "Generated TypeScript" });
+  await expect(panel).toContainText("Nothing is generated until the file checks");
   await page.screenshot({ path: `${screenshots}/effect-workbench-error.png`, fullPage: true });
   await page.getByRole("button", { name: "Reset", exact: true }).click();
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
-  await expect(page.locator(".target-code-view")).toContainText("Schema.Literals");
-  await page.getByRole("textbox", { name: "Forma source" }).fill(ordersSource.replace(":shipped", ":shipped :cancelled"));
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
-  await expect(page.locator(".target-code-view")).toContainText("cancelled");
+  await expect(check(page)).toContainText("Types check");
+  await expect(panel).toContainText("Schema.Literals");
+  // Selecting a form lights up the TypeScript generated from it.
+  await editor(page).getByText("(define pay [id]").click();
+  await expect(panel.locator(".rd-out-linked").first()).toContainText("pay");
+  await editor(page).fill(ordersSource.replace(":shipped", ":shipped :cancelled"));
+  await expect(check(page)).toContainText("Types check");
+  await expect(panel).toContainText("cancelled");
   expect(errors).toEqual([]);
 });
 
-test("cursor types annotate real source without becoming editable text or surviving edits", async ({ page }) => {
-  const errors: string[] = [];
-  page.on("pageerror", error => errors.push(error.message));
+test("the inspector shows the type of the form at the caret", async ({ page }) => {
   await page.goto("/playground/embed/inference");
-  const editor = page.getByRole("textbox", { name: "Forma source" });
-  await editor.fill("(+ 20 3)");
-  await editor.press("ControlOrMeta+Home");
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
-  await expect(page.locator(".cm-inferred-type")).toBeVisible();
-  await expect(editor).toHaveText("(+ 20 3)");
-  await expect(page.locator(".workbench-inspection code").last()).toHaveText("Int");
-  await editor.press("ControlOrMeta+a");
-  await editor.press("Backspace");
-  await expect(page.locator(".cm-inferred-type")).toHaveCount(0);
-  await expect(page.locator(".workbench-inspection")).toContainText("Place the cursor");
-  await editor.fill('(+ 20 "oops")');
-  await expect(page.getByRole("status")).toHaveText(/\d+ errors? · 0 warnings/);
-  await expect(page.locator(".cm-inferred-type")).toHaveCount(0);
-  expect(errors).toEqual([]);
+  await editor(page).fill("(+ 20 3)");
+  await expect(check(page)).toContainText("Types check");
+  await editor(page).press("ControlOrMeta+End");
+  await editor(page).press("ArrowLeft");
+  await expect(page.locator(".rd-inspector")).toContainText("Int");
+  await editor(page).fill('(+ 20 "oops")');
+  await expect(check(page)).toContainText(/\d+ errors?/);
+  await expect(page.locator(".wb .cm-lintRange-error")).toBeVisible();
 });
 
-test("appearance and syntax changes preserve the document and undo history", async ({ page }) => {
-  await page.goto("/playground/embed/contracts");
-  const editor = page.getByRole("textbox", { name: "Forma source" });
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
-  const source = await editor.innerText();
-  await editor.click();
+test("switching the site theme preserves the document and undo history", async ({ page }) => {
+  await page.goto("/playground/live/contracts");
+  await expect(check(page)).toContainText("Types check");
+  const source = await editor(page).innerText();
+  await editor(page).click();
   await page.keyboard.press("ControlOrMeta+End");
   await page.keyboard.insertText("\n; my draft");
-  await page.getByRole("combobox", { name: "Workbench appearance" }).selectOption("dark");
-  await page.getByRole("combobox", { name: "Syntax palette" }).selectOption("orchid");
-  await expect(editor).toContainText("; my draft");
-  await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await editor.click();
+  const dark = await page.locator("html").getAttribute("data-theme") === "dark";
+  await page.getByRole("button", { name: /Switch to (dark|light) mode/ }).click();
+  await expect(page.locator("html")).toHaveAttribute("data-theme", dark ? "light" : "dark");
+  await expect(editor(page)).toContainText("; my draft");
+  await editor(page).click();
   await page.keyboard.press("ControlOrMeta+z");
-  await expect.poll(() => editor.innerText()).toBe(source);
+  await expect.poll(() => editor(page).innerText()).toBe(source);
   await page.getByRole("button", { name: "Introduce error" }).click();
   await expect(page.locator(".cm-lintRange-error")).toBeVisible();
-  await page.screenshot({ path: `${screenshots}/workbench-dark-orchid.png`, fullPage: true });
-  await page.getByRole("combobox", { name: "Workbench appearance" }).selectOption("light");
-  await page.getByRole("combobox", { name: "Syntax palette" }).selectOption("ocean");
-  await expect(page.locator(".cm-lintRange-error")).toBeVisible();
-  await page.screenshot({ path: `${screenshots}/workbench-light-ocean.png`, fullPage: true });
+  await page.screenshot({ path: `${screenshots}/workbench-${dark ? "light" : "dark"}.png`, fullPage: true });
 });
 
 test("typing replay shows a real error, repairs it, and lets editing interrupt it", async ({ page }) => {
   await page.goto("/playground/embed/contracts");
+  // The replay shows its error for a fixed time; start it once the first check is in.
+  await expect(check(page)).toContainText("Types check");
   await page.getByRole("button", { name: "Watch typing" }).click();
-  await expect(page.getByRole("status")).toHaveText("1 error · 0 warnings");
+  await expect(check(page)).toContainText("1 error");
   await expect(page.locator(".cm-lintRange-error")).toBeVisible();
   await expect(page.getByRole("button", { name: "Watch typing" })).toBeVisible({ timeout: 10000 });
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
+  await expect(check(page)).toContainText("Types check");
   await page.getByRole("button", { name: "Watch typing" }).click();
-  await expect(page.getByRole("status")).toHaveText("1 error · 0 warnings");
-  await page.getByRole("textbox", { name: "Forma source" }).fill("; my own program");
+  await expect(check(page)).toContainText("1 error");
+  await editor(page).fill("; my own program");
   await expect(page.getByRole("button", { name: "Watch typing" })).toBeVisible();
   await page.waitForTimeout(3000);
-  await expect(page.getByRole("textbox", { name: "Forma source" })).toHaveText("; my own program");
+  await expect(editor(page)).toHaveText("; my own program");
 });
 
-test("core examples expose inference, expansion and evaluated values", async ({ page }) => {
-  await page.goto("/playground/embed/inference");
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
-  await expect(page.locator(".workbench-contract")).toContainText("subtotal");
-  await page.getByRole("combobox", { name: "Workbench example" }).selectOption("macros");
-  await expect(page.getByRole("status")).toHaveText("0 errors · 0 warnings");
-  await page.getByRole("tab", { name: "Expand", exact: true }).click();
-  await expect(page.getByRole("tabpanel")).toContainText("if");
-  await page.getByRole("tab", { name: "Value", exact: true }).click();
-  await expect(page.getByRole("tabpanel")).toContainText('"A"');
-  await page.getByRole("tab", { name: "Value", exact: true }).press("ArrowLeft");
-  await expect(page.getByRole("tab", { name: "Expand", exact: true })).toBeFocused();
-  await expect(page.getByRole("tab", { name: "Expand", exact: true })).toHaveAttribute("aria-selected", "true");
+test("examples switch the code, and the email example shows the email compiler's problems", async ({ page }) => {
+  await page.goto("/playground/live/inference");
+  await expect(check(page)).toContainText("Types check");
+  const examples = page.getByRole("navigation", { name: "Examples" });
+  await examples.getByRole("button", { name: "Macros", exact: true }).click();
+  await expect(examples.getByRole("button", { name: "Macros", exact: true })).toHaveAttribute("aria-pressed", "true");
+  await expect(page.getByRole("tab", { name: /grades\.lisp/ })).toBeVisible();
+  await expect(check(page)).toContainText("Types check");
+  await examples.getByRole("button", { name: "Email rule lanes" }).click();
   await page.getByRole("button", { name: "Introduce error" }).click();
-  await expect(page.getByRole("status")).toHaveText(/\d+ errors? · 0 warnings/);
-  await expect(page.locator(".workbench-diagnostic").first()).toBeVisible();
+  await expect(check(page)).toContainText("1 error");
+  await expect(page.locator(".rd-inspector")).toContainText("Expected EmailLane");
+  await expect(page.locator(".rd-file-count.bad")).toHaveText("1");
 });
 
-test("mobile workbench stacks source and output without horizontal overflow", async ({ page }) => {
+test("mobile workbench stacks the code and the inspector without horizontal overflow", async ({ page }) => {
   await page.setViewportSize({ width: 360, height: 844 });
   await page.goto("/playground/embed/orders?broken=1");
-  await expect(page.getByRole("status")).toHaveText("1 error · 0 warnings");
+  await expect(check(page)).toContainText("1 error");
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
   await page.screenshot({ path: `${screenshots}/effect-workbench-mobile.png`, fullPage: true });
 });

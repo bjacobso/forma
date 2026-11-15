@@ -8,8 +8,22 @@ export interface SourceFile {
 
 export const isPreludeFile = (id: string) => id.startsWith("forma:");
 
-/** The bundled preludes the reader loads, in order. */
-export const BUNDLED_PRELUDES = ["kernel.lisp", "compiler.lisp", "rpc.lisp", "http-api.lisp", "cluster.lisp"] as const;
+/**
+ * The bundled preludes a reader loads, in order. Some stacks cannot share a
+ * workspace, such as ontology's `entity` and Effect Cluster's, so each reader
+ * picks one; `effect` is the default.
+ */
+export const PRELUDE_STACKS = {
+  effect: ["kernel.lisp", "compiler.lisp", "rpc.lisp", "http-api.lisp", "cluster.lisp"],
+  ontology: ["kernel.lisp", "compiler.lisp", "ontology.lisp"],
+  ui: ["kernel.lisp", "compiler.lisp", "ontology.lisp", "ui.lisp"],
+  email: ["kernel.lisp", "compiler.lisp", "email.lisp"],
+  elm: ["kernel.lisp", "compiler.lisp", "elm.lisp"],
+} as const;
+
+export type PreludeStack = keyof typeof PRELUDE_STACKS;
+
+export const isPreludeStack = (name: unknown): name is PreludeStack => typeof name === "string" && Object.hasOwn(PRELUDE_STACKS, name);
 
 export interface TypedForm {
   readonly from: number;
@@ -212,8 +226,20 @@ export interface FileSymbol {
   readonly uses: number;
 }
 
+/** What a reader checks against besides its files; fixed for the reader's life. */
+export interface ReaderSetup {
+  readonly preludes: PreludeStack;
+  /**
+   * Code in scope for every file without an import, and read-only, such as the
+   * earlier blocks of a docs page. It opens as `forma:earlier.lisp`.
+   */
+  readonly before?: string | undefined;
+}
+
+export const EARLIER_FILE = "forma:earlier.lisp";
+
 /** `scope` names the reader, so readers sharing a worker keep their own workspaces. */
-interface Base { readonly id: number; readonly scope: string; readonly files: readonly SourceFile[]; readonly file: string }
+interface Base { readonly id: number; readonly scope: string; readonly setup: ReaderSetup; readonly files: readonly SourceFile[]; readonly file: string }
 
 export type ReadingRequest =
   | (Base & { readonly kind: "analyze" })
