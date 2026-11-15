@@ -30,6 +30,9 @@ const preludeSidebar: DefaultTheme.SidebarItem[] = [
   })),
 ];
 
+// Dated posts are the Atom feed's entries; they are the site's only articles.
+const postPaths = new Set(loadPosts().map(post => post.path));
+
 const blogSidebar: DefaultTheme.SidebarItem[] = [{
   text: "Blog",
   items: [
@@ -45,6 +48,7 @@ function pageMetadata(pageData: PageData): HeadConfig[] {
   const description = pageData.description || "Define your domain. Check its programs.";
   return [
     ["link", { rel: "canonical", href: url }],
+    ["meta", { property: "og:type", content: postPaths.has(path) ? "article" : "website" }],
     ["meta", { property: "og:url", content: url }],
     ["meta", { property: "og:title", content: pageData.title === "Forma" ? "Forma" : `${pageData.title} · Forma` }],
     ["meta", { property: "og:description", content: description }],
@@ -67,7 +71,6 @@ export default defineConfig({
   head: [
     ["link", { rel: "icon", type: "image/svg+xml", href: "/mark.svg" }],
     ["meta", { name: "theme-color", content: "#faf8f3" }],
-    ["meta", { property: "og:type", content: "website" }],
     ["meta", { property: "og:site_name", content: "Forma" }],
   ],
   markdown: {

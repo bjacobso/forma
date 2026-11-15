@@ -65,10 +65,20 @@ const image = await readFile(resolve(output, "og-image.png"));
 if (image.subarray(0, 8).toString("hex") !== "89504e470d0a1a0a" || image.readUInt32BE(16) !== 1200 || image.readUInt32BE(20) !== 630) {
   throw new Error("Share image must be a 1200 × 630 PNG.");
 }
+// WorldVM's rollout grades the homepage strip against the canonical family file:
+// every project's site and pitch, rendered from rollout/family.json.
+const strip = /aria-label="WorldVM family"[^]*?<\/aside>/u.exec(await readFile(resolve(output, "index.html"), "utf8"))?.[0] ?? "";
+for (const project of JSON.parse(await readFile(resolve(root, "rollout/family.json"), "utf8"))) {
+  if (!strip.includes(`href="${project.site}"`) || !strip.includes(`<span>${project.pitch}</span>`)) {
+    throw new Error(`The homepage family strip is missing ${project.name} with its canonical pitch.`);
+  }
+}
 const { readdir } = await import("node:fs/promises");
+const articles = [];
 for (const file of await readdir(output, { recursive: true })) {
   if (!file.endsWith(".html") || file.startsWith("playground/")) continue;
   const html = await readFile(resolve(output, file), "utf8");
+  if (html.includes('property="og:type" content="article"')) articles.push(`/${file.replace(/\.html$/u, "")}`);
   for (const marker of ['rel="canonical"', 'property="og:title"', 'property="og:description"', 'https://forma-lang.com/og-image.png']) {
     if (!html.includes(marker)) throw new Error(`${file} is missing ${marker}`);
   }
@@ -79,4 +89,8 @@ for (const file of await readdir(output, { recursive: true })) {
   if (file !== "publishing.html" && html.includes("@formalang")) throw new Error(`${file} teaches an internal package name.`);
   if (html.includes("incubation project within")) throw new Error(`${file} still has the old banner.`);
 }
-console.log("Site discovery, share metadata, family strip, and public package names checked.");
+// Feed readers and the WorldVM rollout pair each Atom entry with one og:type=article page.
+if (articles.sort().join("\n") !== loadPosts().map((post) => post.path).sort().join("\n")) {
+  throw new Error(`og:type=article pages must be exactly the feed's posts; found ${articles.length}.`);
+}
+console.log("Site discovery, share metadata, family strip, articles, and public package names checked.");
