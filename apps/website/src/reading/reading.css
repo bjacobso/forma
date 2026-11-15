@@ -32,7 +32,7 @@
   --rd-req: #0f766e;
   --rd-req-soft: rgba(15, 118, 110, 0.09);
   --rd-shadow: 0 1px 2px rgba(34, 32, 28, 0.06), 0 12px 32px -12px rgba(34, 32, 28, 0.22);
-  --rd-b0: #8b7f6d; --rd-b1: #3d7bd9; --rd-b2: #b0702a; --rd-b3: #8e56b8;
+  --rd-b0: #7a6e5c; --rd-b1: #2f6cc9; --rd-b2: #9a6020; --rd-b3: #8e56b8;
   color: var(--rd-ink);
   font-family: var(--forma-sans);
 }

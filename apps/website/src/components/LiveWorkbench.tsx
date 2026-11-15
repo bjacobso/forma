@@ -14,8 +14,8 @@ import type { ReadingDiagnostic } from "../reading/protocol";
 import { typingEdit, workbenchExamples, type WorkbenchExample } from "../workbench/examples";
 import "../reading/reading.css";
 
-export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = false, embedded = false, compact = false }: {
-  initialExample?: string; initiallyBroken?: boolean; embedded?: boolean; compact?: boolean;
+export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = false, embedded = false }: {
+  initialExample?: string; initiallyBroken?: boolean; embedded?: boolean;
 }) {
   const initial = workbenchExamples.find(item => item.id === initialExample) ?? workbenchExamples[0]!;
   const [example, setExample] = useState<WorkbenchExample>(initial);
@@ -61,16 +61,16 @@ export function LiveWorkbench({ initialExample = "contracts", initiallyBroken = 
   const choose = (next: WorkbenchExample) => { stopReplay(); setRevealError(false); setExample(next); replaceSource(next.source); };
   const canBreak = example.source !== example.broken;
 
-  return <section aria-label="Live Forma workbench" className={`wb${embedded ? " wb-embedded" : ""}${compact ? " wb-compact" : ""}`}>
+  return <section aria-label="Live Forma workbench" className={`wb${embedded ? " wb-embedded" : ""}`}>
     <ReaderRoot className="rd-ide wb-reader" diagnostics={emailDiagnostics ?? true} files={[{ id: example.file, source }]} key={example.id}
       preludes={example.dialect === "email" ? "email" : "effect"} onChange={(_, next) => {
         if (next === sourceRef.current) return;
         stopReplay(); replaceSource(next);
       }}>
       <SyncSource latest={sourceRef} revealError={revealError} onRevealed={() => setRevealError(false)} source={source} />
-      {!compact ? <nav aria-label="Examples" className="rd-examples">
+      <nav aria-label="Examples" className="rd-examples">
         {workbenchExamples.map(item => <button aria-pressed={item.id === example.id} className={item.id === example.id ? "active" : ""} key={item.id} onClick={() => choose(item)} type="button">{item.title}</button>)}
-      </nav> : null}
+      </nav>
       <div className="wb-try">
         <p aria-live="polite">{note ?? example.prompt}</p>
         {canBreak ? <button onClick={() => { stopReplay(); replaceSource(example.broken); setRevealError(true); }} type="button"><Bug size={14} />Introduce error</button> : null}

@@ -4,7 +4,8 @@ export type SiteTheme = "light" | "dark";
 
 interface SiteThemeContext {
   readonly theme: SiteTheme;
-  readonly setTheme: (theme: SiteTheme) => void;
+  /** Show a theme; `persist: false` leaves the visitor's saved choice alone, such as for an embed following its host page. */
+  readonly setTheme: (theme: SiteTheme, persist?: boolean) => void;
   readonly toggleTheme: () => void;
 }
 
@@ -16,9 +17,9 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
   const value = useMemo<SiteThemeContext>(
     () => ({
       theme,
-      setTheme: (nextTheme) => {
+      setTheme: (nextTheme, persist = true) => {
         setThemeState(nextTheme);
-        window.localStorage.setItem("forma-theme", nextTheme);
+        if (persist) window.localStorage.setItem("forma-theme", nextTheme);
       },
       toggleTheme: () => {
         setThemeState((currentTheme) => {
@@ -46,11 +47,13 @@ export function ThemeProvider({ children }: { readonly children: ReactNode }) {
  * theme ignores the page, such as for code blocks that are dark in both themes.
  */
 export function HostThemeProvider({ fixed, children }: { readonly fixed?: SiteTheme | undefined; readonly children: ReactNode }) {
-  const hostTheme = (): SiteTheme => fixed ?? (document.documentElement.classList.contains("dark") ? "dark" : "light");
-  const [theme, setTheme] = useState<SiteTheme>(hostTheme);
+  const hostTheme = (): SiteTheme => document.documentElement.classList.contains("dark") ? "dark" : "light";
+  const [observed, setObserved] = useState<SiteTheme>(hostTheme);
+  const theme = fixed ?? observed;
   useEffect(() => {
     if (fixed) return;
-    const observer = new MutationObserver(() => setTheme(hostTheme()));
+    setObserved(hostTheme());
+    const observer = new MutationObserver(() => setObserved(hostTheme()));
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     return () => observer.disconnect();
   }, [fixed]);

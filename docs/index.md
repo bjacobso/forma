@@ -29,10 +29,10 @@ pageClass: forma-index
 <section id="live" class="fh-live" aria-label="Live playground">
 <div class="fh-hero__demo">
 
-<WorkbenchEmbed homepage />
+<WorkbenchEmbed example="orders" title="Live Forma workbench" />
 
 </div>
-<p class="fh-caption">Unlike the scripted stories above, this runs the real compiler in your browser. Try <strong>Introduce error</strong>, then repair the source or press <strong>Reset</strong>. Switch examples to explore domain data or Effect TypeScript generation; switching starts a fresh demo. Sharing and advanced tools live in the full playground.</p>
+<p class="fh-caption">Unlike the scripted stories above, this runs the real checker in your browser. Hover a form for its type, Alt-click to select one and read it in the inspector, and try <strong>Introduce error</strong>, then repair the source or press <strong>Reset</strong>. To define a vocabulary of your own, open the <a href="/playground/custom" target="_self">domain language playground</a>.</p>
 </section>
 
 <section class="fh-statement" aria-labelledby="problem-heading">

@@ -114,6 +114,7 @@ export const pipelines: readonly PipelineDef[] = [
     badge: "preview",
     source: entitySchemaSource,
     passes: ["parse", "expand"],
+    preludes: "ontology",
     context: {
       label: "Descriptor from preludes/ontology.lisp",
       code: defineEntityDescriptor,

@@ -124,7 +124,10 @@ export interface ReaderRootProps {
   readonly sidebar?: boolean | undefined;
   /** The bundled preludes to check against. Default `effect`. */
   readonly preludes?: PreludeStack | undefined;
-  /** Code in scope for every file and not shown, such as the earlier blocks of a docs page. */
+  /**
+   * Code in scope for every file and not shown, such as the earlier blocks of a
+   * docs page or a language's prelude. The files are checked again when it changes.
+   */
   readonly before?: string | undefined;
   /** Show each definition's type inline at first. Default true. */
   readonly inlineTypes?: boolean | undefined;
@@ -136,6 +139,10 @@ export interface ReaderRootProps {
    * with vocabulary the reader does not see.
    */
   readonly diagnostics?: boolean | readonly ReadingDiagnostic[] | undefined;
+  /** The editor's accessible name. Default "Forma source". */
+  readonly label?: string | undefined;
+  /** Show the files for reading only, such as an excerpt of a prelude. Default false. */
+  readonly readOnly?: boolean | undefined;
   readonly className?: string | undefined;
   readonly children: ReactNode;
 }
@@ -144,9 +151,9 @@ export interface ReaderRootProps {
  * Owns one reader. Give it a `key` that changes with `files` to load another set:
  * the files are read when it mounts.
  */
-export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", sidebar: initialSidebar = false, preludes = "effect", before, inlineTypes: initialInlineTypes = true, onChange, diagnostics = true, className, children }: ReaderRootProps) {
+export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", sidebar: initialSidebar = false, preludes = "effect", before, inlineTypes: initialInlineTypes = true, onChange, diagnostics = true, label = "Forma source", readOnly = false, className, children }: ReaderRootProps) {
   const { theme } = useTheme();
-  // Like `files`, the preludes and earlier code are read when the reader mounts.
+  // Like `files`, the preludes are read when the reader mounts; the earlier code can change.
   const client = useMemo(() => new ReadingClient({ preludes, before }), []);
   useEffect(() => () => client.dispose(), [client]);
 
@@ -225,9 +232,15 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
     }, 120);
   }, [client]);
 
+  useEffect(() => {
+    if ((client.setup.before ?? "") === (before ?? "")) return;
+    client.setup = { ...client.setup, before };
+    if (view.current) { analyze(view.current); refreshProject(); }
+  }, [before]);
+
   const stateFor = useCallback((file: SourceFile) => EditorState.create({
     doc: file.source,
-    extensions: [...extensions.current!, appearance.current.of(appearanceOf()), ...(isPreludeFile(file.id) ? readOnlyState : [])],
+    extensions: [...extensions.current!, appearance.current.of(appearanceOf()), ...(readOnly || isPreludeFile(file.id) ? readOnlyState : [])],
   }), []);
 
   /** Show a file in the editor, keeping the state of the one we leave. */
@@ -377,7 +390,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
         { key: "F2", run: editor => { startRename(editor.state.selection.main.head); return true; } },
         ...defaultKeymap, ...historyKeymap,
       ]),
-      EditorView.contentAttributes.of({ "aria-label": "Forma source", spellcheck: "false" }),
+      EditorView.contentAttributes.of({ "aria-label": label, spellcheck: "false" }),
       EditorView.updateListener.of(update => {
         if (update.docChanged) {
           const source = update.state.doc.toString();
@@ -521,7 +534,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   }, [problems, diagnostics, active]);
 
   const model: ReaderModel = {
-    client, fileIds, active, readOnly: isPreludeFile(active),
+    client, fileIds, active, readOnly: readOnly || isPreludeFile(active),
     files: () => filesRef.current, show, open, openFile, back, canGoBack: backStack.length > 0, addFile, closeFile,
     analysis, checking, problems: shownProblems, symbols, subject, inspection, breadcrumbs, outline,
     inlineTypes, setInlineTypes: setInlineTypesState, sidebar, setSidebar, quickOpen, setQuickOpen, panel, setPanel,
