@@ -3,6 +3,7 @@ import { lowerMembers, moduleBindings, patternBindings } from "./members.js";
  * Child nodes retain their author locations; quoted data is never rewritten.
  */
 import { normalizeCoreProgram } from "./core.js";
+import { expandEffectDeclarations } from "../mechanics/effect-library.js";
 import type { SExpr } from "../reader/types.js";
 
 export const head = (e: SExpr | undefined): string | undefined => e?._tag === "List" ? name(e.items[0]) : undefined;
@@ -125,6 +126,7 @@ function lowerConstructors(e: SExpr, constructors: ReadonlyMap<string, Construct
 }
 
 export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true, linkedConstructors = false): readonly SExpr[] {
+  exprs = expandEffectDeclarations(exprs);
   if (validate) {
     const normalized = normalizeCoreProgram(exprs, false);
     exprs = exprs.map((expr, i) => head(expr) === "define" ? normalized[i]! : expr);
@@ -151,26 +153,12 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
     switch (name(h)) {
       case "type": case "__schema":
         return n && args[0] ? call(e, "__schema", n, normalizeEffectTypes(args[0], true, n)) : e;
-      case "error": case "class": case "__error": case "__class": {
+      case "class": case "__error": case "__class": {
         if (!n) return e;
         const hasRecord=args[0]?._tag === "Map" || head(args[0]) === "Struct" || head(args[0]) === ":fields";
         const record = hasRecord ? normalizeEffectTypes(args[0]!, true) : call(e, "Struct");
         const fields = record._tag === "List" && head(record) === "Struct" ? list(record, [sym(record, ":fields"), ...record.items.slice(1)]) : record;
-        return call(e, name(h) === "error" || name(h) === "__error" ? "__error" : "__class", n, fields,...args.slice(hasRecord ? 1 : 0));
-      }
-      case "service": {
-        if (!n) return e;
-        const methods = args.map(m => {
-          if (m._tag !== "List" || head(m) !== ":" || m.items.length !== 3) throw Object.assign(new Error("service members require (: name Type)"), { loc: m.loc, details: { code: "surface/invalid-form" } });
-          const t = normalizeEffectTypes(m.items[2]!);
-          const params: SExpr[] = [];
-          const isFunction = head(t) === "->" && t._tag === "List";
-          if (isFunction) for (const [i, p] of t.items.slice(1, -1).entries()) params.push(sym(p, `arg${i}`), p);
-          const method = list(m, [m.items[1]!, vector(m, params), isFunction ? t.items.at(-1)! : t]);
-          if (!isFunction) serviceValues.add(method);
-          return method;
-        });
-        return call(e, "__service", n, call(e, ":methods", ...methods));
+        return call(e, name(h) === "__error" ? "__error" : "__class", n, fields,...args.slice(hasRecord ? 1 : 0));
       }
       case "__service":
         return call(e, "__service", n!, ...args.map(a => a._tag === "List" ? list(a, a.items.map((m, i) => i === 0 || m._tag !== "List" ? m : normalizeMethod(m))) : a));
@@ -181,8 +169,9 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
         const definitions = args.filter(a=>head(a)==="define" && a._tag === "List") as Extract<SExpr,{_tag:"List"}>[];
         const providesAt = args.findIndex(a=>name(a)===":provides");
         const serviceName = name(args[providesAt+1]);
-        const service = exprs.find(a=>head(a)==="service" && a._tag === "List" && name(a.items[1])===serviceName);
-        const exported = service?._tag === "List" ? new Set(service.items.slice(2).map(a=>a._tag === "List" ? name(a.items[1]) : undefined)) : undefined;
+        const service = exprs.find(a=>head(a)==="__service" && a._tag === "List" && name(a.items[1])===serviceName);
+        const methodsBlock = service?._tag === "List" ? service.items.find(a=>head(a)===":methods") : undefined;
+        const exported = methodsBlock?._tag === "List" ? new Set(methodsBlock.items.slice(1).map(a=>a._tag === "List" ? name(a.items[0]) : undefined)) : undefined;
         const helpers = definitions.filter(a=>exported && !exported.has(name(a.items[1])));
         const helperBindings = helpers.flatMap(a=>[a.items[1]!, a.items[2]?._tag === "Vector" ? call(a,"fn",a.items[2],...a.items.slice(3)) : a.items[2]!]);
         const methods = definitions.filter(a=>!helpers.includes(a)).map(a=>{
@@ -218,8 +207,18 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
   });
 }
 
+/**
+ * A `(:methods ...)` member: `(name [arg0 P0 ...] R)` is a method and
+ * `(name R)` is a service value, as `forma:effect`'s `service` writes them.
+ */
 function normalizeMethod(m: Extract<SExpr, { _tag: "List" }>): SExpr {
-  const result = list(m, [m.items[0]!, m.items[1]!, normalizeEffectTypes(m.items[2]!)]);
+  if (m.items.length === 2) {
+    const result = list(m, [m.items[0]!, vector(m, []), normalizeEffectTypes(m.items[1]!)]);
+    serviceValues.add(result);
+    return result;
+  }
+  const params = m.items[1]?._tag === "Vector" ? vector(m.items[1], m.items[1].items.map((p, i) => i % 2 ? normalizeEffectTypes(p) : p)) : m.items[1]!;
+  const result = list(m, [m.items[0]!, params, normalizeEffectTypes(m.items[2]!)]);
   if (serviceValues.has(m)) serviceValues.add(result);
   return result;
 }
