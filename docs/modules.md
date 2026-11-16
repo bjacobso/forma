@@ -57,7 +57,9 @@ are not implemented.
 
 The implicit module core consists of intrinsic syntax, evaluation primitives,
 primitive/container types, and the current Effect-value authoring forms. `type`,
-`class`, `error`, `service`, `layer`, and `do!` remain built in. Kernel sugar can be
+`class`, `layer`, and `do!` remain built in; `service` and `error` are defined
+by the bundled `forma:effect` library, which every Effect program uses without
+an import. Kernel sugar can be
 imported as `forma:kernel`; it is not automatically loaded into file
 modules. `forma:clojure` is a second such library with Clojure
 spellings such as `defn` and `if-let`, described in

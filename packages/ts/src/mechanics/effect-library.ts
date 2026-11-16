@@ -20,7 +20,10 @@ import { parse } from "../reader/parser.js";
 import { toSExprMany } from "../reader/to-sexpr.js";
 import type { SExpr } from "../reader/types.js";
 import { normalizeCoreProgram } from "../surface/core.js";
-import { head, name } from "../surface/effect.js";
+import type { SExpr as Expr } from "../reader/types.js";
+
+const name = (e: Expr | undefined): string | undefined => e?._tag === "Sym" ? e.name : undefined;
+const head = (e: Expr | undefined): string | undefined => e?._tag === "List" ? name(e.items[0]) : undefined;
 
 export const EFFECT_LIBRARY = "forma:effect";
 
@@ -111,4 +114,49 @@ export function expandEffectLibrary(authored: readonly SExpr[], sourceId: string
   } catch (error) {
     return { ok: false, diagnostics: [diagnosticFromUnknown(error, "elaborate", sourceId)] };
   }
+}
+
+/**
+ * Gives the nodes a library template built the location of the authored
+ * syntax they stand for, so diagnostics never point into the library: a
+ * member list takes its `(: name Type)` form's, everything else the call's.
+ */
+function atAuthoredSyntax(expanded: SExpr, call: SExpr): SExpr {
+  const members = call._tag === "List" ? call.items.slice(2) : [];
+  const relocate = (node: SExpr): SExpr => {
+    const own = node.loc.sourceId === EFFECT_LIBRARY;
+    if (node._tag === "List" || node._tag === "Vector") {
+      const items = node.items.map(relocate);
+      const member = node._tag === "List" ? members.find((m) => m._tag === "List" && m.items[1] !== undefined && m.items[1].loc.start === items[0]?.loc.start && m.items[1].loc.sourceId === items[0]?.loc.sourceId) : undefined;
+      return copySourceTrace(node, { ...node, items, loc: member?.loc ?? (own ? call.loc : node.loc) } as SExpr);
+    }
+    return own ? copySourceTrace(node, { ...node, loc: call.loc } as SExpr) : node;
+  };
+  return relocate(expanded);
+}
+
+/** Declarations `forma:effect` lowers in every Effect program, imported or not (RFC 0029, stage 2). */
+const declarations = new Set(["service", "error"]);
+
+/**
+ * Lowers each top-level `service` and `error` with the library's macros, to
+ * the engine's `__service` and `__error`. A malformed declaration throws an
+ * error carrying the `loc` and `details.code` of the form the macro names.
+ */
+export function expandEffectDeclarations(exprs: readonly SExpr[]): readonly SExpr[] {
+  if (!exprs.some((e) => declarations.has(head(e) ?? ""))) return exprs;
+  const { env } = effectLibrary();
+  return exprs.map((e) => {
+    if (!declarations.has(head(e) ?? "")) return e;
+    try {
+      const expanded = expandMacroOnce(e, env, { normalize: false })?.expr;
+      return expanded ? atAuthoredSyntax(expanded, e) : e;
+    } catch (error) {
+      const failure = error as { readonly message?: string; readonly loc?: SExpr["loc"]; readonly details?: { readonly code?: unknown } };
+      throw Object.assign(new Error(authorNames(String(failure.message ?? error))), {
+        loc: failure.loc ?? e.loc,
+        details: { code: typeof failure.details?.code === "string" ? failure.details.code : "surface/invalid-form" },
+      });
+    }
+  });
 }

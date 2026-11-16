@@ -136,4 +136,14 @@ describe("forma:effect do/bind/pure", () => {
     expect(result.diagnostics).toEqual([]);
     expect(result.interfaces.at(-1)?.exports.find((e) => e.name === "g")?.data?.value).toBe(6);
   });
+
+  // Stage 2: forma:effect lowers service in every Effect program, and its errors stay on the author's member.
+  test.each([["(bad x)"], ["(: n)"]])("a service member %s is reported at the member", (member) => {
+    const source = `(service S ${member})\n(: f (Effect Int [] [S]))\n(define f (S.run))\n`;
+    const expected = [["service members require (: name Type)", member]];
+    const at = (result: { readonly diagnostics: readonly { readonly message: string; readonly span?: { readonly startOffset: number; readonly endOffset: number } | undefined }[] }) =>
+      result.diagnostics.map((d) => [d.message, d.span ? source.slice(d.span.startOffset, d.span.endOffset) : undefined]);
+    expect(at(Mechanics.elaborateEffectProgram(source))).toEqual(expected);
+    expect(at(checkModule(source))[0]).toEqual(expected[0]);
+  });
 });
