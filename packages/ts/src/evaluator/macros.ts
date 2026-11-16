@@ -8,6 +8,7 @@ import { evalQuasiquote } from "./quasiquote.js";
 import { copyExpansion, tagExpandedExpr } from "./source-trace.js";
 import type { KValue, KMacro } from "./types.js";
 import { isKSExpr } from "./types.js";
+import { authorNames } from "../diagnostic/diagnostic.js";
 import type { EvaluatorRuntime, EvalFn } from "./eval-types.js";
 
 // ---------------------------------------------------------------------------
@@ -103,6 +104,20 @@ export function evalDefMacro(
 // Macro application
 // ---------------------------------------------------------------------------
 
+/**
+ * Whether a macro returned its own call unchanged. Such a macro declines the
+ * call, which keeps the core meaning of its head: a library macro named `do`
+ * can claim `(do (bind x eff) ...)` and leave a plain `(do a b)` to the core
+ * form, instead of expanding it again forever. The expander and the
+ * compile-time evaluator both apply this rule.
+ */
+export function declinesCall(head: SExpr, args: readonly SExpr[], result: SExpr): boolean {
+  return result._tag === "List" &&
+    result.items.length === args.length + 1 &&
+    result.items[0]?._tag === "Sym" && head._tag === "Sym" && result.items[0].name === head.name &&
+    result.items.every((item, index) => index === 0 || item === args[index - 1] || item.loc === args[index - 1]!.loc);
+}
+
 export function applyMacro(
   macro: KMacro,
   argExprs: readonly SExpr[],
@@ -110,6 +125,7 @@ export function applyMacro(
   runtime: EvaluatorRuntime,
   callLoc: Loc,
   evalExpr: EvalFn,
+  head?: SExpr,
 ): Effect.Effect<KValue, KernelError> {
   return Effect.gen(function* () {
     if (macro.restParam) {
@@ -146,6 +162,11 @@ export function applyMacro(
     const result = yield* evalExpr(macro.body, macroEnv, runtime);
 
     if (isKSExpr(result)) {
+      // Declined: evaluate the call under the head's core meaning.
+      if (head?._tag === "Sym" && declinesCall(head, argExprs, result.expr)) {
+        const core = { ...head, name: authorNames(head.name) };
+        return yield* evalExpr({ _tag: "List", items: [core, ...argExprs], loc: callLoc }, callerEnv, runtime);
+      }
       const expanded = copyExpansion(result.expr, argExprs);
       tagExpandedExpr(expanded, { macroName: macro.name, loc: callLoc }, argExprs);
       return yield* evalExpr(expanded, callerEnv, runtime);

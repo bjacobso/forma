@@ -40,7 +40,7 @@ group("every? empty? keys vals dissoc", true, false, true,
   "Legacy runtime/Effect operation; no HM scheme yet (outside the six stage-1 contracts).");
 group("upper lower contains? list sort-by group-by flat-map some distinct into get get-in path assoc merge select-keys nil? string? number? boolean? list? map? fn? apply pipe __dictionary __map-get", true, false, false,
   "Unchecked runtime operation or internal lowering helper; no ordinary HM scheme or Effect builtin entry yet.");
-group("gensym sexpr-list? sexpr-vector? sexpr-items sexpr-sym-name", true, false, false,
+group("gensym sexpr-list? sexpr-vector? sexpr-items sexpr-sym-name syntax-error", true, false, false,
   "Expansion-time syntax helpers, intentionally outside ordinary value checking and Effect lowering.");
 group("schema/any schema/string schema/number schema/boolean schema/nil schema/literal schema/optional schema/list schema/map schema/strict schema/transform validate assert-valid decode encode type/metadata", true, false, false,
   "Runtime schema/metadata operations; descriptors and Effect schema syntax have separate checking paths.");

@@ -77,9 +77,13 @@ Reserved specifiers import the libraries shipped with the engine:
 (import "forma:test" [test is is=])
 (import "forma:clojure" [defn if-let])
 (import "forma:routes" [route])
+(import "forma:effect" [do bind pure])
 ```
 
-The available names are `kernel`, `test`, `clojure`, and `routes`. They need no
+The available names are `kernel`, `test`, `clojure`, `routes`, `effect`, and the
+Effect descriptor libraries below. `forma:effect` writes Effect steps as
+`(do (bind x eff) (let y value) result)`, which expands to `do!`; a `do`
+without `bind` or `let` steps keeps its core meaning. They need no
 `forma.json` dependency, vendored copy, or filesystem path. Their source strings
 are embedded from `preludes/modules/` and work in Node, browser hosts, and the
 installed npm distribution. The engine reserves the `forma:` scheme before host

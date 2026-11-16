@@ -1,7 +1,7 @@
 import { Context, Effect } from "effect";
 import type { BuiltinFn, KValue } from "../evaluator/types.js";
 import { isKSExpr } from "../evaluator/types.js";
-import { ArityError } from "../diagnostic/errors.js";
+import { ArityError, KernelTypeError } from "../diagnostic/errors.js";
 
 /** The counter behind `gensym` names. */
 export interface GensymCounter {
@@ -83,10 +83,25 @@ export const sexprSymName: BuiltinFn = (args) => {
   return Effect.succeed(null);
 };
 
+/**
+ * `(syntax-error code message form?)`: a macro rejects its input with a coded
+ * diagnostic. It is located at `form` when given, or else at the macro call.
+ */
+export const syntaxError: BuiltinFn = (args) => {
+  if (args.length < 2 || args.length > 3)
+    return Effect.fail(new ArityError({ name: "syntax-error", expected: "2-3", got: args.length }));
+  const [code, message, form] = args;
+  if (typeof code !== "string" || typeof message !== "string")
+    return Effect.fail(new KernelTypeError({ message: "syntax-error expects a code and a message string.", expected: "String", got: typeof code }));
+  const loc = form !== undefined && isKSExpr(form) ? form.expr.loc : undefined;
+  return Effect.fail(new KernelTypeError({ message, expected: "valid syntax", got: "invalid syntax", details: { code }, ...(loc ? { loc } : {}) }));
+};
+
 export const macroBuiltins: Record<string, BuiltinFn> = {
   gensym,
   "sexpr-list?": sexprListQ,
   "sexpr-vector?": sexprVectorQ,
   "sexpr-items": sexprItems,
   "sexpr-sym-name": sexprSymName,
+  "syntax-error": syntaxError,
 };
