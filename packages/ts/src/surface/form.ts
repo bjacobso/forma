@@ -7,7 +7,7 @@ import { datum, syntaxForDatum } from "./datum.js";
 import { typeCheckDescriptorTree } from "../descriptor/descriptor-tree-check.js";
 import { coerceProgram } from "./coerce.js";
 import { reachableHelpers } from "./helpers.js";
-import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences, primitiveTypeNames } from "./type-syntax.js";
+import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences, primitiveTypeNames, typeHoleMetadata, refinementMetadata, refinementTargetErrors } from "./type-syntax.js";
 import { KernelTypeError, type KernelError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { Effect, Layer, Ref } from "effect";
@@ -438,6 +438,11 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
       converted.set(`:${n}`,value); env = env.bind(n,value);
     }
     env = env.bind("__holes",converted);
+    // A document's own type definition, falling back to the prelude's.
+    const authoredType = (typeName: string): SExpr | undefined => {
+      const authored = input.semanticEnv.getFact("type-definition", typeName);
+      return (authored instanceof Map ? authored.get("syntax") as SExpr | undefined : undefined) ?? spec.types.get(typeName);
+    };
     const fieldsOf = (owner: KValue, strip = false): Map<string,KValue> => {
       const fields=input.semanticEnv.getFact("declaration-field-syntax",String(owner));
       return fields instanceof Map ? new Map([...fields].map(([k,t])=>[k,datum(strip ? stripTypeMetadata(t as SExpr) : t as SExpr)])) : new Map();
@@ -447,11 +452,14 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         ? Effect.succeed([...args[0]].map(([key, value]) => [mapKeyValue(key), value]))
         : Effect.fail(new KernelTypeError({message:"meta/entries expects a record",expected:"record",got:typeof args[0]})),
       "declaration-fields": args => Effect.succeed(fieldsOf(args[0]!)),
+      // (type-definition 'Name :refinements) keeps value refinements such as :min.
       "type-definition": args => {
         const typeName = String(isKSymbol(args[0]!) || isKKeyword(args[0]!) ? args[0]!.name : args[0]);
-        const authored = input.semanticEnv.getFact("type-definition", typeName);
-        const syntax = (authored instanceof Map ? authored.get("syntax") as SExpr | undefined : undefined) ?? spec.types.get(typeName);
-        return Effect.succeed(syntax ? datum(stripTypeMetadata(syntax)) : null);
+        const option = args[1] === undefined || args[1] === null ? undefined : String(isKKeyword(args[1]) ? args[1].name : args[1]);
+        if (option !== undefined && option.replace(/^:/, "") !== "refinements")
+          return Effect.fail(new KernelTypeError({message:`type-definition accepts only the :refinements option, got ${option}`,expected:":refinements",got:option}));
+        const syntax = authoredType(typeName);
+        return Effect.succeed(syntax ? datum(stripTypeMetadata(syntax, option ? refinementMetadata : undefined)) : null);
       },
       "declarations-of": args => {
         const formName = String(isKSymbol(args[0]!) || isKKeyword(args[0]!) ? args[0]!.name : args[0]).replace(/^:/, "");
@@ -612,7 +620,8 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         }
         const typeHoles = name(u) === "Type" ? [e] : head(u) === "Record" && name(arg(u)) === "Type" && e._tag === "Map" ? e.pairs.map(([,v]) => v) : head(u) === "List" && name(arg(u)) === "Type" && e._tag === "Vector" ? e.items : [];
         for (const syntax of typeHoles) {
-          for (const message of typeSyntaxErrors(syntax)) diagnostics.push({severity: "error", message, loc: syntax.loc, details: {...holeDetails, expected: "Type", actual: formatSExprMany([syntax]).trim()} });
+          for (const message of typeSyntaxErrors(syntax, typeHoleMetadata)) diagnostics.push({severity: "error", message, loc: syntax.loc, details: {...holeDetails, expected: "Type", actual: formatSExprMany([syntax]).trim()} });
+          for (const problem of refinementTargetErrors(syntax, authoredType)) diagnostics.push({severity: "error", message: problem.message, loc: problem.expression.loc, details: {...holeDetails, expected: "Type", actual: formatSExprMany([syntax]).trim()}, help: "Refine String with :pattern or lengths, List with lengths, Int and Float with :min and :max, and Float with :finite."});
           const candidates = [...new Set([...primitiveTypeNames, ...spec.types.keys(), ...input.semanticEnv.getDeclaredNames().keys()])];
           for (const unknown of unknownTypeReferences(syntax, n => spec.types.has(n) || input.semanticEnv.getDeclaredNames().has(n) || input.semanticEnv.getFact("type-kind", n) !== undefined)) diagnostics.push({severity:"error",message:`Unknown type ${unknown.name}`,loc:unknown.loc,details:{...holeDetails,name:unknown.name,expected:"Type",actual:unknown.name,candidates},help:"Declare or import the type, or use a type already in scope."});
         }

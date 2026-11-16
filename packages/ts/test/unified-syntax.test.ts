@@ -357,7 +357,7 @@ describe('open records and schema metadata', () => {
     expect(result.declarations[0]?.payload).toMatchObject({fields:[{name:'account/plan',type:['Union',':free',':pro']},{name:'account/label',description:'Display name'}]});
     const bad=elaborateProgram('(entity Account {:label (String :min 2)})',{prelude});
     expect(bad.ok).toBe(false);
-    expect(bad.diagnostics.some(d=>d.message.includes('Unknown type metadata :min'))).toBe(true);
+    expect(bad.diagnostics.some(d=>d.message.includes(':min applies to Int and Float.'))).toBe(true);
   });
 });
 

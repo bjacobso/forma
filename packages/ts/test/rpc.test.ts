@@ -67,7 +67,7 @@ export const program = Effect.gen(function* () {
     ['(rpc-group X (rpc "Bad" :payload Int))', "success"],
     ['(rpc-group X (rpc "Bad" :payload {:nested (List Missing)} :success String))', "Unknown type Missing"],
     ['(rpc-group X (rpc "Bad" :payload Int :success String :error Missing))', "Unknown type Missing"],
-    ['(rpc-group X (rpc "Bad" :payload (String :min 1) :success String))', "Unknown type metadata"],
+    ['(rpc-group X (rpc "Bad" :payload (String :min 1) :success String))', ":min applies to Int and Float."],
     ['(rpc-group X)\n(rpc-group X)', "duplicate"],
     ['(type X String)\n(rpc-group X)', "rpc/name-collision"],
     ['(type Rpc String)\n(rpc-group X)', "rpc/name-collision"],
