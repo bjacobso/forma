@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import DefaultTheme from "vitepress/theme-without-fonts";
-import family from "../family.json";
+import family from "../../../rollout/family.json";
 import navigation from "../navigation.json";
 </script>
 

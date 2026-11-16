@@ -1,0 +1,56 @@
+[
+  {
+    "name": "Forma",
+    "site": "https://forma-lang.com",
+    "repo": "bjacobso/forma",
+    "pitch": "A programmable type system for Lisp.",
+    "maturity": "experimental",
+    "tier": "core",
+    "relationship": "WorldVM's world language is a Forma prelude."
+  },
+  {
+    "name": "Triplex",
+    "site": "https://triplex.build",
+    "repo": "bjacobso/triplex",
+    "pitch": "The database that remembers why.",
+    "maturity": "experimental",
+    "tier": "core",
+    "relationship": "WorldVM keeps each world's subject records in Triplex."
+  },
+  {
+    "name": "WorldVM",
+    "site": "https://worldvm.com",
+    "repo": "bjacobso/worldvm",
+    "pitch": "The requirement runtime.",
+    "maturity": "experimental",
+    "tier": "core",
+    "relationship": "Forma defines the world. Triplex remembers the world. WorldVM changes the world."
+  },
+  {
+    "name": "Foldworks",
+    "site": "https://foldworks.dev",
+    "repo": "bjacobso/foldworks",
+    "pitch": "Typed tools for building interfaces with Effect.",
+    "maturity": "experimental",
+    "tier": "family",
+    "relationship": "WorldVM's browser demos use Foldkit from Foldworks."
+  },
+  {
+    "name": "Schematics",
+    "site": "https://schematics.run",
+    "repo": "bjacobso/schematics",
+    "pitch": "Explore and edit structured data through schemas.",
+    "maturity": "experimental",
+    "tier": "family",
+    "relationship": "Schematics explores schema-driven tools in the WorldVM family."
+  },
+  {
+    "name": "Open Ontology",
+    "site": "https://open-ontology.com",
+    "repo": "bjacobso/open-ontology",
+    "pitch": "A shared vocabulary for operational domains.",
+    "maturity": "experimental",
+    "tier": "family",
+    "relationship": "Open Ontology explores domain vocabulary in the WorldVM family."
+  }
+]

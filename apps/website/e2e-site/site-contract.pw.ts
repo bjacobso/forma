@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import family from "../../../docs/.vitepress/family.json" with { type: "json" };
+import family from "../../../rollout/family.json" with { type: "json" };
 import navigation from "../../../docs/.vitepress/navigation.json" with { type: "json" };
 
 test("discovery endpoints are real assets with the right media types", async ({ request }) => {

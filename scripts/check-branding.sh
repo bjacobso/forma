@@ -10,10 +10,10 @@ patterns=(
   "oo[_-]""lang"
 )
 
-# The family manifest uses the sibling project’s current public name and site.
+# rollout/family.json is WorldVM's canonical family file, copied verbatim; it uses the sibling project’s current public name, repo and site.
 failed=0
 for pattern in "${patterns[@]}"; do
-  if git grep -nI -i -E "$pattern" -- . ':(exclude)scripts/check-branding.sh' ':(exclude)docs/.vitepress/family.json'; then
+  if git grep -nI -i -E "$pattern" -- . ':(exclude)scripts/check-branding.sh' ':(exclude)rollout/family.json'; then
     failed=1
   fi
 done

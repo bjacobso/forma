@@ -1,4 +1,4 @@
-import family from "../../../../docs/.vitepress/family.json";
+import family from "../../../../rollout/family.json";
 import navigation from "../../../../docs/.vitepress/navigation.json";
 
 export function SiteFooter() {
