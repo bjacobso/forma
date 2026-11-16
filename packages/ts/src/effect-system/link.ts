@@ -29,6 +29,7 @@ import type { LinkedEffectModule } from "../modules/link.js";
 import { head, normalizeEffectProgram } from "../surface/effect.js";
 import { mechanicsPackageableDeclarations } from "../mechanics/artifact.js";
 import { checkMechanicsProgram } from "../mechanics/checked.js";
+import { expandEffectLibrary } from "../mechanics/effect-library.js";
 
 /** A declaration, service, entity, or other part of the linked system. */
 export interface SystemNode {
@@ -156,7 +157,14 @@ export function linkEffectSystem(source: string | ModuleGraph, extensions: reado
       ...(error.loc ? { span: span(error.loc) } : {}),
     });
     if (failed()) return result();
-    const authored = input?.authored ?? toSExprMany(parsed.redTree);
+    let authored = input?.authored ?? toSExprMany(parsed.redTree);
+    const read = authored;
+    if (!input) {
+      // forma:effect expands in place; any other import makes this a module graph.
+      const library = expandEffectLibrary(authored, sourceId);
+      if (!library.ok) { diagnostics.push(...library.diagnostics); return result(); }
+      authored = library.exprs;
+    }
     if (!input && authored.some(e => ["import", "export", "export-from"].includes(head(e) ?? ""))) {
       try { return linkEffectSystem(resolveModuleGraph({ id: sourceId, source }, () => undefined), extensions, options); }
       catch (error) {
@@ -170,7 +178,9 @@ export function linkEffectSystem(source: string | ModuleGraph, extensions: reado
     for (const d of importedDeclarations) if (d.summary.name) semanticEnv.declareGlobal(d.summary.name, d.formName);
     const projected = input
       ? elaborateSources([{ sourceId, source, expressions: [...input.scope.filter(e => ["type", "class", "error"].includes(head(e) ?? "")), ...authored] }], { prelude, semanticEnv })
-      : elaborateProgram(source, { prelude, sourceId });
+      : authored !== read
+        ? elaborateSources([{ sourceId, source, expressions: authored }], { prelude, semanticEnv })
+        : elaborateProgram(source, { prelude, sourceId });
     diagnostics.push(...projected.diagnostics);
     if (failed()) return result();
 

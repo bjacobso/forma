@@ -300,7 +300,7 @@ export function evalList(
 
     // Macro invocation: pass unevaluated args as KSExpr, evaluate result
     if (isKMacro(fn)) {
-      return yield* applyMacro(fn, items.slice(1), env, runtime, loc, evalExpr);
+      return yield* applyMacro(fn, items.slice(1), env, runtime, loc, evalExpr, head);
     }
 
     if (isKFn(fn)) {

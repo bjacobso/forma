@@ -3,7 +3,8 @@ import { Effect } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
 import { parseManyToSExpr } from "../reader/index.js";
 import { Env } from "../Env.js";
-import { ArityError } from "../diagnostic/errors.js";
+import { ArityError, withKernelSourceTrace } from "../diagnostic/errors.js";
+import { authorNames } from "../diagnostic/diagnostic.js";
 import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
 import { PRELUDE_SOURCE } from "./prelude.js";
 import { defaultBuiltins } from "../builtins/index.js";
@@ -18,6 +19,7 @@ import {
 } from "../evaluator/source-trace.js";
 import type { BuiltinFn, KMacro, KValue } from "../evaluator/types.js";
 import { isKMacro, isKSExpr } from "../evaluator/types.js";
+import { declinesCall } from "../evaluator/macros.js";
 import { GensymScope, type GensymCounter } from "../builtins/macro.js";
 
 const DEFAULT_MACRO_STEP_LIMIT = 10_000;
@@ -184,18 +186,24 @@ function expandExpr(
   inlineCompileTimeCalls: boolean,
 ): SExpr {
   if (expr._tag === "List" && expr.items.length > 0) {
-    const head = expr.items[0]!;
+    let head = expr.items[0]!;
     if (head._tag === "Sym") {
       const binding = macroEnv.lookup(head.name);
       if (binding !== undefined && isKMacro(binding)) {
-        return expandExpr(
-          expandMacroCall(expr, binding, builtins, macroStepLimit, state),
-          macroEnv,
-          builtins,
-          macroStepLimit,
-          state,
-          inlineCompileTimeCalls,
-        );
+        const expanded = expandMacroCall(expr, binding, builtins, macroStepLimit, state);
+        if (expanded !== undefined) {
+          return expandExpr(
+            expanded,
+            macroEnv,
+            builtins,
+            macroStepLimit,
+            state,
+            inlineCompileTimeCalls,
+          );
+        }
+        // Declined: the head keeps its core meaning under its author spelling.
+        head = copySourceTrace(head, { ...head, name: authorNames(head.name) });
+        expr = copySourceTrace(expr, { ...expr, items: [head, ...expr.items.slice(1)] });
       }
 
       const retired = retiredSpellingError(expr);
@@ -695,20 +703,25 @@ function bindDestructurePattern(
   }
 }
 
-/** One macro call, expanded once: hygiene, provenance, and core normalization, without expanding the result. */
+/**
+ * One macro call, expanded once: hygiene, provenance, and core normalization,
+ * without expanding the result. Undefined when the macro declines the call.
+ */
 function expandMacroCall(
   expr: SExpr & { readonly _tag: "List" },
   binding: KMacro,
   builtins: Record<string, BuiltinFn>,
   macroStepLimit: number,
   state: ExpandState,
-): SExpr {
+  normalize = true,
+): SExpr | undefined {
   const args = expr.items.slice(1);
-  const result = evaluateMacro(binding, args, builtins, macroStepLimit, state.gensym);
+  const result = evaluateMacro(binding, args, builtins, macroStepLimit, state.gensym, sourceLocOf(expr));
+  if (declinesCall(expr.items[0]!, args, result)) return undefined;
   const hygienic = binding.name.includes("__forma_") ? hygienicExpansion(result, args, state) : result;
   const expanded = markExpansion(expr, hygienic, args);
   tagExpandedExpr(expanded, { macroName: binding.name, loc: sourceLocOf(expr) }, args);
-  return normalizeCoreProgram([expanded])[0]!;
+  return normalize ? normalizeCoreProgram([expanded])[0]! : expanded;
 }
 
 export interface ExpandOnceResult {
@@ -720,21 +733,25 @@ export interface ExpandOnceResult {
 /**
  * Expand `expr` once if it is a call to a macro in `macroEnv`, as one step of
  * {@link expandProgramSync} does; the result's own macro calls stay unexpanded.
- * Returns `undefined` when `expr` is not a macro call.
+ * Returns `undefined` when `expr` is not a macro call or the macro declines it.
  */
 export function expandMacroOnce(
   expr: SExpr,
   macroEnv: Env,
-  options: { readonly builtins?: Record<string, BuiltinFn>; readonly macroStepLimit?: number; readonly gensym?: GensymCounter } = {},
+  options: {
+    readonly builtins?: Record<string, BuiltinFn>;
+    readonly macroStepLimit?: number;
+    readonly gensym?: GensymCounter;
+    /** Apply core normalization to the result (default). Effect programs normalize with their own surface. */
+    readonly normalize?: boolean;
+  } = {},
 ): ExpandOnceResult | undefined {
   if (expr._tag !== "List" || expr.items[0]?._tag !== "Sym") return undefined;
   const binding = macroEnv.lookup(expr.items[0].name);
   if (binding === undefined || !isKMacro(binding)) return undefined;
   const state: ExpandState = { bindingCounter: 0, gensym: options.gensym ?? { next: 0 } };
-  return {
-    macro: binding.name,
-    expr: expandMacroCall(expr, binding, options.builtins ?? defaultBuiltins, options.macroStepLimit ?? DEFAULT_MACRO_STEP_LIMIT, state),
-  };
+  const expanded = expandMacroCall(expr, binding, options.builtins ?? defaultBuiltins, options.macroStepLimit ?? DEFAULT_MACRO_STEP_LIMIT, state, options.normalize ?? true);
+  return expanded === undefined ? undefined : { macro: binding.name, expr: expanded };
 }
 
 function evaluateMacro(
@@ -743,6 +760,7 @@ function evaluateMacro(
   builtins: Record<string, BuiltinFn>,
   stepLimit: number,
   gensym: GensymCounter,
+  call?: Loc,
 ): SExpr {
   if (macro.restParam) {
     if (argExprs.length < macro.params.length) {
@@ -777,7 +795,16 @@ function evaluateMacro(
       stepLimit,
       builtins,
       env: macroEnv,
-    }).pipe(Effect.provideService(GensymScope, gensym)),
+    }).pipe(
+      Effect.provideService(GensymScope, gensym),
+      // A library macro's own source means nothing to its caller: report a
+      // failure inside it at the call, unless it names the caller's syntax.
+      Effect.mapError((error) =>
+        call && error.loc && error.loc.sourceId !== call.sourceId
+          ? withKernelSourceTrace(error, { loc: call, macroOrigins: [{ macroName: authorNames(macro.name), loc: call }] })
+          : error,
+      ),
+    ),
   ).value;
 
   return isKSExpr(result) ? result.expr : kValueToSExpr(result);

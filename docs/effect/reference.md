@@ -94,6 +94,8 @@ applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
 | `(do! [x eff _ eff2] body)` | `const x = yield* eff; yield* eff2; ...` |
 | `(do! [x eff :let [y value]] body)` | mixes effects with lexical pure bindings |
 | `(let [x value] body)` | `const x = value` (`let` binds values; running an effect needs `do!`) |
+| `(do (bind x eff) (let y value) result)` | with `(import "forma:effect" [do bind pure])`: the same steps as `do!`, and the same generated code |
+| `(pure v)` | with `forma:effect`: `(succeed v)` |
 | `(succeed v)`, a plain value | `return v` |
 | `(fail (NotFound {:id id}))` | `yield* Effect.fail(new NotFound({ id }))` |
 | `(Users.find id)`, `(other-op x)` | `users.find(id)`, `otherOp(x)` |

@@ -17,6 +17,7 @@ import { isMechanicsArtifactForm, mechanicsPackageableDeclarations, type Mechani
 import { type CheckInfo } from "./check.js";
 import { checkMechanicsProgram } from "./checked.js";
 import { generateMechanicsEffectTypeScriptModule } from "./effect-typescript.js";
+import { expandEffectLibrary } from "./effect-library.js";
 
 export interface EffectProgramSpan {
   readonly sourceId: string;
@@ -116,7 +117,21 @@ export function elaborateEffectProgram(
     };
   }
 
-  return elaborateEffectForms(toSExprMany(redTree), source, options);
+  const library = expandEffectLibrary(toSExprMany(redTree), sourceId);
+  if (!library.ok) {
+    return {
+      ok: false,
+      declarations: [],
+      diagnostics: library.diagnostics.map((diagnostic) => ({
+        phase: "project",
+        severity: "error",
+        code: diagnostic.code,
+        message: diagnostic.message,
+        ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
+      })),
+    };
+  }
+  return elaborateEffectForms(library.exprs, source, options);
 }
 
 /**
