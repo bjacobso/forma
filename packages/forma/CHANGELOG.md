@@ -1,5 +1,21 @@
 # @forma-language/forma
 
+## 0.8.0
+
+### Minor Changes
+
+- 9835161: `(import "forma:effect" [do bind pure])` writes Effect steps as `(do (bind x eff) (let y value) result)`, which expands to `do!` and generates the same code; `pure` is `succeed`. A `do` without `bind` or `let` steps keeps its core meaning. A macro that returns its own call unchanged now declines it, so the head keeps its core meaning, and the new `syntax-error` macro builtin reports a coded diagnostic at the author's form.
+- d6d550a: `@forma-language/forma/expander` exports `expandMacroOnce(expr, macroEnv)`, which runs one macro call as one step of full expansion does and leaves the macro calls it produces unexpanded, so tools can show a form's expansion one macro at a time.
+- 6e87ec8: **Breaking:** Remove the RPC generator's `schemasFrom` option. To share generated domain schemas between RPC and HTTP modules, put the domain in its own file module and import it; each generated module imports the domain's generated module.
+
+### Patch Changes
+
+- b454f68: `service` and `error` declarations in Effect programs are now lowered by the bundled `forma:effect` library rather than the engine (RFC 0029 stage 2). Programs need no import, and checking, diagnostics, and generated code are unchanged.
+- d6d550a: Editor analysis and the language server accept a document's own `type` and `error` declarations in the type slots of prelude forms such as `rpc` and `entity`, instead of reporting "Unknown type". The `handle` form from `forma:effect/http-api` is analyzed as that form instead of being rejected as the retired algebraic-effect `handle`.
+- f58b90a: Form `Type` holes accept the value refinements `:pattern`, `:min-length`, `:max-length`, `:min`, `:max`, and `:finite`, so `(entity Person {:age (Int :min 0)})` no longer fails with "Unknown type metadata :min". A refinement on a type it does not apply to, after aliases and brands are resolved, is reported at the refinement key with the mechanics checker's message, such as `:min applies to Int and Float.` for `(String :min 1)`; previously these were reported as unknown metadata.
+  
+  `(type-definition 'Name :refinements)` returns a type definition with its value refinements, such as `(Int :min 0)` for `(type Allowances (Int :min 0 :doc "Count"))`. Without the option, `type-definition` still strips all metadata.
+
 ## 0.7.0
 
 ### Minor Changes
