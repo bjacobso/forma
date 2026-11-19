@@ -14,6 +14,8 @@ import { Effect } from "effect";
 import { JsonAbi } from "../json-abi.js";
 import type { EvaluationState } from "../types.js";
 import { withFileSession } from "./file.js";
+import { replTool } from "../repl.js";
+import { createNodeRepl } from "./mcp-repl.js";
 
 const failed = (code: string, message: string) => ({ ok: false, diagnostics: [{ code, severity: "error" as const, message }] });
 const hasErrors = (diagnostics: readonly { severity: string }[]) => diagnostics.some(d => d.severity === "error");
@@ -109,6 +111,8 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
     { name: "describe_nodes", description: "Identify and describe every syntax node. Ids refer to this exact source; describe again after editing.", inputSchema: input({ source: string }, ["source"]) },
     { name: "edit", description: "Apply an id-addressed edit script to source, then check the new source. Does not write files.", inputSchema: input({ source: string, script: scriptDocument.schema }, ["source", "script"], { $defs: scriptDocument.definitions }) },
   ];
+  tools.push(replTool as unknown as Tool);
+  const repl = createNodeRepl(abi);
   tools.push({ name: "describe", description: "Describe the vocabulary a file module graph makes available: forms with typed slots and checked examples, exported functions with signatures and docs, and types.", inputSchema: input({ path: string }, ["path"]) });
   const validator = new AjvJsonSchemaValidator();
   const validators = new Map(tools.map(tool => [tool.name, validator.getValidator<Record<string, any>>(tool.inputSchema as JsonSchemaType)]));
@@ -117,6 +121,7 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools }));
   server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
     let result: Record<string, unknown>;
+    let text: string | undefined;
     try {
       const validate = validators.get(params.name);
       if (!validate) result = failed("abi/unsupported-op", `Unknown tool ${params.name}.`);
@@ -125,7 +130,8 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
         if (!validated.valid) result = failed("abi/invalid-request", validated.errorMessage);
         else {
           const args = validated.data;
-          if (params.name === "check" || params.name === "run" || params.name === "describe") result = await checkOrRun(params.name, args);
+          if (params.name === "repl") ({ result, text } = await repl.call(args as { input: string; session?: string }));
+          else if (params.name === "check" || params.name === "run" || params.name === "describe") result = await checkOrRun(params.name, args);
           else if (params.name === "format") {
             const path = args.path === undefined ? undefined : confined(args.path);
             const source = path === undefined ? args.source : readFileSync(path, "utf8");
@@ -153,7 +159,7 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
     }
     if (params.name === "run") result = { value: null, printed: null, type: null, ...result };
     return {
-      content: [{ type: "text" as const, text: `${params.name}: ${result.ok ? "ok" : "failed"}${typeof result.type === "string" ? ` (${result.type})` : ""}.` }],
+      content: [{ type: "text" as const, text: text ?? `${params.name}: ${result.ok ? "ok" : "failed"}${typeof result.type === "string" ? ` (${result.type})` : ""}.` }],
       structuredContent: result,
       ...(result.ok === false ? { isError: true } : {}),
     };
