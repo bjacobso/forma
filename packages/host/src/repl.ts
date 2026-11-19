@@ -335,7 +335,7 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
     const orphaned = state.declarations.filter(f => !forms.has(f.key.split(" ")[0]!));
     for (const f of orphaned) {
       dropped.push(f.sourceId);
-      diagnostics.push({ code: "repl/form-removed", severity: "warning", message: `The session's preludes no longer define ${f.key.split(" ")[0]}; dropped ${f.cell.slice(f.start, f.end)}.`, span: spanIn(f.sourceId, f.cell, f.start, f.end) });
+      diagnostics.push({ ...error("repl/form-removed", `The session's preludes no longer define ${f.key.split(" ")[0]}; dropped ${f.cell.slice(f.start, f.end)}.`), severity: "warning", span: spanIn(f.sourceId, f.cell, f.start, f.end) });
     }
     state.declarations = state.declarations.filter(f => !orphaned.includes(f));
     if (state.declarations.length) {
