@@ -104,9 +104,15 @@ importers:
       '@formalang/editor':
         specifier: workspace:*
         version: link:../../packages/editor
+      '@formalang/host':
+        specifier: workspace:*
+        version: link:../../packages/host
       '@formalang/ts':
         specifier: workspace:*
         version: link:../../packages/ts
+      '@modelcontextprotocol/sdk':
+        specifier: 1.32.2
+        version: 1.32.2(zod@4.6.7)
       effect:
         specifier: 4.1.1
         version: 4.1.1

@@ -1,5 +1,23 @@
 # MCP server
 
+## Try it without installing
+
+`https://forma-lang.com/mcp` is a hosted MCP server (Streamable HTTP) with the
+[`repl`](#repl) tool. With Claude Code:
+
+```sh
+claude mcp add --transport http forma https://forma-lang.com/mcp
+```
+
+Other clients that support remote MCP servers take the same URL. Ask the model
+to send `:help` to the `repl` tool. The hosted server keeps each MCP session's
+REPL (definitions, session preludes and the Effect program) for a day after its
+last call. It checks, infers, expands and generates Effect programs, but `:run`
+is available only in a local `forma mcp`, and it has none of the file tools
+below. Calls are rate limited per client address.
+
+## Local server
+
 `forma mcp` serves structured language tools over stdio for MCP clients. Start it
 in your project directory: paths and file imports are confined to that directory,
 including symlink targets. It does not grant host capabilities to evaluated code.

@@ -4,7 +4,12 @@
   "compatibility_date": "2026-06-10",
   "main": "./src/worker.ts",
   "r2_buckets": [{ "binding": "PLAYGROUNDS", "bucket_name": "forma-playgrounds" }],
-  "ratelimits": [{ "name": "PLAYGROUND_WRITES", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } }],
+  "ratelimits": [
+    { "name": "PLAYGROUND_WRITES", "namespace_id": "1001", "simple": { "limit": 10, "period": 60 } },
+    { "name": "MCP_CALLS", "namespace_id": "1002", "simple": { "limit": 120, "period": 60 } }
+  ],
+  "durable_objects": { "bindings": [{ "name": "REPL_SESSIONS", "class_name": "ReplSession" }] },
+  "migrations": [{ "tag": "repl-sessions", "new_sqlite_classes": ["ReplSession"] }],
   "assets": {
     "binding": "ASSETS",
     "directory": "../../dist-site",
@@ -20,7 +25,9 @@
       "/demo",
       "/demo/*",
       "/workbench/demo",
-      "/workbench/demo/"
+      "/workbench/demo/",
+      "/mcp",
+      "/mcp/"
     ]
   }
 }

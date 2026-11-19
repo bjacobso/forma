@@ -26,11 +26,17 @@ export default Alchemy.Stack(
           namespaceId: 1001,
           simple: { limit: 10, period: 60 },
         }),
+        // forma-lang.com/mcp: one Durable Object per MCP session holds its REPL.
+        REPL_SESSIONS: Cloudflare.Workers.DurableObject("ReplSessions", { className: "ReplSession" }),
+        MCP_CALLS: Cloudflare.Workers.RateLimit("McpCalls", {
+          namespaceId: 1002,
+          simple: { limit: 120, period: 60 },
+        }),
       },
       assets: {
         htmlHandling: "auto-trailing-slash",
         notFoundHandling: "404-page",
-        runWorkerFirst: ["/feed.xml", "/sitemap.xml", "/robots.txt", "/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/"],
+        runWorkerFirst: ["/feed.xml", "/sitemap.xml", "/robots.txt", "/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/", "/mcp", "/mcp/"],
       },
       dev: { command: "pnpm dev" },
     });
