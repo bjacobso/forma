@@ -19,7 +19,9 @@ its optional peers installed separately.
 `generateEffectSystem`'s `extensions` option; expect them to change in a minor release.
 
 Local installations provide `pnpm exec forma help` and
-`pnpm exec forma-language-server --stdio`. For global installation after
+`pnpm exec forma lsp`, the language server over stdio (also available as
+`forma-language-server --stdio`). Any LSP editor can run it; the VS Code
+extension in `apps/vscode` starts it from the project's installation. For global installation after
 publication, install both this package and `effect@4.1.1` globally.
 The library root does not start either executable.
 

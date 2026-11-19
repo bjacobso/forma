@@ -28,6 +28,7 @@ Machine commands (JSON):
   request ['<json>']                   Handle one JSON request (argument or stdin).
   daemon                              Handle one JSON request per stdin line.
   mcp                                 Serve structured agent tools over MCP stdio.
+  lsp                                 Serve the language server over LSP stdio.
   abi-schema                          Print the JSON Schema of every request and response.
   add <name> <spec> | update [name] | verify | vendor
                                       Manage packages.

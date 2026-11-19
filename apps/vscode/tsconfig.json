@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": [
+      "node",
+      "vscode"
+    ],
+    "noEmit": true
+  },
+  "include": [
+    "src",
+    "tsdown.config.ts"
+  ]
+}
