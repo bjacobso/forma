@@ -33,7 +33,7 @@ A fresh clone uses
 
 ## For agents
 
-- [MCP server](https://forma-lang.com/mcp): Configure Claude Code or Codex with structured check, run, format, diagnostic explanation, and node-addressed editing tools.
+- [MCP server](https://forma-lang.com/mcp): Configure Claude Code or Codex with structured check, run, format, diagnostic explanation, and node-addressed editing tools, plus a code-mode REPL that checks, expands, generates and runs Effect programs and can evolve the language through session preludes. The REPL is also hosted at https://forma-lang.com/mcp, without `:run`.
 
 - [Writing a form](https://raw.githubusercontent.com/bjacobso/forma/main/docs/writing-a-form.md): Define domain vocabulary with typed forms, form-local constant extensions, checked documentation examples, and elaboration hooks.
 - [Preludes](https://forma-lang.com/preludes/): Catalog of the repository preludes with maturity labels; each reference page is generated at site build from form descriptors, `(: name type)` signatures, docstrings, comments, and per-form examples checked by `pnpm check`.
