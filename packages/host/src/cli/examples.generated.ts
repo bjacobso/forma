@@ -3,9 +3,9 @@
 export const effectExamples = [
   {
     "name": "builtin-contracts",
-    "summary": "",
+    "summary": "Builtin list and number functions with checked contracts: reverse, sqrt, conj, concat, reduce with the accumulator first, and integer quot.",
     "outcome": "runs",
-    "program": "(: reversed (-> (List Int) (List Int)))\n(define reversed [xs] (reverse xs))\n(: root (-> Float Float))\n(define root [x] (sqrt x))\n(: appended (-> (List Int) Int (List Int)))\n(define appended [xs x] (conj xs x))\n(: concatenated (-> (List Int) (List Int) (List Int)))\n(define concatenated [xs ys] (concat xs ys))\n(: collected (-> (List Int) (List Int) (List Int)))\n(define collected [init xs] (reduce (fn [acc item] (conj acc item)) init xs))\n(: quotient (-> Int Int Int))\n(define quotient [x y] (quot x y))\n"
+    "program": ";; Builtin list and number functions with checked contracts: reverse, sqrt, conj,\n;; concat, reduce with the accumulator first, and integer quot.\n(: reversed (-> (List Int) (List Int)))\n(define reversed [xs] (reverse xs))\n(: root (-> Float Float))\n(define root [x] (sqrt x))\n(: appended (-> (List Int) Int (List Int)))\n(define appended [xs x] (conj xs x))\n(: concatenated (-> (List Int) (List Int) (List Int)))\n(define concatenated [xs ys] (concat xs ys))\n(: collected (-> (List Int) (List Int) (List Int)))\n(define collected [init xs] (reduce (fn [acc item] (conj acc item)) init xs))\n(: quotient (-> Int Int Int))\n(define quotient [x y] (quot x y))\n"
   },
   {
     "name": "checker-parity-records",
@@ -83,9 +83,9 @@ export const effectExamples = [
   },
   {
     "name": "ontology-actions",
-    "summary": "",
+    "summary": "Ontology actions: entities and a relation declared as ontology forms, and typed actions that create, link, update and retract their records.",
     "outcome": "runs",
-    "program": "(entity Employee {:name String :active Bool})\n(entity Department {:name String})\n(relation works-at Employee Department {:since Int})\n(: hire (-> String (Action (Id Employee))))\n(define hire [name] (create! Employee {:name name :active true}))\n(: onboard (-> String (Id Department) (Action (Id Employee))))\n(define\n  onboard\n  [name department]\n  (do!\n    [\n      employee\n      (hire name)\n      :let\n      [since 2026]\n      _\n      (link! works-at employee department {:since since})]\n    employee))\n(: deactivate (-> (Id Employee) (Action Bool)))\n(define\n  deactivate\n  [employee]\n  (do! [_ (update! Employee employee {:active false})] true))\n(: remove (-> (Id Employee) (Action Unit)))\n(define remove [employee] (retract! Employee employee))\n"
+    "program": ";; Ontology actions: entities and a relation declared as ontology forms, and\n;; typed actions that create, link, update and retract their records.\n(entity Employee {:name String :active Bool})\n(entity Department {:name String})\n(relation works-at Employee Department {:since Int})\n(: hire (-> String (Action (Id Employee))))\n(define hire [name] (create! Employee {:name name :active true}))\n(: onboard (-> String (Id Department) (Action (Id Employee))))\n(define\n  onboard\n  [name department]\n  (do!\n    [\n      employee\n      (hire name)\n      :let\n      [since 2026]\n      _\n      (link! works-at employee department {:since since})]\n    employee))\n(: deactivate (-> (Id Employee) (Action Bool)))\n(define\n  deactivate\n  [employee]\n  (do! [_ (update! Employee employee {:active false})] true))\n(: remove (-> (Id Employee) (Action Unit)))\n(define remove [employee] (retract! Employee employee))\n"
   },
   {
     "name": "operational-effects",
@@ -155,14 +155,14 @@ export const effectExamples = [
   },
   {
     "name": "reject-duplicate-record-key",
-    "summary": "",
+    "summary": "A map literal cannot repeat a key.",
     "outcome": "rejected",
-    "program": "(: weights (Map String Int))\n(define weights {\"a\" 2 \"a\" 3})\n",
+    "program": ";; A map literal cannot repeat a key.\n(: weights (Map String Int))\n(define weights {\"a\" 2 \"a\" 3})\n",
     "diagnostics": [
       {
         "code": "read/syntax",
         "message": "Duplicate map key",
-        "line": 2,
+        "line": 3,
         "column": 24
       }
     ]
@@ -617,14 +617,14 @@ export const effectExamples = [
   },
   {
     "name": "reject-tagged-collision",
-    "summary": "",
+    "summary": "A tagged union case cannot have a field named like its discriminator.",
     "outcome": "rejected",
-    "program": "(type Shape (Tagged :tag kind (Circle {:kind String :radius Float})))\n",
+    "program": ";; A tagged union case cannot have a field named like its discriminator.\n(type Shape (Tagged :tag kind (Circle {:kind String :radius Float})))\n",
     "diagnostics": [
       {
         "code": "surface/invalid-form",
         "message": "Tagged record payload must be disjoint from discriminator :kind",
-        "line": 1,
+        "line": 2,
         "column": 40
       }
     ]
@@ -741,9 +741,9 @@ export const effectExamples = [
   },
   {
     "name": "surface-review",
-    "summary": "",
+    "summary": "Surface regressions: Tagged unions with payload-free cases, enum-keyed maps, layers with :setup bindings, and catch with tag and catch-all handlers.",
     "outcome": "runs",
-    "program": "(type Shape (Tagged (Circle Int) None))\n(type Other (Tagged (Circle String) Empty))\n(type Role (Union :admin :member))\n(type Roles (Map Role Int))\n(type MaybeName (Option String))\n(: roles Roles)\n(define roles {:admin 1})\n(: circle (Effect Shape))\n(define circle (: (Shape.Circle 7) Shape))\n(: other Other)\n(define other (Other.Circle \"x\"))\n(: missing (Option Int))\n(define missing Option.None)\n(: radius (-> Shape Int))\n(define radius [shape] (match shape (Shape.Circle value) value Shape.None 0))\n(service Counter (: next (Effect Int)))\n(layer\n  CounterLive\n  :provides\n  Counter\n  :setup\n  [cfg {:inner {:port 8}}]\n  (define base [] 1)\n  (define next (+ (base) cfg.inner.port)))\n(error FirstError {})\n(error SecondError {})\n(: recover (-> Bool (Effect String)))\n(define\n  recover\n  [first]\n  (catch\n    (if first (fail (FirstError {})) (fail (SecondError {})))\n    (FirstError e)\n    \"first\"\n    err\n    \"fallback\"))\n(: handler-error (Effect String [SecondError]))\n(define\n  handler-error\n  (catch\n    (if true (fail (FirstError {})) (fail (SecondError {})))\n    (FirstError e)\n    (fail (SecondError {}))\n    err\n    \"fallback\"))\n"
+    "program": ";; Surface regressions: Tagged unions with payload-free cases, enum-keyed maps,\n;; layers with :setup bindings, and catch with tag and catch-all handlers.\n(type Shape (Tagged (Circle Int) None))\n(type Other (Tagged (Circle String) Empty))\n(type Role (Union :admin :member))\n(type Roles (Map Role Int))\n(type MaybeName (Option String))\n(: roles Roles)\n(define roles {:admin 1})\n(: circle (Effect Shape))\n(define circle (: (Shape.Circle 7) Shape))\n(: other Other)\n(define other (Other.Circle \"x\"))\n(: missing (Option Int))\n(define missing Option.None)\n(: radius (-> Shape Int))\n(define radius [shape] (match shape (Shape.Circle value) value Shape.None 0))\n(service Counter (: next (Effect Int)))\n(layer\n  CounterLive\n  :provides\n  Counter\n  :setup\n  [cfg {:inner {:port 8}}]\n  (define base [] 1)\n  (define next (+ (base) cfg.inner.port)))\n(error FirstError {})\n(error SecondError {})\n(: recover (-> Bool (Effect String)))\n(define\n  recover\n  [first]\n  (catch\n    (if first (fail (FirstError {})) (fail (SecondError {})))\n    (FirstError e)\n    \"first\"\n    err\n    \"fallback\"))\n(: handler-error (Effect String [SecondError]))\n(define\n  handler-error\n  (catch\n    (if true (fail (FirstError {})) (fail (SecondError {})))\n    (FirstError e)\n    (fail (SecondError {}))\n    err\n    \"fallback\"))\n"
   },
   {
     "name": "typed-errors",

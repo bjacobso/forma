@@ -5,6 +5,8 @@
  */
 
 export {
+  effectCombinators,
+  effectCoreFormNames,
   isMechanicsArtifactForm,
   mechanicsPackageableDeclarations,
   type MechanicsArtifactDiagnostic,

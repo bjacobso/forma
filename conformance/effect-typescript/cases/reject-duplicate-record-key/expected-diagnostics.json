@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "read/syntax",
       "message": "Duplicate map key",
-      "line": 2,
+      "line": 3,
       "column": 24,
-      "endLine": 2,
+      "endLine": 3,
       "endColumn": 27
     }
   ]

@@ -6,9 +6,9 @@
       "severity": "error",
       "code": "surface/invalid-form",
       "message": "Tagged record payload must be disjoint from discriminator :kind",
-      "line": 1,
+      "line": 2,
       "column": 40,
-      "endLine": 1,
+      "endLine": 2,
       "endColumn": 45
     }
   ]

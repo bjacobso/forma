@@ -2,8 +2,12 @@
 ; Import explicitly; no compiler hooks or host-side route generator required.
 (export route)
 
-; Literal segments are strings; [:name] is a required String parameter.
-; Parameter values are already URL-encoded path segments, not arbitrary text.
+;; route — define a URL builder from a route template
+;;
+;; Literal segments are strings; [:name] is a required String parameter.
+;; Parameter values are already URL-encoded path segments, not arbitrary text.
+;;
+;; (route user-path ["users" [:id]])
 (macro (route builder segments)
   (if (sexpr-vector? segments) nil (fail "route requires a vector of segments"))
   (let [parts (sexpr-items segments)

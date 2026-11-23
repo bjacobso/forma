@@ -8,6 +8,10 @@ import { afterAll, beforeAll, expect, test } from "vitest";
 // @ts-expect-error: a plain Node script without declarations.
 import { examplesOutput, renderExamples } from "../scripts/generate-examples.mjs";
 import { runGenerated } from "../src/cli/mcp-repl.js";
+import { allBundledDocs, builtinDocs, effectKeywordDocs } from "../src/repl-docs.js";
+import { effectCombinators, effectCoreFormNames } from "@formalang/ts/mechanics";
+import { bundledModuleSources } from "@formalang/ts/modules";
+import { preludeSources } from "@formalang/ts/preludes";
 
 const cli = resolve(import.meta.dirname, "../dist/cli.mjs");
 const dir = realpathSync(mkdtempSync(join(tmpdir(), "forma-mcp-")));
@@ -158,7 +162,10 @@ const findUser = (errors: string) => `(import "forma:effect" [do bind pure])
 
 test("repl keeps pure definitions per session and grants no capabilities", async () => {
   expect(await repl("(define sq (fn [x] (* x x)))", "pure")).toMatchObject({ ok: true });
-  expect(await repl("(map sq [1 2 3])", "pure")).toMatchObject({ ok: true, printed: "[1 4 9]", type: "List<Int>", text: "[1 4 9] : List<Int>" });
+  const mapped = await repl("(map sq [1 2 3])", "pure");
+  expect(mapped).toMatchObject({ ok: true, printed: "[1 4 9]", type: "List<Int>", text: "[1 4 9] : List<Int>" });
+  // The printed value is the value; no second copy as the ABI's JSON tree.
+  expect(mapped).not.toHaveProperty("value");
   expect(await repl(":type sq", "pure")).toMatchObject({ ok: true, type: "Int -> Int" });
   expect(await repl("(sq 2)", "other")).toMatchObject({ ok: false, isError: true, diagnostics: [{ code: "typecheck/unbound-symbol" }] });
   expect(await repl('(read-file "secret.lisp")', "pure")).toMatchObject({ ok: false, diagnostics: [{ code: "typecheck/unbound-symbol" }] });
@@ -238,7 +245,7 @@ test("repl evolves the language through session preludes", async () => {
 });
 
 test("repl documents forms and modules, and its examples are the conformance programs", async () => {
-  expect(await repl(":doc do")).toMatchObject({ ok: true, docs: [{ kind: "doc", source: "forma:effect", doc: expect.stringContaining("do — run steps in order") }] });
+  expect(await repl(":doc do")).toMatchObject({ ok: true, docs: [{ kind: "macro", source: "forma:effect", summary: "run steps in order and return the last form" }, { kind: "effect", name: "do" }] });
   expect(await repl(":doc mechanics/undeclared-error")).toMatchObject({ ok: true, docs: [{ kind: "diagnostic", code: "mechanics/undeclared-error" }] });
   expect((await repl(":modules")).modules).toEqual(expect.arrayContaining([expect.objectContaining({ name: "forma:effect", exports: ["do", "bind", "pure"] })]));
   expect((await repl(":source forma:effect")).source).toContain("(macro (pure value)");
@@ -252,3 +259,112 @@ test("repl documents forms and modules, and its examples are the conformance pro
     else expect(loaded.diagnostics.map((d: { code: string }) => d.code), name).toEqual(expect.arrayContaining(example.diagnostics.map((d: { code: string }) => d.code)));
   }
 }, 60_000);
+
+test("repl :doc covers prelude forms, Effect keywords and builtins, and points to related names", async () => {
+  // Forms are documented without loading their prelude, from their :examples.
+  const entity = await repl(":doc entity", "docs");
+  expect(entity.docs).toEqual(expect.arrayContaining([expect.objectContaining({
+    kind: "form", source: "ontology.lisp", use: ":load ontology.lisp", signature: "(entity name fields {:keys [doc role id-pattern tier]})",
+    arguments: [{ name: "name", type: "(Declares SchemaDecl)" }, { name: "fields", type: "(Record Type)" }],
+    options: expect.arrayContaining([{ name: "tier", type: "(Option (Union :user :meta))" }]),
+    ir: "EntityDeclarationIR", examples: ["(entity Person {:name String :age (Option Int)})"] })]));
+  expect(entity.text).toContain("Option keys: :doc (Option String), :role (Option String)");
+  const layer = await repl(":doc layer", "docs");
+  expect(layer).toMatchObject({ ok: true, docs: [{ kind: "effect", options: { ":provides": expect.any(String), ":setup": expect.any(String) }, try: ":effect" }] });
+  expect(layer.text).toContain("(layer UsersLive :provides Users");
+  const map = await repl(":doc map", "docs");
+  expect(map).toMatchObject({ ok: true, docs: [{ kind: "builtin", usage: "(map f xs)", type: "(t0 -> t1) -> List<t0> -> List<t1>", effect: ["(-> (-> a b) (Array a) (Array b))"] }] });
+  expect(map.text).toContain("(map (fn [x] (* x 2)) [1 2 3])");
+  // No form is called policy; the one whose doc says policy is suggested.
+  const policy = await repl(":doc policy", "docs");
+  expect(policy).toMatchObject({ ok: false, related: expect.arrayContaining([expect.objectContaining({ name: "permission", source: "ontology.lisp" })]), diagnostics: [{ code: "repl/no-docs" }] });
+  expect(policy.text).toContain("permission (form, ontology.lisp)");
+});
+
+test("every Effect keyword, builtin and bundled macro has a :doc example that checks", async () => {
+  const keywords = new Map(effectKeywordDocs.map(doc => [doc.name, doc]));
+  for (const name of [...effectCombinators.keys(), ...effectCoreFormNames]) expect(keywords.has(name), `:doc ${name}`).toBe(true);
+  for (const [name, spec] of effectCombinators)
+    expect(Object.keys(keywords.get(name)!.options ?? {}).sort(), `${name} option keys`).toEqual((spec.options ?? []).map(key => `:${key}`).sort());
+  for (const doc of effectKeywordDocs) {
+    const [shown] = (await repl(`:doc ${doc.name}`, "keyword-docs")).docs.filter((d: { kind: string }) => d.kind === "effect");
+    const checked = await repl(`${shown.try} ${doc.example}`, `keyword-${doc.name}`);
+    expect(checked.diagnostics, `:doc ${doc.name} example`).toEqual([]);
+    expect(checked.ok, `:doc ${doc.name} example`).toBe(true);
+  }
+  for (const doc of builtinDocs) {
+    if (doc.example.startsWith("(: ")) expect(await repl(`:effect ${doc.example}`, `builtin-${doc.name}`), `:doc ${doc.name} example`).toMatchObject({ ok: true, diagnostics: [] });
+    else if (!(await repl(doc.example, "builtin-docs")).ok)
+      expect(await repl(`:infer ${doc.example}`, "builtin-docs"), `:doc ${doc.name} example`).toMatchObject({ ok: true, diagnostics: [] });
+  }
+  // Macros: kernel and compiler.lisp examples evaluate, forma:effect examples check
+  // as Effect code, and file-module library examples check as a file that imports them.
+  await repl(":load compiler.lisp", "macro-docs");
+  await repl(':effect (import "forma:effect" [do bind pure])', "macro-docs");
+  const macros = allBundledDocs().filter(doc => doc.kind === "macro");
+  expect(macros.length).toBeGreaterThan(25);
+  for (const doc of macros) {
+    const [example] = doc.examples;
+    expect(example, `${doc.source} ${doc.name} has an example`).toBeDefined();
+    if (!doc.source.startsWith("forma:")) {
+      expect(await repl(example!, "macro-docs"), `${doc.name} example`).toMatchObject({ ok: true });
+    } else if (doc.source === "forma:effect") {
+      const declaration = /^\((service|error)\s/u.test(example!);
+      expect(await repl(`${declaration ? ":effect" : ":infer"} ${example}`, "macro-docs"), `${doc.name} example`).toMatchObject({ ok: true, diagnostics: [] });
+    } else {
+      const exports = /^\(export ([^)]*)\)/mu.exec((bundledModuleSources as Record<string, string>)[doc.source.slice("forma:".length)]!)![1];
+      writeFileSync(join(dir, "macro-example.lisp"), `(import "${doc.source}" [${exports}])\n${example}`);
+      expect(await call("check", { path: "macro-example.lisp" }), `${doc.name} example`).toMatchObject({ ok: true });
+    }
+  }
+}, 120_000);
+
+test("repl pages long results and outlines large sources", async () => {
+  const ontology = preludeSources["ontology.lisp"];
+  const first = await repl(":source ontology.lisp", "pages");
+  expect(first).toMatchObject({ ok: true, kind: "source", name: "ontology.lisp", page: { page: 1, more: ":more", omitted: ["source"] } });
+  expect(first.source).toBeUndefined();
+  expect(first.text.length).toBeLessThan(8_400);
+  expect(first.text).toMatch(/\[:source ontology\.lisp: page 1 of \d+, lines 1-\d+ of \d+\. :more shows the next page/u);
+  // Following :more to the end returns every line exactly once.
+  const pages = [first];
+  while (pages.at(-1)!.page?.more) pages.push(await repl(":more", "pages"));
+  expect(pages.length).toBe(first.page.pages);
+  expect(pages.map(p => p.text.slice(0, p.text.lastIndexOf("\n["))).join("\n")).toBe(ontology);
+  expect(await repl(":more", "pages")).toMatchObject({ ok: false, diagnostics: [{ code: "repl/no-more" }] });
+  await repl(":source ontology.lisp", "pages");
+  await repl(":more", "pages");
+  const rest = await repl(":more all", "pages");
+  expect(rest).toMatchObject({ ok: true, source: ontology });
+  expect(ontology.endsWith(rest.text)).toBe(true);
+
+  const outline = await repl(":outline ontology.lisp", "pages");
+  expect(outline.page).toBeUndefined();
+  expect(outline.text).toMatch(/^ {2}108 form {2}entity — A named record of attributes\.$/mu);
+  expect(outline.text).toMatch(/^ {4}8 ── ENTITY SCHEMAS AND SEED DATA$/mu);
+  expect(await repl(":source ontology.lisp 108-109", "pages")).toMatchObject({ lines: [108, 109], source: ontology.split("\n").slice(107, 109).join("\n") });
+
+  await repl(":load ontology.lisp", "pages");
+  expect((await repl(":outline", "pages")).text).toMatch(/^Forms from ontology\.lisp \(\d+\):\n {2}entity relation seed/mu);
+  const entity = await repl(":describe entity", "pages");
+  expect(entity).toMatchObject({ ok: true, forms: [{ name: "entity", examples: [expect.stringContaining("(entity Person")] }], functions: [], types: [] });
+  expect(entity.text).toContain("Optional: doc (Option String)");
+  expect(await repl(":describe nothing-here", "pages")).toMatchObject({ ok: false, diagnostics: [{ code: "repl/unknown-name" }] });
+}, 30_000);
+
+test("repl :ir exports every declaration in the session as one document", async () => {
+  expect(await repl(":ir", "ir")).toMatchObject({ ok: true, ir: { preludes: [], declarations: [], effect: [] } });
+  await repl(":load ontology.lisp", "ir");
+  await repl("(entity Person {:name String})", "ir");
+  await repl("(entity Team {})\n(relation Member Person Team {})", "ir");
+  // Redeclaring a name replaces it in place.
+  await repl("(entity Person {:name String :age Int})", "ir");
+  await repl(":effect (error NotFound {:id String})", "ir");
+  const { ir, text } = await repl(":export", "ir");
+  expect(ir.preludes).toEqual(["ontology.lisp"]);
+  expect(ir.declarations.map((d: { id: string }) => d.id)).toEqual(["Entity:Person", "Entity:Team", "Relation:Member"]);
+  expect(ir.declarations[0]).toMatchObject({ form: "entity", payload: { fields: [{ name: "person/name" }, { name: "person/age", type: "Int" }] } });
+  expect(ir.effect).toMatchObject([{ id: "ErrorDef:NotFound", payload: { kind: "ErrorDef", name: "NotFound" } }]);
+  expect(JSON.stringify(ir)).not.toContain('"span"');
+  expect(JSON.parse(text)).toEqual(ir);
+}, 30_000);

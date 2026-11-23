@@ -14,25 +14,25 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 246,
+                "endOffset": 401,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 232
+                "startOffset": 387
               },
               "success": {
                 "kind": "Ref",
                 "name": "Shape",
                 "span": {
-                  "endOffset": 245,
+                  "endOffset": 400,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 240
+                  "startOffset": 395
                 }
               }
             },
             "kind": "Pure",
             "span": {
-              "endOffset": 289,
+              "endOffset": 444,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 263
+              "startOffset": 418
             },
             "value": {
               "items": [
@@ -43,9 +43,9 @@
                     "name": ":"
                   },
                   "span": {
-                    "endOffset": 289,
+                    "endOffset": 444,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 263
+                    "startOffset": 418
                   }
                 },
                 {
@@ -57,9 +57,9 @@
                         "name": ":"
                       },
                       "span": {
-                        "endOffset": 282,
+                        "endOffset": 437,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 266
+                        "startOffset": 421
                       }
                     },
                     {
@@ -72,17 +72,17 @@
                               "name": ":_tag"
                             },
                             "span": {
-                              "endOffset": 282,
+                              "endOffset": 437,
                               "sourceId": "surfaces/effect-typescript/surface-review",
-                              "startOffset": 266
+                              "startOffset": 421
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 282,
+                              "endOffset": 437,
                               "sourceId": "surfaces/effect-typescript/surface-review",
-                              "startOffset": 266
+                              "startOffset": 421
                             },
                             "value": "Circle"
                           }
@@ -95,17 +95,17 @@
                               "name": ":value"
                             },
                             "span": {
-                              "endOffset": 281,
+                              "endOffset": 436,
                               "sourceId": "surfaces/effect-typescript/surface-review",
-                              "startOffset": 280
+                              "startOffset": 435
                             }
                           },
                           "value": {
                             "kind": "Literal",
                             "span": {
-                              "endOffset": 281,
+                              "endOffset": 436,
                               "sourceId": "surfaces/effect-typescript/surface-review",
-                              "startOffset": 280
+                              "startOffset": 435
                             },
                             "value": 7
                           }
@@ -113,43 +113,43 @@
                       ],
                       "kind": "Record",
                       "span": {
-                        "endOffset": 282,
+                        "endOffset": 437,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 266
+                        "startOffset": 421
                       }
                     },
                     {
                       "kind": "Var",
                       "name": "Shape",
                       "span": {
-                        "endOffset": 282,
+                        "endOffset": 437,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 266
+                        "startOffset": 421
                       }
                     }
                   ],
                   "kind": "List",
                   "span": {
-                    "endOffset": 282,
+                    "endOffset": 437,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 266
+                    "startOffset": 421
                   }
                 },
                 {
                   "kind": "Var",
                   "name": "Shape",
                   "span": {
-                    "endOffset": 288,
+                    "endOffset": 443,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 283
+                    "startOffset": 438
                   }
                 }
               ],
               "kind": "List",
               "span": {
-                "endOffset": 289,
+                "endOffset": 444,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 263
+                "startOffset": 418
               }
             }
           },
@@ -158,17 +158,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 246,
+              "endOffset": 401,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 232
+              "startOffset": 387
             },
             "success": {
               "kind": "Ref",
               "name": "Shape",
               "span": {
-                "endOffset": 245,
+                "endOffset": 400,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 240
+                "startOffset": 395
               }
             }
           },
@@ -179,9 +179,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 290,
+          "endOffset": 445,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 248
+          "startOffset": 403
         }
       },
       {
@@ -195,9 +195,9 @@
               "condition": {
                 "kind": "Literal",
                 "span": {
-                  "endOffset": 1013,
+                  "endOffset": 1168,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 1009
+                  "startOffset": 1164
                 },
                 "value": true
               },
@@ -208,17 +208,17 @@
                 "kind": "Effect",
                 "requirements": [],
                 "span": {
-                  "endOffset": 966,
+                  "endOffset": 1121,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 937
+                  "startOffset": 1092
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 951,
+                    "endOffset": 1106,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 945
+                    "startOffset": 1100
                   }
                 }
               },
@@ -230,17 +230,17 @@
                   "kind": "Effect",
                   "requirements": [],
                   "span": {
-                    "endOffset": 966,
+                    "endOffset": 1121,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 937
+                    "startOffset": 1092
                   },
                   "success": {
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 951,
+                      "endOffset": 1106,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 945
+                      "startOffset": 1100
                     }
                   }
                 },
@@ -251,29 +251,29 @@
                     "entries": [],
                     "kind": "Record",
                     "span": {
-                      "endOffset": 1058,
+                      "endOffset": 1213,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 1056
+                      "startOffset": 1211
                     }
                   },
                   "span": {
-                    "endOffset": 1059,
+                    "endOffset": 1214,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 1043
+                    "startOffset": 1198
                   }
                 },
                 "kind": "Fail",
                 "span": {
-                  "endOffset": 1060,
+                  "endOffset": 1215,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 1037
+                  "startOffset": 1192
                 }
               },
               "kind": "If",
               "span": {
-                "endOffset": 1061,
+                "endOffset": 1216,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 1005
+                "startOffset": 1160
               },
               "then": {
                 "effect": {
@@ -283,17 +283,17 @@
                   "kind": "Effect",
                   "requirements": [],
                   "span": {
-                    "endOffset": 966,
+                    "endOffset": 1121,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 937
+                    "startOffset": 1092
                   },
                   "success": {
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 951,
+                      "endOffset": 1106,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 945
+                      "startOffset": 1100
                     }
                   }
                 },
@@ -304,22 +304,22 @@
                     "entries": [],
                     "kind": "Record",
                     "span": {
-                      "endOffset": 1034,
+                      "endOffset": 1189,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 1032
+                      "startOffset": 1187
                     }
                   },
                   "span": {
-                    "endOffset": 1035,
+                    "endOffset": 1190,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 1020
+                    "startOffset": 1175
                   }
                 },
                 "kind": "Fail",
                 "span": {
-                  "endOffset": 1036,
+                  "endOffset": 1191,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 1014
+                  "startOffset": 1169
                 }
               }
             },
@@ -330,17 +330,17 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 966,
+                "endOffset": 1121,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 937
+                "startOffset": 1092
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 951,
+                  "endOffset": 1106,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 945
+                  "startOffset": 1100
                 }
               }
             },
@@ -356,17 +356,17 @@
                     "kind": "Effect",
                     "requirements": [],
                     "span": {
-                      "endOffset": 966,
+                      "endOffset": 1121,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 937
+                      "startOffset": 1092
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "String",
                       "span": {
-                        "endOffset": 951,
+                        "endOffset": 1106,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 945
+                        "startOffset": 1100
                       }
                     }
                   },
@@ -377,28 +377,28 @@
                       "entries": [],
                       "kind": "Record",
                       "span": {
-                        "endOffset": 1106,
+                        "endOffset": 1261,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 1104
+                        "startOffset": 1259
                       }
                     },
                     "span": {
-                      "endOffset": 1107,
+                      "endOffset": 1262,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 1091
+                      "startOffset": 1246
                     }
                   },
                   "kind": "Fail",
                   "span": {
-                    "endOffset": 1108,
+                    "endOffset": 1263,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 1085
+                    "startOffset": 1240
                   }
                 },
                 "span": {
-                  "endOffset": 1080,
+                  "endOffset": 1235,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 1066
+                  "startOffset": 1221
                 }
               },
               {
@@ -412,48 +412,48 @@
                     "kind": "Effect",
                     "requirements": [],
                     "span": {
-                      "endOffset": 966,
+                      "endOffset": 1121,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 937
+                      "startOffset": 1092
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "String",
                       "span": {
-                        "endOffset": 951,
+                        "endOffset": 1106,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 945
+                        "startOffset": 1100
                       }
                     }
                   },
                   "kind": "Pure",
                   "span": {
-                    "endOffset": 1131,
+                    "endOffset": 1286,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 1121
+                    "startOffset": 1276
                   },
                   "value": {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 1131,
+                      "endOffset": 1286,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 1121
+                      "startOffset": 1276
                     },
                     "value": "fallback"
                   }
                 },
                 "span": {
-                  "endOffset": 1116,
+                  "endOffset": 1271,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 1113
+                  "startOffset": 1268
                 }
               }
             ],
             "kind": "CatchTags",
             "span": {
-              "endOffset": 1132,
+              "endOffset": 1287,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 994
+              "startOffset": 1149
             }
           },
           "effect": {
@@ -463,17 +463,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 966,
+              "endOffset": 1121,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 937
+              "startOffset": 1092
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 951,
+                "endOffset": 1106,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 945
+                "startOffset": 1100
               }
             }
           },
@@ -484,9 +484,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 1133,
+          "endOffset": 1288,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 968
+          "startOffset": 1123
         }
       },
       {
@@ -501,9 +501,9 @@
                 "kind": "Var",
                 "name": "first",
                 "span": {
-                  "endOffset": 815,
+                  "endOffset": 970,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 810
+                  "startOffset": 965
                 }
               },
               "effect": {
@@ -511,17 +511,17 @@
                 "kind": "Effect",
                 "requirements": [],
                 "span": {
-                  "endOffset": 762,
+                  "endOffset": 917,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 747
+                  "startOffset": 902
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "String",
                   "span": {
-                    "endOffset": 761,
+                    "endOffset": 916,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 755
+                    "startOffset": 910
                   }
                 }
               },
@@ -531,17 +531,17 @@
                   "kind": "Effect",
                   "requirements": [],
                   "span": {
-                    "endOffset": 762,
+                    "endOffset": 917,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 747
+                    "startOffset": 902
                   },
                   "success": {
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 761,
+                      "endOffset": 916,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 755
+                      "startOffset": 910
                     }
                   }
                 },
@@ -552,29 +552,29 @@
                     "entries": [],
                     "kind": "Record",
                     "span": {
-                      "endOffset": 860,
+                      "endOffset": 1015,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 858
+                      "startOffset": 1013
                     }
                   },
                   "span": {
-                    "endOffset": 861,
+                    "endOffset": 1016,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 845
+                    "startOffset": 1000
                   }
                 },
                 "kind": "Fail",
                 "span": {
-                  "endOffset": 862,
+                  "endOffset": 1017,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 839
+                  "startOffset": 994
                 }
               },
               "kind": "If",
               "span": {
-                "endOffset": 863,
+                "endOffset": 1018,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 806
+                "startOffset": 961
               },
               "then": {
                 "effect": {
@@ -582,17 +582,17 @@
                   "kind": "Effect",
                   "requirements": [],
                   "span": {
-                    "endOffset": 762,
+                    "endOffset": 917,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 747
+                    "startOffset": 902
                   },
                   "success": {
                     "kind": "Primitive",
                     "name": "String",
                     "span": {
-                      "endOffset": 761,
+                      "endOffset": 916,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 755
+                      "startOffset": 910
                     }
                   }
                 },
@@ -603,22 +603,22 @@
                     "entries": [],
                     "kind": "Record",
                     "span": {
-                      "endOffset": 836,
+                      "endOffset": 991,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 834
+                      "startOffset": 989
                     }
                   },
                   "span": {
-                    "endOffset": 837,
+                    "endOffset": 992,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 822
+                    "startOffset": 977
                   }
                 },
                 "kind": "Fail",
                 "span": {
-                  "endOffset": 838,
+                  "endOffset": 993,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 816
+                  "startOffset": 971
                 }
               }
             },
@@ -627,17 +627,17 @@
               "kind": "Effect",
               "requirements": [],
               "span": {
-                "endOffset": 762,
+                "endOffset": 917,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 747
+                "startOffset": 902
               },
               "success": {
                 "kind": "Primitive",
                 "name": "String",
                 "span": {
-                  "endOffset": 761,
+                  "endOffset": 916,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 755
+                  "startOffset": 910
                 }
               }
             },
@@ -651,40 +651,40 @@
                     "kind": "Effect",
                     "requirements": [],
                     "span": {
-                      "endOffset": 762,
+                      "endOffset": 917,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 747
+                      "startOffset": 902
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "String",
                       "span": {
-                        "endOffset": 761,
+                        "endOffset": 916,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 755
+                        "startOffset": 910
                       }
                     }
                   },
                   "kind": "Pure",
                   "span": {
-                    "endOffset": 894,
+                    "endOffset": 1049,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 887
+                    "startOffset": 1042
                   },
                   "value": {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 894,
+                      "endOffset": 1049,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 887
+                      "startOffset": 1042
                     },
                     "value": "first"
                   }
                 },
                 "span": {
-                  "endOffset": 882,
+                  "endOffset": 1037,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 868
+                  "startOffset": 1023
                 }
               },
               {
@@ -696,48 +696,48 @@
                     "kind": "Effect",
                     "requirements": [],
                     "span": {
-                      "endOffset": 762,
+                      "endOffset": 917,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 747
+                      "startOffset": 902
                     },
                     "success": {
                       "kind": "Primitive",
                       "name": "String",
                       "span": {
-                        "endOffset": 761,
+                        "endOffset": 916,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 755
+                        "startOffset": 910
                       }
                     }
                   },
                   "kind": "Pure",
                   "span": {
-                    "endOffset": 917,
+                    "endOffset": 1072,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 907
+                    "startOffset": 1062
                   },
                   "value": {
                     "kind": "Literal",
                     "span": {
-                      "endOffset": 917,
+                      "endOffset": 1072,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 907
+                      "startOffset": 1062
                     },
                     "value": "fallback"
                   }
                 },
                 "span": {
-                  "endOffset": 902,
+                  "endOffset": 1057,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 899
+                  "startOffset": 1054
                 }
               }
             ],
             "kind": "CatchTags",
             "span": {
-              "endOffset": 918,
+              "endOffset": 1073,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 795
+              "startOffset": 950
             }
           },
           "effect": {
@@ -745,17 +745,17 @@
             "kind": "Effect",
             "requirements": [],
             "span": {
-              "endOffset": 762,
+              "endOffset": 917,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 747
+              "startOffset": 902
             },
             "success": {
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 761,
+                "endOffset": 916,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 755
+                "startOffset": 910
               }
             }
           },
@@ -768,9 +768,9 @@
                 "kind": "Primitive",
                 "name": "Bool",
                 "span": {
-                  "endOffset": 746,
+                  "endOffset": 901,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 742
+                  "startOffset": 897
                 }
               }
             }
@@ -778,9 +778,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 919,
+          "endOffset": 1074,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 765
+          "startOffset": 920
         }
       },
       {
@@ -795,9 +795,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 703,
+          "endOffset": 858,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 682
+          "startOffset": 837
         }
       },
       {
@@ -812,9 +812,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 726,
+          "endOffset": 881,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 704
+          "startOffset": 859
         }
       },
       {
@@ -826,18 +826,18 @@
                 "kind": "Var",
                 "name": "match",
                 "span": {
-                  "endOffset": 450,
+                  "endOffset": 605,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 445
+                  "startOffset": 600
                 }
               },
               {
                 "kind": "Var",
                 "name": "shape",
                 "span": {
-                  "endOffset": 456,
+                  "endOffset": 611,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 451
+                  "startOffset": 606
                 }
               },
               {
@@ -846,26 +846,26 @@
                     "kind": "Var",
                     "name": "Circle",
                     "span": {
-                      "endOffset": 477,
+                      "endOffset": 632,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 457
+                      "startOffset": 612
                     }
                   },
                   {
                     "kind": "Var",
-                    "name": "__pattern_457",
+                    "name": "__pattern_612",
                     "span": {
-                      "endOffset": 477,
+                      "endOffset": 632,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 457
+                      "startOffset": 612
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 477,
+                  "endOffset": 632,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 457
+                  "startOffset": 612
                 }
               },
               {
@@ -874,9 +874,9 @@
                     "kind": "Var",
                     "name": "let",
                     "span": {
-                      "endOffset": 483,
+                      "endOffset": 638,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 478
+                      "startOffset": 633
                     }
                   },
                   {
@@ -885,9 +885,9 @@
                         "kind": "Var",
                         "name": "value",
                         "span": {
-                          "endOffset": 476,
+                          "endOffset": 631,
                           "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 471
+                          "startOffset": 626
                         }
                       },
                       {
@@ -896,18 +896,18 @@
                             "kind": "Var",
                             "name": "get",
                             "span": {
-                              "endOffset": 477,
+                              "endOffset": 632,
                               "sourceId": "surfaces/effect-typescript/surface-review",
-                              "startOffset": 457
+                              "startOffset": 612
                             }
                           },
                           {
                             "kind": "Var",
-                            "name": "__pattern_457",
+                            "name": "__pattern_612",
                             "span": {
-                              "endOffset": 477,
+                              "endOffset": 632,
                               "sourceId": "surfaces/effect-typescript/surface-review",
-                              "startOffset": 457
+                              "startOffset": 612
                             }
                           },
                           {
@@ -917,68 +917,68 @@
                               "name": ":value"
                             },
                             "span": {
-                              "endOffset": 477,
+                              "endOffset": 632,
                               "sourceId": "surfaces/effect-typescript/surface-review",
-                              "startOffset": 457
+                              "startOffset": 612
                             }
                           }
                         ],
                         "kind": "List",
                         "span": {
-                          "endOffset": 477,
+                          "endOffset": 632,
                           "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 457
+                          "startOffset": 612
                         }
                       }
                     ],
                     "kind": "Vector",
                     "span": {
-                      "endOffset": 477,
+                      "endOffset": 632,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 457
+                      "startOffset": 612
                     }
                   },
                   {
                     "kind": "Var",
                     "name": "value",
                     "span": {
-                      "endOffset": 483,
+                      "endOffset": 638,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 478
+                      "startOffset": 633
                     }
                   }
                 ],
                 "kind": "List",
                 "span": {
-                  "endOffset": 483,
+                  "endOffset": 638,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 478
+                  "startOffset": 633
                 }
               },
               {
                 "kind": "Var",
                 "name": "None",
                 "span": {
-                  "endOffset": 494,
+                  "endOffset": 649,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 484
+                  "startOffset": 639
                 }
               },
               {
                 "kind": "Literal",
                 "span": {
-                  "endOffset": 496,
+                  "endOffset": 651,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 495
+                  "startOffset": 650
                 },
                 "value": 0
               }
             ],
             "kind": "List",
             "span": {
-              "endOffset": 497,
+              "endOffset": 652,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 444
+              "startOffset": 599
             }
           },
           "kind": "FunctionDef",
@@ -990,9 +990,9 @@
                 "kind": "Ref",
                 "name": "Shape",
                 "span": {
-                  "endOffset": 414,
+                  "endOffset": 569,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 409
+                  "startOffset": 564
                 }
               }
             }
@@ -1001,17 +1001,17 @@
             "kind": "Primitive",
             "name": "Int",
             "span": {
-              "endOffset": 418,
+              "endOffset": 573,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 415
+              "startOffset": 570
             }
           }
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 498,
+          "endOffset": 653,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 421
+          "startOffset": 576
         }
       },
       {
@@ -1026,9 +1026,9 @@
                     {
                       "name": "base",
                       "span": {
-                        "endOffset": 638,
+                        "endOffset": 793,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 620
+                        "startOffset": 775
                       },
                       "value": {
                         "effect": {
@@ -1042,9 +1042,9 @@
                         },
                         "kind": "Pure",
                         "span": {
-                          "endOffset": 638,
+                          "endOffset": 793,
                           "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 620
+                          "startOffset": 775
                         },
                         "value": {
                           "items": [
@@ -1052,35 +1052,35 @@
                               "kind": "Var",
                               "name": "fn",
                               "span": {
-                                "endOffset": 638,
+                                "endOffset": 793,
                                 "sourceId": "surfaces/effect-typescript/surface-review",
-                                "startOffset": 620
+                                "startOffset": 775
                               }
                             },
                             {
                               "items": [],
                               "kind": "Vector",
                               "span": {
-                                "endOffset": 635,
+                                "endOffset": 790,
                                 "sourceId": "surfaces/effect-typescript/surface-review",
-                                "startOffset": 633
+                                "startOffset": 788
                               }
                             },
                             {
                               "kind": "Literal",
                               "span": {
-                                "endOffset": 637,
+                                "endOffset": 792,
                                 "sourceId": "surfaces/effect-typescript/surface-review",
-                                "startOffset": 636
+                                "startOffset": 791
                               },
                               "value": 1
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 638,
+                            "endOffset": 793,
                             "sourceId": "surfaces/effect-typescript/surface-review",
-                            "startOffset": 620
+                            "startOffset": 775
                           }
                         }
                       }
@@ -1109,9 +1109,9 @@
                         },
                         "kind": "Pure",
                         "span": {
-                          "endOffset": 679,
+                          "endOffset": 834,
                           "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 654
+                          "startOffset": 809
                         },
                         "value": {
                           "items": [
@@ -1119,9 +1119,9 @@
                               "kind": "Var",
                               "name": "+",
                               "span": {
-                                "endOffset": 656,
+                                "endOffset": 811,
                                 "sourceId": "surfaces/effect-typescript/surface-review",
-                                "startOffset": 655
+                                "startOffset": 810
                               }
                             },
                             {
@@ -1130,17 +1130,17 @@
                                   "kind": "Var",
                                   "name": "base",
                                   "span": {
-                                    "endOffset": 662,
+                                    "endOffset": 817,
                                     "sourceId": "surfaces/effect-typescript/surface-review",
-                                    "startOffset": 658
+                                    "startOffset": 813
                                   }
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 663,
+                                "endOffset": 818,
                                 "sourceId": "surfaces/effect-typescript/surface-review",
-                                "startOffset": 657
+                                "startOffset": 812
                               }
                             },
                             {
@@ -1149,9 +1149,9 @@
                                   "kind": "Var",
                                   "name": "get",
                                   "span": {
-                                    "endOffset": 678,
+                                    "endOffset": 833,
                                     "sourceId": "surfaces/effect-typescript/surface-review",
-                                    "startOffset": 664
+                                    "startOffset": 819
                                   }
                                 },
                                 {
@@ -1160,18 +1160,18 @@
                                       "kind": "Var",
                                       "name": "get",
                                       "span": {
-                                        "endOffset": 678,
+                                        "endOffset": 833,
                                         "sourceId": "surfaces/effect-typescript/surface-review",
-                                        "startOffset": 664
+                                        "startOffset": 819
                                       }
                                     },
                                     {
                                       "kind": "Var",
                                       "name": "cfg",
                                       "span": {
-                                        "endOffset": 678,
+                                        "endOffset": 833,
                                         "sourceId": "surfaces/effect-typescript/surface-review",
-                                        "startOffset": 664
+                                        "startOffset": 819
                                       }
                                     },
                                     {
@@ -1181,17 +1181,17 @@
                                         "name": ":inner"
                                       },
                                       "span": {
-                                        "endOffset": 678,
+                                        "endOffset": 833,
                                         "sourceId": "surfaces/effect-typescript/surface-review",
-                                        "startOffset": 664
+                                        "startOffset": 819
                                       }
                                     }
                                   ],
                                   "kind": "List",
                                   "span": {
-                                    "endOffset": 678,
+                                    "endOffset": 833,
                                     "sourceId": "surfaces/effect-typescript/surface-review",
-                                    "startOffset": 664
+                                    "startOffset": 819
                                   }
                                 },
                                 {
@@ -1201,34 +1201,34 @@
                                     "name": ":port"
                                   },
                                   "span": {
-                                    "endOffset": 678,
+                                    "endOffset": 833,
                                     "sourceId": "surfaces/effect-typescript/surface-review",
-                                    "startOffset": 664
+                                    "startOffset": 819
                                   }
                                 }
                               ],
                               "kind": "List",
                               "span": {
-                                "endOffset": 678,
+                                "endOffset": 833,
                                 "sourceId": "surfaces/effect-typescript/surface-review",
-                                "startOffset": 664
+                                "startOffset": 819
                               }
                             }
                           ],
                           "kind": "List",
                           "span": {
-                            "endOffset": 679,
+                            "endOffset": 834,
                             "sourceId": "surfaces/effect-typescript/surface-review",
-                            "startOffset": 654
+                            "startOffset": 809
                           }
                         }
                       }
                     ],
                     "kind": "Do",
                     "span": {
-                      "endOffset": 680,
+                      "endOffset": 835,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 641
+                      "startOffset": 796
                     }
                   },
                   "effect": {
@@ -1242,17 +1242,17 @@
                   },
                   "kind": "Let",
                   "span": {
-                    "endOffset": 680,
+                    "endOffset": 835,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 641
+                    "startOffset": 796
                   }
                 },
                 "name": "next",
                 "params": [],
                 "span": {
-                  "endOffset": 680,
+                  "endOffset": 835,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 641
+                  "startOffset": 796
                 }
               }
             ],
@@ -1261,9 +1261,9 @@
               {
                 "name": "cfg",
                 "span": {
-                  "endOffset": 616,
+                  "endOffset": 771,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 598
+                  "startOffset": 753
                 },
                 "value": {
                   "effect": {
@@ -1277,9 +1277,9 @@
                   },
                   "kind": "Pure",
                   "span": {
-                    "endOffset": 616,
+                    "endOffset": 771,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 598
+                    "startOffset": 753
                   },
                   "value": {
                     "entries": [
@@ -1291,9 +1291,9 @@
                             "name": ":inner"
                           },
                           "span": {
-                            "endOffset": 605,
+                            "endOffset": 760,
                             "sourceId": "surfaces/effect-typescript/surface-review",
-                            "startOffset": 599
+                            "startOffset": 754
                           }
                         },
                         "value": {
@@ -1306,17 +1306,17 @@
                                   "name": ":port"
                                 },
                                 "span": {
-                                  "endOffset": 612,
+                                  "endOffset": 767,
                                   "sourceId": "surfaces/effect-typescript/surface-review",
-                                  "startOffset": 607
+                                  "startOffset": 762
                                 }
                               },
                               "value": {
                                 "kind": "Literal",
                                 "span": {
-                                  "endOffset": 614,
+                                  "endOffset": 769,
                                   "sourceId": "surfaces/effect-typescript/surface-review",
-                                  "startOffset": 613
+                                  "startOffset": 768
                                 },
                                 "value": 8
                               }
@@ -1324,18 +1324,18 @@
                           ],
                           "kind": "Record",
                           "span": {
-                            "endOffset": 615,
+                            "endOffset": 770,
                             "sourceId": "surfaces/effect-typescript/surface-review",
-                            "startOffset": 606
+                            "startOffset": 761
                           }
                         }
                       }
                     ],
                     "kind": "Record",
                     "span": {
-                      "endOffset": 616,
+                      "endOffset": 771,
                       "sourceId": "surfaces/effect-typescript/surface-review",
-                      "startOffset": 598
+                      "startOffset": 753
                     }
                   }
                 }
@@ -1347,9 +1347,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 681,
+          "endOffset": 836,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 539
+          "startOffset": 694
         }
       },
       {
@@ -1362,24 +1362,24 @@
               "kind": "Primitive",
               "name": "String",
               "span": {
-                "endOffset": 177,
+                "endOffset": 332,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 171
+                "startOffset": 326
               }
             },
             "kind": "Option",
             "span": {
-              "endOffset": 178,
+              "endOffset": 333,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 163
+              "startOffset": 318
             }
           }
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 179,
+          "endOffset": 334,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 147
+          "startOffset": 302
         }
       },
       {
@@ -1391,9 +1391,9 @@
             "discriminator": "_tag",
             "kind": "TaggedUnion",
             "span": {
-              "endOffset": 82,
+              "endOffset": 237,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 52
+              "startOffset": 207
             },
             "variants": [
               {
@@ -1405,29 +1405,29 @@
                         "kind": "Primitive",
                         "name": "String",
                         "span": {
-                          "endOffset": 74,
+                          "endOffset": 229,
                           "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 68
+                          "startOffset": 223
                         }
                       },
                       "span": {
-                        "endOffset": 74,
+                        "endOffset": 229,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 68
+                        "startOffset": 223
                       }
                     }
                   ],
                   "kind": "Struct",
                   "span": {
-                    "endOffset": 74,
+                    "endOffset": 229,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 68
+                    "startOffset": 223
                   }
                 },
                 "span": {
-                  "endOffset": 75,
+                  "endOffset": 230,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 60
+                  "startOffset": 215
                 },
                 "tag": "Circle"
               },
@@ -1436,15 +1436,15 @@
                   "fields": [],
                   "kind": "Struct",
                   "span": {
-                    "endOffset": 81,
+                    "endOffset": 236,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 76
+                    "startOffset": 231
                   }
                 },
                 "span": {
-                  "endOffset": 81,
+                  "endOffset": 236,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 76
+                  "startOffset": 231
                 },
                 "tag": "Empty"
               }
@@ -1453,9 +1453,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 83,
+          "endOffset": 238,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 40
+          "startOffset": 195
         }
       },
       {
@@ -1466,9 +1466,9 @@
           "schema": {
             "kind": "Literal",
             "span": {
-              "endOffset": 117,
+              "endOffset": 272,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 95
+              "startOffset": 250
             },
             "values": [
               "admin",
@@ -1478,9 +1478,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 118,
+          "endOffset": 273,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 84
+          "startOffset": 239
         }
       },
       {
@@ -1493,33 +1493,33 @@
               "kind": "Ref",
               "name": "Role",
               "span": {
-                "endOffset": 140,
+                "endOffset": 295,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 136
+                "startOffset": 291
               }
             },
             "kind": "Map",
             "span": {
-              "endOffset": 145,
+              "endOffset": 300,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 131
+              "startOffset": 286
             },
             "value": {
               "kind": "Primitive",
               "name": "Int",
               "span": {
-                "endOffset": 144,
+                "endOffset": 299,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 141
+                "startOffset": 296
               }
             }
           }
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 146,
+          "endOffset": 301,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 119
+          "startOffset": 274
         }
       },
       {
@@ -1531,9 +1531,9 @@
             "discriminator": "_tag",
             "kind": "TaggedUnion",
             "span": {
-              "endOffset": 38,
+              "endOffset": 193,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 12
+              "startOffset": 167
             },
             "variants": [
               {
@@ -1545,29 +1545,29 @@
                         "kind": "Primitive",
                         "name": "Int",
                         "span": {
-                          "endOffset": 31,
+                          "endOffset": 186,
                           "sourceId": "surfaces/effect-typescript/surface-review",
-                          "startOffset": 28
+                          "startOffset": 183
                         }
                       },
                       "span": {
-                        "endOffset": 31,
+                        "endOffset": 186,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 28
+                        "startOffset": 183
                       }
                     }
                   ],
                   "kind": "Struct",
                   "span": {
-                    "endOffset": 31,
+                    "endOffset": 186,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 28
+                    "startOffset": 183
                   }
                 },
                 "span": {
-                  "endOffset": 32,
+                  "endOffset": 187,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 20
+                  "startOffset": 175
                 },
                 "tag": "Circle"
               },
@@ -1576,15 +1576,15 @@
                   "fields": [],
                   "kind": "Struct",
                   "span": {
-                    "endOffset": 37,
+                    "endOffset": 192,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 33
+                    "startOffset": 188
                   }
                 },
                 "span": {
-                  "endOffset": 37,
+                  "endOffset": 192,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 33
+                  "startOffset": 188
                 },
                 "tag": "None"
               }
@@ -1593,9 +1593,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 39,
+          "endOffset": 194,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 0
+          "startOffset": 155
         }
       },
       {
@@ -1611,17 +1611,17 @@
                   "Counter.next"
                 ],
                 "span": {
-                  "endOffset": 536,
+                  "endOffset": 691,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 524
+                  "startOffset": 679
                 },
                 "success": {
                   "kind": "Primitive",
                   "name": "Int",
                   "span": {
-                    "endOffset": 535,
+                    "endOffset": 690,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 532
+                    "startOffset": 687
                   }
                 }
               },
@@ -1634,9 +1634,9 @@
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 538,
+          "endOffset": 693,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 499
+          "startOffset": 654
         }
       },
       {
@@ -1649,9 +1649,9 @@
               "kind": "Primitive",
               "name": "Int",
               "span": {
-                "endOffset": 363,
+                "endOffset": 518,
                 "sourceId": "surfaces/effect-typescript/surface-review",
-                "startOffset": 360
+                "startOffset": 515
               }
             },
             "kind": "Option"
@@ -1660,17 +1660,17 @@
             "kind": "Var",
             "name": "none",
             "span": {
-              "endOffset": 393,
+              "endOffset": 548,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 382
+              "startOffset": 537
             }
           }
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 394,
+          "endOffset": 549,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 366
+          "startOffset": 521
         }
       },
       {
@@ -1682,9 +1682,9 @@
             "kind": "Ref",
             "name": "Other",
             "span": {
-              "endOffset": 305,
+              "endOffset": 460,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 300
+              "startOffset": 455
             }
           },
           "value": {
@@ -1696,9 +1696,9 @@
                   "name": ":"
                 },
                 "span": {
-                  "endOffset": 339,
+                  "endOffset": 494,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 321
+                  "startOffset": 476
                 }
               },
               {
@@ -1711,17 +1711,17 @@
                         "name": ":_tag"
                       },
                       "span": {
-                        "endOffset": 339,
+                        "endOffset": 494,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 321
+                        "startOffset": 476
                       }
                     },
                     "value": {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 339,
+                        "endOffset": 494,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 321
+                        "startOffset": 476
                       },
                       "value": "Circle"
                     }
@@ -1734,17 +1734,17 @@
                         "name": ":value"
                       },
                       "span": {
-                        "endOffset": 338,
+                        "endOffset": 493,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 335
+                        "startOffset": 490
                       }
                     },
                     "value": {
                       "kind": "Literal",
                       "span": {
-                        "endOffset": 338,
+                        "endOffset": 493,
                         "sourceId": "surfaces/effect-typescript/surface-review",
-                        "startOffset": 335
+                        "startOffset": 490
                       },
                       "value": "x"
                     }
@@ -1752,34 +1752,34 @@
                 ],
                 "kind": "Record",
                 "span": {
-                  "endOffset": 339,
+                  "endOffset": 494,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 321
+                  "startOffset": 476
                 }
               },
               {
                 "kind": "Var",
                 "name": "Other",
                 "span": {
-                  "endOffset": 339,
+                  "endOffset": 494,
                   "sourceId": "surfaces/effect-typescript/surface-review",
-                  "startOffset": 321
+                  "startOffset": 476
                 }
               }
             ],
             "kind": "List",
             "span": {
-              "endOffset": 339,
+              "endOffset": 494,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 321
+              "startOffset": 476
             }
           }
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 340,
+          "endOffset": 495,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 307
+          "startOffset": 462
         }
       },
       {
@@ -1791,9 +1791,9 @@
             "kind": "Ref",
             "name": "Roles",
             "span": {
-              "endOffset": 194,
+              "endOffset": 349,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 189
+              "startOffset": 344
             }
           },
           "value": {
@@ -1806,17 +1806,17 @@
                     "name": ":admin"
                   },
                   "span": {
-                    "endOffset": 217,
+                    "endOffset": 372,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 211
+                    "startOffset": 366
                   }
                 },
                 "value": {
                   "kind": "Literal",
                   "span": {
-                    "endOffset": 219,
+                    "endOffset": 374,
                     "sourceId": "surfaces/effect-typescript/surface-review",
-                    "startOffset": 218
+                    "startOffset": 373
                   },
                   "value": 1
                 }
@@ -1824,17 +1824,17 @@
             ],
             "kind": "Record",
             "span": {
-              "endOffset": 220,
+              "endOffset": 375,
               "sourceId": "surfaces/effect-typescript/surface-review",
-              "startOffset": 210
+              "startOffset": 365
             }
           }
         },
         "sourceId": "surfaces/effect-typescript/surface-review",
         "span": {
-          "endOffset": 221,
+          "endOffset": 376,
           "sourceId": "surfaces/effect-typescript/surface-review",
-          "startOffset": 196
+          "startOffset": 351
         }
       }
     ]
