@@ -945,15 +945,15 @@ function report(context: BodyContext, expr: SExpr, code: string, message: string
  * `effects` is a vector or map of effect programs, `type` is a type
  * expression, and `value` is an ordinary value expression.
  */
-type CombinatorArg = "effect" | "value" | "lambda" | "effects" | "type";
+export type CombinatorArg = "effect" | "value" | "lambda" | "effects" | "type";
 
-interface CombinatorSpec {
+export interface CombinatorSpec {
   readonly args: readonly CombinatorArg[];
   readonly rest?: CombinatorArg;
   readonly options?: readonly string[];
 }
 
-const combinators: ReadonlyMap<string, CombinatorSpec> = new Map<string, CombinatorSpec>([
+export const effectCombinators: ReadonlyMap<string, CombinatorSpec> = new Map<string, CombinatorSpec>([
   ["scoped", { args: ["effect"] }],
   ["acquire-release", { args: ["effect", "lambda"] }],
   ["ensuring", { args: ["effect", "effect"] }],
@@ -983,9 +983,12 @@ const combinators: ReadonlyMap<string, CombinatorSpec> = new Map<string, Combina
   ["decode", { args: ["type", "value"] }],
 ]);
 
+/** Effect body forms the elaborator handles itself rather than through `effectCombinators`. */
+export const effectCoreFormNames: readonly string[] = ["succeed", "fail", "catch", "do!", "do", "<-", "when", "unless"];
+
 /** Names that build effects and so only make sense in an effect body. */
 export function isEffectFormName(name: string): boolean {
-  return combinators.has(name) || ["succeed", "fail", "catch", "do!", "do", "<-", "when", "unless"].includes(name);
+  return effectCombinators.has(name) || effectCoreFormNames.includes(name);
 }
 
 function effectBodyFormsToJson(context: BodyContext, bodyForms: readonly SExpr[]): JsonValue {
@@ -1032,7 +1035,7 @@ function effectCoreExprToJson(context: BodyContext, expr: SExpr): JsonValue {
       };
     }
 
-    const combinator = head ? combinators.get(head) : undefined;
+    const combinator = head ? effectCombinators.get(head) : undefined;
     if (head && combinator) return combinatorToJson(context, expr, head, combinator);
 
     switch (head) {

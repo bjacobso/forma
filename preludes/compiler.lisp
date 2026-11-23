@@ -23,8 +23,11 @@
       []
       [(diag/error :slot slot :message (str "Default is not a member: " value))])))
 
-; Build a string-keyed map from distinct binding names, retaining value syntax.
-; (named-map gap visible) expands to {"gap" gap "visible" visible}.
+;; named-map — build a string-keyed map from distinct binding names, retaining value syntax
+;;
+;; Expands named-map gap visible to {"gap" gap "visible" visible}.
+;;
+;; (let [gap 4 visible true] (named-map gap visible))
 (macro (named-map names ...)
   (reduce
     (fn [result name]

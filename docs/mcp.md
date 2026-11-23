@@ -13,8 +13,8 @@ Other clients that support remote MCP servers take the same URL. Ask the model
 to send `:help` to the `repl` tool. The hosted server keeps each MCP session's
 REPL (definitions, session preludes and the Effect program) for a day after its
 last call. It checks, infers, expands and generates Effect programs, but `:run`
-is available only in a local `forma mcp`, and it has none of the file tools
-below. Calls are rate limited per client address.
+is available only in a local `forma mcp`; `:help` and a session's first reply
+say so. It has none of the file tools below. Calls are rate limited per client address.
 
 ## Local server
 
@@ -106,8 +106,13 @@ source again before preparing the next script.
 The `repl` tool is a code-mode session: the model writes Forma, or one `:command`
 per call, instead of choosing among narrow tools. Send `:help` first. Its text
 content is a readable result, for clients that pass only text to the model, and
-`structuredContent` has the same result as fields (`value`, `type`, `diagnostics`,
-`contracts`, `code`, `logs`).
+`structuredContent` has the same result as fields (`printed`, `type`,
+`diagnostics`, `contracts`, `code`, `logs`).
+
+A result longer than 8,000 characters comes in pages of whole lines. The text
+ends with which lines it shows; `:more` returns the next page and `:more all`
+the rest, with the full structured result. A paged structured result keeps its
+short fields and lists the long ones it leaves out in `page.omitted`.
 
 Each named `session` (default `"default"`) keeps two things until `:reset`:
 
@@ -126,8 +131,9 @@ Each named `session` (default `"default"`) keeps two things until `:reset`:
 order and replays its earlier inputs, so the new definitions apply at once. An
 input that no longer checks is dropped and reported as a warning, and a prelude
 that fails to load leaves the session unchanged. `:prelude` lists the session's
-preludes, `:prelude <name>` shows one, `:unload <name>` removes one, and
-`:describe` shows the forms, functions and types they provide.
+preludes, `:prelude <name>` shows one, `:unload <name>` removes one,
+`:describe` shows the forms, functions and types they provide, and
+`:describe <name>` shows one of them in full, with its examples.
 
 Input made only of applications of the session's prelude forms is declared
 rather than run: it elaborates to its IR, which the result shows, and is kept,
@@ -148,6 +154,11 @@ Not kept: the declarations have errors.
 error[elaborate/hole-type]: message does not match its declared hole type
 ```
 
+`:ir` (or `:export`) returns every declaration in the session as one JSON
+document: the session's preludes, each form application's declaration id, form
+and payload, and the Effect program's declarations without source offsets, so
+two sessions' documents can be diffed.
+
 ### Effect commands
 
 For the Effect program, `:infer <expr>` shows an expression's inferred
@@ -155,11 +166,20 @@ For the Effect program, `:infer <expr>` shows an expression's inferred
 generated Effect TypeScript, `:expand <forms>` shows `forma:effect` macros
 (`do`, `bind`, `pure`, `service`, `error`) expanded, and `:program` shows the
 current declarations. `:effect` also reports each new definition's declared and
-inferred type. To discover the language, use `:doc <name>` (macro and prelude
-doc comments, session definitions, and diagnostic codes), `:modules`,
-`:source <module or prelude>`, and `:examples [filter]` with `:example <name>`,
-which show the Effect TypeScript conformance programs, including the
-diagnostics each rejected program expects.
+inferred type.
+
+### Discovering the language
+
+`:outline` lists what the session provides, by name; `:outline <module or
+prelude>` maps a bundled source with a line number for each form, macro, type
+and function, and `:source <module or prelude> <from>-<to>` shows those lines.
+`:doc <name>` documents a prelude form (signature, arguments, option keys, IR and
+its `:examples`), a macro, an Effect program keyword (`layer`, `retry`,
+`provide`, ...), a builtin (`map`, `reduce`, ...), a session definition, or a
+diagnostic code, and names related entries when nothing has that name.
+`:modules` lists bundled modules and preludes, and `:examples [filter]` with
+`:example <name>` shows the Effect TypeScript conformance programs, including
+the diagnostics each rejected program expects.
 
 ### What running can touch
 

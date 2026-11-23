@@ -71,7 +71,7 @@ export async function handleMcp(request: Request, env: McpEnv): Promise<Response
 
   const server = new Server({ name: "forma", version: engineVersion }, {
     capabilities: { tools: {} },
-    instructions: "Explore the Forma language with the repl tool: send :help first. Sessions keep definitions between calls.",
+    instructions: "Explore the Forma language with the repl tool: send :help first, then :outline and :doc <name>. Sessions keep definitions between calls. This server checks, infers and generates Effect programs but cannot run them (:run is unavailable).",
   });
   server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [replTool as unknown as Tool] }));
   server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {

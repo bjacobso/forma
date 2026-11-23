@@ -20,19 +20,21 @@
 
 ;; pure — an effect that succeeds with a value
 ;;
-;; (pure {:total total})
+;; (pure {:total 3})
 (macro (pure value) `(succeed ~value))
 
 ;; bind — a step of do; it has no meaning on its own
+;;
+;; (do (bind n (succeed 2)) (pure (* n 2)))
 (macro (bind parts ...)
   (syntax-error "effect/bind-outside-do"
     "bind is a step of do: write it as a direct child, as in (do (bind user (Users.find id)) (pure user))."))
 
 ;; do — run steps in order and return the last form
 ;;
-;; (do (bind cart (Shop.find-cart id))
-;;     (let total (sum (map (fn [item] (get item :price)) (get cart :items))))
-;;     (bind _ (Mailer.send email (str total)))
+;; (do (bind items (succeed [{:price 3} {:price 4}]))
+;;     (let total (sum (map (fn [item] (get item :price)) items)))
+;;     (bind _ (log "total" total))
 ;;     (pure total))
 (macro (do forms ...)
   (let [bind-name (sexpr-sym-name `bind)
@@ -66,7 +68,7 @@
 ;; service — a service of methods and values, in every Effect program
 ;;
 ;; (service Users
-;;   (: find (-> UserId (Effect User [UserNotFound])))
+;;   (: find (-> String (Effect (Option String))))
 ;;   (: count (Effect Int)))
 ;;
 ;; A member whose type is (-> P ... R) is a method with parameters arg0,
@@ -91,5 +93,5 @@
 
 ;; error — a tagged error type, in every Effect program
 ;;
-;; (error UserNotFound {:id UserId})
+;; (error UserNotFound {:id String})
 (macro (error parts ...) `(__error ~@parts))

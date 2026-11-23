@@ -70,7 +70,14 @@ describe("forma-lang.com/mcp", () => {
   test("checks and generates Effect programs but does not run them", async () => {
     const e = env();
     const session = (await rpc(e, "initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "1" } })).session;
-    expect(await repl(e, session, ":run (succeed 1)")).toMatchObject({ isError: true, structuredContent: { diagnostics: [{ code: "repl/run-unavailable" }] } });
+    // The first reply of a session says so before any program is built, and :help leads with it.
+    const first = await repl(e, session, "(+ 1 2)");
+    expect(first.content[0].text).toMatch(/^This server cannot run programs: :run is unavailable\. The hosted server/u);
+    expect(first.structuredContent).toMatchObject({ ok: true, printed: "3", notice: expect.stringContaining("forma mcp") });
+    expect((await repl(e, session, "(+ 1 2)")).structuredContent.notice).toBeUndefined();
+    expect((await repl(e, session, ":help")).content[0].text.split("\n").slice(0, 4).join("\n")).toContain("This server cannot run programs");
+    // :run fails at once, without checking an expression that would not check anyway.
+    expect(await repl(e, session, ":run (find-user \"u-1\")")).toMatchObject({ isError: true, structuredContent: { diagnostics: [{ code: "repl/run-unavailable" }] } });
     expect((await rpc(e, "tools/call", { name: "repl", arguments: { input: "x".repeat(20_001) } }, session)).body.result).toMatchObject({ isError: true });
   });
 });

@@ -19,6 +19,7 @@ import { Effect } from "effect";
 import type { JsonAbi } from "./json-abi.js";
 import type { Diagnostic } from "./types.js";
 import { effectExamples } from "./cli/examples.generated.js";
+import { allBundledDocs, builtinDocs, bundledSources, effectKeywordDocs, effectSignatures, firstSentence, outlineSource, sourceDocs, type SourceDoc } from "./repl-docs.js";
 import { formatDiagnostics } from "./cli/diagnostic-text.js";
 
 const STEP_LIMIT = 1_000_000;
@@ -27,7 +28,19 @@ const ENTRY = "__repl";
 // An unknown success type leaves the body's inference unconstrained; only the first pass uses it.
 const PLACEHOLDER = "(Effect __Infer)";
 
-const helpText = (runNote: string) => `Forma REPL. Send Forma code, or one command per call.
+const PAGE_CHARS = 8_000;
+
+const helpText = (runNote: string, unavailable: string | undefined) => `Forma REPL. Send Forma code, or one command per call.
+${unavailable ? `
+This server cannot run programs: :run is unavailable. ${unavailable}
+` : ""}
+Start here:
+  :outline [name]        What the session provides, or a map of a bundled module or prelude.
+  :doc <name>            Signature, options and an example for a form, macro, Effect keyword,
+                         builtin, definition or diagnostic code.
+  :examples [filter]     Effect conformance programs; :example <name> shows one.
+
+Long results come in pages of ${PAGE_CHARS / 1000}K characters; :more shows the next page, :more all the rest.
 
 Pure Forma (definitions persist in the session):
   <code>                 Check, then evaluate. Returns value, type and diagnostics.
@@ -39,10 +52,13 @@ Evolving the language (pure session):
                          functions. The session reloads its preludes in order and
                          replays earlier inputs; inputs that no longer check are dropped.
   :prelude [name]        List session preludes, or show one.  :unload <name>  Remove one.
-  :describe              Forms, functions and types the session's preludes provide.
+  :describe [name]       Forms, functions and types the session's preludes provide, or one
+                         of them in full, with its examples.
   <form applications>    Input made only of session prelude forms is declared, not run:
                          it elaborates to IR, is kept, and later declarations can refer
                          to it. Redeclaring a name replaces it.
+  :ir                    Every declaration in the session (form applications and the
+                         Effect program) as one JSON document. :export is the same.
 
 Effect programs (a separate, declarations-only program in the same session):
   :effect <forms>        Add or replace declarations (type, error, service, signature,
@@ -50,25 +66,23 @@ Effect programs (a separate, declarations-only program in the same session):
                          checked; a cell with errors is not kept. Reports each
                          definition's declared and inferred type.
   :infer <expr>          Inferred type of an expression, e.g. (Effect User [NotFound] [Users.find]).
-  :run <expr>            Run an effect, such as (provide (find-user "u-1") UsersLive).
-                         Requirements must be provided by layers defined in the program.
+  :run <expr>            ${unavailable ? "Not available on this server." : `Run an effect, such as (provide (find-user "u-1") UsersLive).
+                         Requirements must be provided by layers defined in the program.`}
   :ts                    The generated Effect TypeScript module.
   :expand <forms>        Expand forma:effect macros (do, bind, pure, service, error).
   :program               The current Effect program.
 
 Discovery:
-  :doc <name>            Docs for a macro, prelude form, definition or diagnostic code.
   :modules               Bundled modules (forma:effect, ...) and preludes.
-  :source <name>         Source of a bundled module or prelude.
-  :examples [filter]     Effect conformance programs; :example <name> shows one.
+  :source <name> [a-b]   Source of a bundled module or prelude, or lines a to b of it.
   :reset                 Clear this session.  :help  This text.
 
-Pure evaluation has no host capabilities and a step limit. ${runNote}`;
+Pure evaluation has no host capabilities and a step limit.${unavailable ? "" : ` ${runNote}`}`;
 
 /** The MCP tool definition, as plain JSON so this module needs no MCP SDK. */
 export const replTool = {
   name: "repl",
-  description: "Code-mode Forma REPL. Send Forma code to evaluate it in a persistent session, or a :command (start with :help). Explore Effect programs with :effect, :infer, :run, :ts and :expand; discover the language with :doc, :modules, :source and :examples.",
+  description: "Code-mode Forma REPL. Send Forma code to evaluate it in a persistent session, or a :command (start with :help). Discover the language with :outline, :doc, :modules, :source and :examples; build Effect programs with :effect, :infer, :ts and :expand, and :run them where the server can run effects (:help says whether it can); export declarations with :ir.",
   inputSchema: {
     type: "object",
     properties: {
@@ -113,9 +127,48 @@ interface Session {
   forms: ReadonlySet<string>;
   /** Accepted form applications, elaborated together so later ones can refer to earlier ones. */
   declarations: EffectForm[];
+  /** The rest of a paged result, for :more. */
+  more?: Paged | undefined;
 }
 type Result = Record<string, unknown> & { ok: boolean; diagnostics: readonly Diagnostic[] };
 export interface ReplReply { readonly result: Result; readonly text: string }
+/** A long result split into pages of whole lines; `lines[i]` is the first line of page i. */
+interface Paged { readonly result: Result; readonly command: string; readonly pages: readonly string[]; readonly lines: readonly number[]; next: number }
+
+function paginate(text: string): { pages: string[]; lines: number[] } {
+  const pages: string[] = [], lines: number[] = [];
+  let current: string[] = [], size = 0, first = 1;
+  const flush = () => { if (current.length) { pages.push(current.join("\n")); lines.push(first); } current = []; size = 0; };
+  text.split("\n").forEach((line, index) => {
+    if (size + line.length + 1 > PAGE_CHARS) flush();
+    if (!current.length) first = index + 1;
+    // A line longer than a page is cut into page-sized pieces.
+    for (; line.length > PAGE_CHARS; line = line.slice(PAGE_CHARS)) { pages.push(line.slice(0, PAGE_CHARS)); lines.push(index + 1); }
+    current.push(line);
+    size += line.length + 1;
+  });
+  flush();
+  return { pages, lines };
+}
+
+/**
+ * Page `index` of a paged result. Its structured result keeps the short fields
+ * and names the long ones it leaves out; `:more all` returns them.
+ */
+function page(paged: Paged, index: number): ReplReply {
+  const kept = Object.entries(paged.result).filter(([key, value]) => key === "diagnostics" || value === null || (typeof value !== "object" && !(typeof value === "string" && value.length > 200)));
+  const omitted = Object.keys(paged.result).filter(key => !kept.some(([k]) => k === key));
+  const lineCount = paged.lines.at(-1)! + paged.pages.at(-1)!.split("\n").length - 1;
+  const last = index + 1 < paged.pages.length ? Math.max(paged.lines[index]!, paged.lines[index + 1]! - 1) : lineCount;
+  const hint = paged.result.kind === "source" ? ` :outline ${paged.result.name} maps it; :source ${paged.result.name} <from>-<to> shows a range.`
+    : paged.result.kind === "describe" ? " :outline lists the names; :describe <name> shows one." : "";
+  const more = index + 1 < paged.pages.length ? " :more shows the next page, :more all the rest." : " That is the end.";
+  const footer = `[${paged.command}: page ${index + 1} of ${paged.pages.length}, lines ${paged.lines[index]}-${last} of ${lineCount}.${more}${hint}]`;
+  return {
+    result: { ...Object.fromEntries(kept), ok: paged.result.ok, diagnostics: paged.result.diagnostics, page: { page: index + 1, pages: paged.pages.length, omitted, ...(index + 1 < paged.pages.length ? { more: ":more" } : {}) } },
+    text: `${paged.pages[index]}\n${footer}`,
+  };
+}
 
 const error = (code: string, message: string): Diagnostic => ({ code, severity: "error", message });
 const hasErrors = (diagnostics: readonly { severity: string }[]) => diagnostics.some(d => d.severity === "error");
@@ -226,24 +279,6 @@ function contracts(elaboration: EffectProgramElaboration, names: ReadonlySet<str
   });
 }
 
-/** `;; name — summary` doc blocks in bundled modules and preludes. */
-function docBlocks(name: string) {
-  const sources = [
-    ...Object.entries(bundledModuleSources).map(([id, text]) => [`forma:${id}`, text] as const),
-    ...Object.entries(preludeSources),
-  ];
-  const escaped = name.replace(/[.*+?^${}()|[\]\\]/gu, "\\$&");
-  return sources.flatMap(([source, text]) => {
-    const lines = text.split("\n");
-    const start = lines.findIndex(line => new RegExp(`^;;\\s*${escaped}\\s+—`, "u").test(line));
-    if (start < 0) return [];
-    let end = start + 1;
-    while (end < lines.length && lines[end]!.startsWith(";;")) end++;
-    const definition = lines.slice(end).find(line => line.trim()) ?? "";
-    return [{ source, doc: lines.slice(start, end).map(line => line.replace(/^;;\s?/u, "")).join("\n").trim(), definition: definition.trim() }];
-  });
-}
-
 function sourceSummary(text: string): string {
   const purpose = text.match(/^;+\s*Purpose:\s*(.+)$/mu)?.[1];
   if (purpose) return purpose.trim();
@@ -251,8 +286,61 @@ function sourceSummary(text: string): string {
     .find(line => line && !/^-+$/u.test(line) && !/\.lisp$/u.test(line) && !line.startsWith("Generated")) ?? "";
 }
 
+/** IR without source offsets, which change with every edit and would swamp a diff. */
+const withoutSpans = (value: unknown): unknown => Array.isArray(value) ? value.map(withoutSpans)
+  : value && typeof value === "object" ? Object.fromEntries(Object.entries(value).filter(([key]) => key !== "span").map(([key, inner]) => [key, withoutSpans(inner)]))
+  : value;
+const indent = (text: string) => text.split("\n").map(line => `  ${line}`).join("\n");
+const slotList = (slots: readonly { name: string; type?: string }[], prefix = "") => slots.map(s => `${prefix}${s.name}${s.type ? ` ${s.type}` : ""}`).join(", ");
+
+function renderDoc(d: any): string {
+  const out: string[] = [];
+  const example = (examples: readonly string[], how?: string) => { for (const e of examples) out.push(`Example${how ? ` (try it with ${how})` : ""}:`, indent(e)); };
+  switch (d.kind) {
+    case "diagnostic": return `${d.code}: ${d.summary}\n${d.explanation}`;
+    case "type": return `type ${d.type}`;
+    case "effect-program": return `in the Effect program:\n${d.source}`;
+    case "effect":
+      out.push(`${d.name} — Effect program keyword`, indent(d.signature), d.summary);
+      if (d.options) out.push("Option keys:", ...Object.entries(d.options).map(([key, what]) => `  ${key} — ${what}`));
+      example([d.example], `${d.try} <example>`);
+      break;
+    case "builtin":
+      out.push(`${d.name} — builtin function`);
+      if (d.usage) out.push(indent(d.usage));
+      if (d.type) out.push(`  type ${d.type}`);
+      for (const signature of d.effect) out.push(`  in Effect programs ${signature}`);
+      if (d.summary) out.push(d.summary);
+      if (d.example) example([d.example]);
+      break;
+    default:
+      out.push(`${d.name} — ${d.kind} in ${d.source}, line ${d.line}; ${d.use}`, indent(d.signature));
+      if (d.summary) out.push(d.summary);
+      if (d.doc) out.push(d.doc);
+      if (d.arguments?.length) out.push(`Arguments: ${slotList(d.arguments)}`);
+      if (d.options?.length) out.push(`Option keys: ${slotList(d.options, ":")}`);
+      if (d.ir) out.push(`Produces: ${d.ir}`);
+      example(d.examples);
+  }
+  return out.join("\n");
+}
+
+function describeForm(f: any): string {
+  const required = f.slots.filter((s: any) => s.required), optional = f.slots.filter((s: any) => !s.required);
+  const slot = (s: any) => `${s.name}${s.many ? "..." : ""}${s.type ? ` ${s.type}` : ""}`;
+  const out = [`form (${[f.name, ...f.identifiers.map((i: any) => i.name), ...f.slots.map((s: any) => `${s.name}${s.many ? "..." : ""}`)].join(" ")}) from ${f.sourceId}`];
+  if (f.doc) out.push(f.doc);
+  if (f.identifiers.length) out.push(`Names: ${f.identifiers.map((i: any) => `${i.name} ${i.kind}`).join(", ")}`);
+  if (required.length) out.push(`Required: ${required.map(slot).join(", ")}`);
+  if (optional.length) out.push(`Optional: ${optional.map(slot).join(", ")}`);
+  out.push(`Result: ${f.result.kind === "constant" ? f.result.type : "computed"}${f.ir ? `; IR ${f.ir}` : ""}`);
+  for (const e of f.examples) out.push("Example:", indent(e));
+  return out.join("\n");
+}
+
 export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
-  const help = helpText(options.runNote ?? "");
+  const unavailable = options.run ? undefined : options.runUnavailable ?? "This server cannot run effects.";
+  const help = helpText(options.runNote ?? "", unavailable);
   const sessions = new Map<string, Session>();
 
   async function session(name: string): Promise<Session> {
@@ -357,8 +445,47 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
     const { text, locate } = assemble(forms);
     const emitted = await abi.host.emit({ sessionId: state.sessionId, source: text, sourceId: "<declarations>" });
     const diagnostics = emitted.diagnostics.map(d => locate({ ...d, phase: "check" } as unknown as EffectProgramDiagnostic));
-    const content = ("artifacts" in emitted ? emitted.artifacts[0]?.content : undefined) as { declarations?: { formName: string; payload: unknown; span?: { startOffset: number } }[] } | undefined;
+    const content = ("artifacts" in emitted ? emitted.artifacts[0]?.content : undefined) as { declarations?: { formName: string; declarationId?: string; payload: unknown; span?: { startOffset: number } }[] } | undefined;
     return { ok: !hasErrors(diagnostics), diagnostics, declarations: content?.declarations ?? [] };
+  }
+
+  /** A session prelude, or a bundled module or prelude: `effect` and `forma:effect` both name the module. */
+  function findSource(state: Session, name: string) {
+    const own = state.preludes.get(name);
+    if (own !== undefined) return { name, text: own, bundled: (preludeSources as Record<string, string>)[name] === own };
+    const lookup = (key: string) => bundledSources.find(([source]) => source === key);
+    const found = lookup(name) ?? lookup(`forma:${name}`) ?? lookup(`${name}.lisp`);
+    return found && { name: found[0], text: found[1], bundled: true };
+  }
+
+  /** Docs from the session's own preludes; bundled ones loaded unchanged are already in `allBundledDocs`. */
+  const sessionDocs = (state: Session): SourceDoc[] => [...state.preludes]
+    .filter(([name, text]) => (preludeSources as Record<string, string>)[name] !== text)
+    .flatMap(([name, text]) => sourceDocs(name, text, false));
+
+  /** Names only, grouped, so a session with a large prelude still fits on a page. */
+  async function sessionOutline(state: Session): Promise<string> {
+    const wrap = (label: string, items: readonly string[], separator = " ") => {
+      if (!items.length) return [];
+      const rows: string[] = [];
+      for (const item of items) {
+        if (rows.length && rows.at(-1)!.length + separator.length + item.length <= 98) rows[rows.length - 1] += `${separator}${item}`;
+        else rows.push(`  ${item}`);
+      }
+      return [`${label} (${items.length}):`, ...rows];
+    };
+    const out: string[] = [];
+    if (state.preludes.size) {
+      const described = await abi.host.describe({ sessionId: state.sessionId });
+      out.push(`Session preludes: ${[...state.preludes.keys()].join(", ")}.`);
+      for (const source of new Set(described.forms.map(f => f.sourceId)))
+        out.push(...wrap(`Forms from ${source}`, described.forms.filter(f => f.sourceId === source).map(f => f.name)));
+      out.push(...wrap("Functions", described.functions.map(f => f.name)), ...wrap("Types", described.types.map(t => t.name)));
+    } else out.push(`No session preludes. Bundled preludes (:load <name>, or :outline <name> to map one first): ${Object.keys(preludeSources).join(", ")}.`);
+    if (state.history.length) out.push(`Pure inputs kept: ${state.history.length}.`);
+    out.push(...wrap("Declarations", state.declarations.map(f => f.key), ", "), ...wrap("Effect program", state.effect.map(f => f.key), ", "));
+    out.push(":describe <name> or :doc <name> shows one; :outline <module|prelude> maps a bundled source; :ir exports the declarations.");
+    return out.join("\n");
   }
 
   async function declare(state: Session, sourceId: string, input: string, read: readonly SExpr[]): Promise<Result> {
@@ -391,9 +518,10 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
       return { ok: false, kind: "value", diagnostics: [error("abi/invalid-request", "REPL evaluation does not grant host capabilities.")] };
     }
     if (submitted.status === "failed") return { ok: false, kind: "value", diagnostics: submitted.diagnostics };
-    const { value, printed, type, diagnostics } = submitted.result;
+    const { printed, type, diagnostics } = submitted.result;
     if (!hasErrors(diagnostics)) state.history.push({ sourceId, source: input });
-    return { ok: !hasErrors(diagnostics), kind: "value", value, printed: printed ?? null, type: type?.display ?? null, diagnostics };
+    // The printed value is the value; the ABI's tagged JSON tree would repeat it.
+    return { ok: !hasErrors(diagnostics), kind: "value", printed: printed ?? null, type: type?.display ?? null, diagnostics };
   }
 
   async function command(state: Session, name: string, rest: string, sourceId: string): Promise<Result> {
@@ -434,7 +562,27 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
       }
       case "describe": {
         const described = await abi.host.describe({ sessionId: state.sessionId });
-        return { ok: !hasErrors(described.diagnostics), kind: "describe", ...described };
+        if (!rest) return { ok: !hasErrors(described.diagnostics), kind: "describe", ...described };
+        const named = <T extends { name: string }>(list: readonly T[]) => list.filter(item => item.name === rest);
+        const one = { forms: named(described.forms), functions: named(described.functions), types: named(described.types) };
+        return one.forms.length || one.functions.length || one.types.length ? { ok: true, kind: "describe", name: rest, ...one, diagnostics: [] }
+          : { ok: false, kind: "describe", name: rest, ...one, diagnostics: [error("repl/unknown-name", `The session's preludes define no form, function or type ${rest}. :outline lists what they define; :doc ${rest} also searches bundled modules and preludes.`)] };
+      }
+      case "outline": {
+        if (!rest) return { ok: true, kind: "outline", outline: await sessionOutline(state), diagnostics: [] };
+        const found = findSource(state, rest);
+        return found ? { ok: true, kind: "outline", name: found.name, outline: outlineSource(found.name, found.text, found.bundled), diagnostics: [] }
+          : { ok: false, kind: "outline", diagnostics: [error("repl/unknown-module", `No session prelude, bundled module or prelude ${rest}; see :modules.`)] };
+      }
+      case "ir": case "export": {
+        const forms = state.declarations.length ? (await elaborateDeclarations(state, state.declarations)).declarations : [];
+        const program = state.effect.length ? elaborate(state.effect).elaboration.declarations : [];
+        const ir = {
+          preludes: [...state.preludes.keys()],
+          declarations: forms.map(d => ({ id: d.declarationId ?? null, form: d.formName, payload: d.payload })),
+          effect: program.map(d => ({ id: `${d.summary.kind}:${d.summary.name}`, payload: withoutSpans(d.payload) })),
+        };
+        return { ok: true, kind: "ir", ir, diagnostics: [] };
       }
       case "effect": {
         const read = readForms(sourceId, rest);
@@ -457,6 +605,8 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
         return { ok: !hasErrors(inferred.diagnostics) && inferred.type !== undefined, kind: "infer", type: inferred.type ? showMechanicsType(inferred.type) : null, diagnostics: inferred.diagnostics };
       }
       case "run": {
+        // Fail before checking: building a program and its layers only to learn it cannot run wastes the work.
+        if (!options.run) return { ok: false, kind: "run", diagnostics: [error("repl/run-unavailable", unavailable!)] };
         const inferred = inferExpression(state, sourceId, rest);
         const type = inferred.type ? showMechanicsType(inferred.type) : null;
         if (hasErrors(inferred.diagnostics) || !inferred.type) return { ok: false, kind: "run", type, diagnostics: inferred.diagnostics };
@@ -468,7 +618,6 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
         }
         const generated = generateEffectProgram(inferred.program!, { sourceId: "<program>" });
         if (!generated.code) return { ok: false, kind: "run", type, diagnostics: generated.diagnostics.map(({ phase: _phase, span: _span, ...d }) => d) };
-        if (!options.run) return { ok: false, kind: "run", type, diagnostics: [error("repl/run-unavailable", options.runUnavailable ?? "This server cannot run effects.")] };
         const run = await options.run(generated.code);
         return { ok: run.exit === "success", kind: "run", type, ...run, diagnostics: [] };
       }
@@ -492,18 +641,33 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
         return { ok: true, kind: "expand", source: formatted._tag === "Success" ? formatted.success : printed, diagnostics: [] };
       }
       case "doc": {
+        if (!rest) return { ok: false, kind: "doc", docs: [], diagnostics: [error("repl/no-docs", "Give a name, as in :doc entity. :outline lists what the session provides.")] };
         const docs: Record<string, unknown>[] = [];
         const entry = diagnosticCatalog.get(rest);
         if (entry) docs.push({ kind: "diagnostic", ...entry });
-        for (const block of docBlocks(rest)) docs.push({ kind: "doc", ...block });
+        const sourced = [...sessionDocs(state), ...allBundledDocs()];
+        docs.push(...sourced.filter(d => d.name === rest).map(d => ({ ...d })));
+        const keyword = effectKeywordDocs.find(k => k.name === rest);
+        if (keyword) docs.push({ kind: "effect", ...keyword, try: /^\((type|class|error|service|:|define|layer|import)\s/u.test(keyword.example) ? ":effect" : ":infer" });
         const declared = state.effect.filter(f => f.key.endsWith(` ${rest}`));
         if (declared.length) docs.push({ kind: "effect-program", source: declared.map(f => f.cell.slice(f.start, f.end)).join("\n") });
+        let type: string | undefined;
         if (/^[^\s()[\]{}":;]+$/u.test(rest)) {
           const checked = await abi.host.typecheck({ sessionId: state.sessionId, source: rest });
-          if (!hasErrors(checked.diagnostics)) docs.push({ kind: "type", type: checked.type?.display ?? checked.display });
+          if (!hasErrors(checked.diagnostics)) type = checked.type?.display ?? checked.display;
         }
-        return docs.length ? { ok: true, kind: "doc", name: rest, docs, diagnostics: [] }
-          : { ok: false, kind: "doc", name: rest, docs, diagnostics: [error("repl/no-docs", `No docs for ${rest}. Try :modules, :source <module>, or :examples ${rest}.`)] };
+        const builtin = builtinDocs.find(b => b.name === rest), effect = effectSignatures(rest);
+        if (builtin || effect.length) docs.push({ kind: "builtin", name: rest, ...builtin, ...(type ? { type } : {}), effect });
+        else if (type && type !== "Unknown" && !docs.length) docs.push({ kind: "type", type });
+        if (docs.length) return { ok: true, kind: "doc", name: rest, docs, diagnostics: [] };
+        // Nothing by that name: point at the names whose docs mention it.
+        const word = rest.toLowerCase();
+        const related = [
+          ...sourced.filter(d => d.kind === "form" || d.kind === "macro").map(d => ({ name: d.name, kind: d.kind, source: d.source, summary: d.summary ?? "" })),
+          ...effectKeywordDocs.map(k => ({ name: k.name, kind: "effect", source: "Effect programs", summary: k.summary })),
+          ...builtinDocs.map(b => ({ name: b.name, kind: "builtin", source: "builtins", summary: b.summary })),
+        ].filter(d => d.name.includes(rest) || d.summary.toLowerCase().includes(word)).slice(0, 10);
+        return { ok: false, kind: "doc", name: rest, docs, related, diagnostics: [error("repl/no-docs", `No docs for ${rest}.${related.length ? ` Related: ${related.map(d => d.name).join(", ")}.` : ""} Try :outline, :modules, or :examples ${rest}.`)] };
       }
       case "modules": return {
         ok: true, kind: "modules", diagnostics: [],
@@ -511,10 +675,12 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
         preludes: Object.entries(preludeSources).map(([name, text]) => ({ name, summary: sourceSummary(text) })),
       };
       case "source": {
-        const id = rest.replace(/^forma:/u, "");
-        const text = (bundledModuleSources as Record<string, string>)[id] ?? (preludeSources as Record<string, string>)[rest] ?? (preludeSources as Record<string, string>)[`${rest}.lisp`];
-        return text === undefined ? { ok: false, kind: "source", diagnostics: [error("repl/unknown-module", `No bundled module or prelude ${rest}; see :modules.`)] }
-          : { ok: true, kind: "source", name: rest, source: text, diagnostics: [] };
+        const [, name = "", from, to] = /^(\S*)(?:\s+(\d+)(?:\s*-\s*(\d+))?)?\s*$/u.exec(rest) ?? [];
+        const found = name ? findSource(state, name) : undefined;
+        if (!found) return { ok: false, kind: "source", diagnostics: [error("repl/unknown-module", `No bundled module or prelude ${rest}; see :modules. A range is :source <name> <from>-<to>.`)] };
+        if (!from) return { ok: true, kind: "source", name: found.name, source: found.text, diagnostics: [] };
+        const lines = found.text.split("\n"), first = Number(from), last = Math.min(Number(to ?? from), lines.length);
+        return { ok: true, kind: "source", name: found.name, lines: [first, last], source: lines.slice(first - 1, last).join("\n"), diagnostics: [] };
       }
       case "examples": return {
         ok: true, kind: "examples", diagnostics: [],
@@ -549,7 +715,12 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
         break;
       case "ts": if (r.code) lines.push(r.code); break;
       case "program": case "expand": case "source": lines.push(r.source || "(empty)"); break;
-      case "doc": for (const d of r.docs) lines.push(d.kind === "diagnostic" ? `${d.code}: ${d.summary}\n${d.explanation}` : d.kind === "doc" ? `${d.source}\n${d.doc}\n${d.definition}` : d.kind === "type" ? `type ${d.type}` : `in the Effect program:\n${d.source}`); break;
+      case "outline": lines.push(r.outline); break;
+      case "ir": lines.push(JSON.stringify(r.ir, null, 2)); break;
+      case "doc":
+        lines.push(r.docs.map(renderDoc).join("\n\n"));
+        if (r.related?.length) lines.push("Related:", ...r.related.map((d: any) => `  ${d.name} (${d.kind}, ${d.source}) ${firstSentence(d.summary)}`));
+        break;
       case "modules":
         lines.push("Modules (import in file modules; forma:effect also in :effect):", ...r.modules.map((m: any) => `  ${m.name} [${m.exports.join(" ")}] ${m.summary}`));
         lines.push("Preludes (:load in the pure session):", ...r.preludes.map((p: any) => `  ${p.name} ${p.summary}`));
@@ -568,6 +739,12 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
         break;
       case "preludes": lines.push(r.preludes.length ? r.preludes.join("\n") : "No session preludes. Define one with :prelude <name> <source>."); break;
       case "describe":
+        if (r.name) {
+          for (const f of r.forms) lines.push(describeForm(f));
+          for (const f of r.functions) lines.push(`${f.name} : ${f.signature}${f.doc ? `\n${f.doc}` : ""}\nfrom ${f.sourceId}`);
+          for (const t of r.types) lines.push(`type ${t.name} ${t.signature}${t.doc ? `\n${t.doc}` : ""}\nfrom ${t.sourceId}`);
+          break;
+        }
         for (const f of r.forms) {
           const typed = f.slots.filter((slot: any) => slot.type).map((slot: any) => `:${slot.name} ${slot.type}`);
           lines.push(`form (${[f.name, ...f.identifiers.map((i: any) => i.name), ...f.slots.map((slot: any) => `${slot.name}${slot.many ? "..." : ""}`)].join(" ")})${typed.length ? ` {${typed.join(" ")}}` : ""}${f.doc ? ` ; ${f.doc}` : ""}`);
@@ -591,11 +768,37 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
     // Diagnostics name the text they point into, so record it before checking.
     state.sources.set(sourceId, body);
     let result: Result;
+    if (match?.[1] === "more") return more(state, body);
     if (match?.[1] === "example" && body === "") result = await command(state, "examples", "", sourceId);
     else if (match) result = await command(state, match[1]!, body, sourceId);
     else if (!input) result = { ok: false, kind: "value", diagnostics: [error("repl/empty", "Send Forma code or a :command; :help lists them.")] };
     else result = await evaluate(state, sourceId, args.input);
-    return { result, text: render(result, state) };
+    let reply: ReplReply = { result, text: render(result, state) };
+    if (reply.text.length > PAGE_CHARS) {
+      const { pages, lines } = paginate(reply.text);
+      state.more = { result, pages, lines, next: 1, command: input.length > 60 ? `${input.slice(0, 57)}...` : input };
+      reply = page(state.more, 0);
+    }
+    // A session's first reply says up front that this server cannot run programs.
+    if (state.inputs !== 1 || !unavailable || result.kind === "help") return reply;
+    const notice = `This server cannot run programs: :run is unavailable. ${unavailable}`;
+    return { result: { ...reply.result, notice }, text: `${notice}\n\n${reply.text}` };
+  }
+
+  /** The next page of the last long result, or with `all` the rest of it and its full structured result. */
+  function more(state: Session, rest: string): ReplReply {
+    const pending = state.more;
+    if (!pending) {
+      const result: Result = { ok: false, kind: "more", diagnostics: [error("repl/no-more", "Nothing more to show: :more continues a result that came in pages.")] };
+      return { result, text: render(result, state) };
+    }
+    if (rest === "all") {
+      state.more = undefined;
+      return { result: pending.result, text: pending.pages.slice(pending.next).join("\n") };
+    }
+    const index = pending.next++;
+    if (pending.next >= pending.pages.length) state.more = undefined;
+    return page(pending, index);
   }
 
   function snapshot(name = "default"): ReplSnapshot | undefined {
