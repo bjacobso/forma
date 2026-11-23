@@ -5,6 +5,7 @@ import { lowerMembers, moduleBindings, patternBindings } from "./members.js";
 import { normalizeCoreProgram } from "./core.js";
 import { expandEffectDeclarations } from "../mechanics/effect-library.js";
 import type { SExpr } from "../reader/types.js";
+import { surfaceError } from "./errors.js";
 
 export const head = (e: SExpr | undefined): string | undefined => e?._tag === "List" ? name(e.items[0]) : undefined;
 export const name = (e: SExpr | undefined): string | undefined => e?._tag === "Sym" ? e.name : undefined;
@@ -164,6 +165,7 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
         return call(e, "__service", n!, ...args.map(a => a._tag === "List" ? list(a, a.items.map((m, i) => i === 0 || m._tag !== "List" ? m : normalizeMethod(m))) : a));
       case "layer": {
         if (!n) return e;
+        if (args.length === 2 && args[1]?._tag === "Map" && name(args[0]) && !name(args[0])!.startsWith(":")) throw layerMapError(e, args[0]!, args[1]);
         if (args.length === 1) return call(e, "__layer", n, normalizeBody(args[0]!));
         const sections: SExpr[] = [];
         const definitions = args.filter(a=>head(a)==="define" && a._tag === "List") as Extract<SExpr,{_tag:"List"}>[];
@@ -204,6 +206,28 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
       }
       default: return normalizeBody(e);
     }
+  });
+}
+
+/** The canonical shapes of `layer`, echoed by its shape errors. */
+export const layerShapes = "(layer Name :provides Service (define method [params] body) ...) to implement a service, or (layer Name LayerExpr) to compose layers";
+
+/**
+ * `(layer Name Service {:method (fn [params] body)})` is a common guess at the
+ * service-layer shape. When every method is an `fn`, the repair rewrites it in
+ * place, keeping the author's parameters and bodies.
+ */
+function layerMapError(e: SExpr, service: SExpr, methods: Extract<SExpr, { _tag: "Map" }>): Error {
+  const at = (s: SExpr, start: number, end: number, newText: string) => ({ span: { sourceId: s.loc.sourceId ?? "", startOffset: start, endOffset: end }, newText });
+  const fns = methods.pairs.every(([k, v]) => name(k)?.startsWith(":") && head(v) === "fn" && v._tag === "List" && v.items[1]?._tag === "Vector");
+  const fix = fns && methods.pairs.length ? [
+    at(service, service.loc.start, service.loc.start, ":provides "),
+    at(methods, methods.loc.start, methods.loc.start + 1, ""),
+    ...methods.pairs.map(([k, v]) => at(k, k.loc.start, (v as Extract<SExpr, { _tag: "List" }>).items[1]!.loc.start, `(define ${name(k)!.slice(1)} `)),
+    at(methods, methods.loc.end - 1, methods.loc.end, ""),
+  ] : undefined;
+  return surfaceError(`layer ${name(e._tag === "List" ? e.items[1] : undefined) ?? ""} takes :provides ${name(service)} and method definitions, not a map of methods.`, e, "artifact/layer", {
+    help: `layer has the shape ${layerShapes}`, ...(fix ? { fix } : {}), details: { form: "layer", expected: "(layer Name :provides Service (define method [params] body) ...)" },
   });
 }
 

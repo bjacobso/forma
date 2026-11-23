@@ -7,13 +7,19 @@ import { type Origin, InferenceError } from "./errors.js";
 import { unify } from "./unify.js";
 
 /** Numeric requirements survive generalization instead of fixing inputs to Float. */
-export const requireNumeric = (type: Type, origin: Origin): Effect.Effect<void, InferenceError, InferContext> => Effect.gen(function* () {
+export const requireNumeric = (type: Type, origin: Origin, siblings: readonly Type[] = []): Effect.Effect<void, InferenceError, InferContext> => Effect.gen(function* () {
   const ctx = yield* InferContext;
   const actual = applyType(yield* Ref.get(ctx.subst), type);
   if (actual._tag === "TVar") {
     yield* Ref.update(ctx.pendingConstraints, pending => [...pending, {constraint:{className:"$Numeric", args:[actual]}, origin}]);
   } else if (!(actual._tag === "TCon" && ["Int", "Float", "Unknown"].includes(actual.name))) {
-    yield* ctx.fail(origin, {code:"typecheck/type-mismatch", ...typeMismatch(TCon("Float"), actual)});
+    // Name the numeric type the other operands settled on; with none, either one.
+    const subst = yield* Ref.get(ctx.subst);
+    const known = siblings.map(s => applyType(subst, s)).filter(s => s._tag === "TCon" && (s.name === "Int" || s.name === "Float"));
+    const expected = known.some(s => s._tag === "TCon" && s.name === "Float") ? "Float" : known.length ? "Int" : undefined;
+    const mismatch = typeMismatch(TCon(expected ?? "Int"), actual);
+    yield* ctx.fail(origin, {code:"typecheck/type-mismatch", ...mismatch,
+      ...(expected ? {} : {expected:"Int or Float", message:`Expected Int or Float, found ${mismatch["got"]}`})});
   }
 });
 

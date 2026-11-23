@@ -96,7 +96,11 @@ describe("elaborateProgram", () => {
       ["elaborate/duplicate-declaration", 5, 1, "'A' is already declared by entity"],
     ]);
     expect(result.diagnostics.every((d) => d.phase === "elaborate")).toBe(true);
-    expect(result.diagnostics[1]!.details).toEqual({ form: "relation" });
+    // Shape errors echo the form's canonical shape.
+    expect(result.diagnostics[1]).toMatchObject({
+      details: { form: "relation", expected: "(relation name source target fields)" },
+      help: "relation has the shape (relation name source target fields)",
+    });
   });
 
   test("restricts top-level forms when asked", () => {

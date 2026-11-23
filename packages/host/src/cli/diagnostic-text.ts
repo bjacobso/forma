@@ -32,7 +32,7 @@ export function formatDiagnostics(diagnostics: readonly Pick<Diagnostic, "code" 
     for (const fix of diagnostic.fix ?? []) {
       const source = sourceText(fix.span.sourceId ?? span?.sourceId ?? "");
       const previous = source?.slice(fix.span.startOffset, fix.span.endOffset);
-      lines.push(`  = fix: replace ${previous === undefined ? "source" : `\`${previous}\``} with \`${fix.newText}\``);
+      lines.push(previous === "" ? `  = fix: insert \`${fix.newText}\`` : `  = fix: replace ${previous === undefined ? "source" : `\`${previous}\``} with \`${fix.newText}\``);
     }
   }
   lines.push(`${diagnostics.filter(d => d.severity === "error").length} errors, ${diagnostics.filter(d => d.severity === "warning").length} warnings`);

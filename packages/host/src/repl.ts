@@ -216,12 +216,17 @@ function assemble(forms: readonly EffectForm[]) {
     text += form.cell.slice(form.start, form.end);
   }
   const locate = (d: EffectProgramDiagnostic): Diagnostic => {
-    const { phase: _phase, span, ...rest } = d;
+    const { phase: _phase, span, fix, ...rest } = d as EffectProgramDiagnostic & Pick<Diagnostic, "fix">;
     const segment = span && segments.find(s => span.startOffset >= s.at && span.startOffset <= s.at + s.form.end - s.form.start);
     if (!span || !segment) return rest;
     const shift = segment.form.start - segment.at;
     const end = Math.min(span.endOffset + shift, segment.form.end);
-    return { ...rest, span: spanIn(segment.form.sourceId, segment.form.cell, span.startOffset + shift, end) };
+    // A repair moves with its diagnostic when it edits the same cell's form.
+    const inForm = (s: { startOffset: number; endOffset: number }) => s.startOffset + shift >= segment.form.start && s.endOffset + shift <= segment.form.end;
+    const moved = fix?.every(edit => inForm(edit.span))
+      ? fix.map(edit => ({ ...edit, span: spanIn(segment.form.sourceId, segment.form.cell, edit.span.startOffset + shift, edit.span.endOffset + shift) }))
+      : undefined;
+    return { ...rest, span: spanIn(segment.form.sourceId, segment.form.cell, span.startOffset + shift, end), ...(moved ? { fix: moved } : {}) };
   };
   return { text, locate };
 }
@@ -379,9 +384,14 @@ export function createRepl(abi: JsonAbi, options: ReplOptions = {}) {
     const relocate = (d: Diagnostic, signature: string): Diagnostic => {
       if (!d.span || d.span.sourceId !== `${sourceId}#synthetic`) return d;
       const offset = prefix(signature).length;
-      const start = d.span.startOffset - offset + expr.loc.start, end = d.span.endOffset - offset + expr.loc.start;
-      const { span: _span, ...rest } = d;
-      return start >= expr.loc.start && end <= expr.loc.end ? { ...rest, span: spanIn(sourceId, cell, start, end) } : rest;
+      const move = (s: { startOffset: number; endOffset: number }) => {
+        const start = s.startOffset - offset + expr.loc.start, end = s.endOffset - offset + expr.loc.start;
+        return start >= expr.loc.start && end <= expr.loc.end ? spanIn(sourceId, cell, start, end) : undefined;
+      };
+      const { span, fix, ...rest } = d;
+      const moved = move(span), edits = fix?.map(edit => ({ ...edit, span: move(edit.span) }));
+      const located = edits?.every(edit => edit.span) ? edits as Diagnostic["fix"] : undefined;
+      return moved ? { ...rest, span: moved, ...(located ? { fix: located } : {}) } : rest;
     };
     // The first pass's own errors, without those its placeholder signature causes.
     const firstErrors = () => first.diagnostics.map(d => relocate(d, PLACEHOLDER)).filter(d => !d.message.includes(ENTRY) && !d.message.includes("__Infer"));

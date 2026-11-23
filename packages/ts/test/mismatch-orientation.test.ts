@@ -3,7 +3,8 @@ import { expect, test } from "vitest";
 import { typecheck } from "../src/Engine.js";
 
 const cases = [
-  ["builtin argument", '(+ 1 "nope")', "Float", "String"],
+  ["builtin argument", '(+ 1 "nope")', "Int", "String"],
+  ["builtin argument beside a Float", '(+ 1.5 "nope")', "Float", "String"],
   ["user function argument", '(: f (-> Float Float)) (define f [x] x) (f "nope")', "Float", "String"],
   ["annotated definition", '(: value Float) (define value "nope")', "Float", "String"],
   ["if branches", '(if true 1 "nope")', "Int", "String"],
@@ -19,7 +20,9 @@ test.each(cases)("%s identifies expected and actual", (_name, source, expected, 
 });
 
 test("builtin arguments retain their context", () => {
-  expect(typecheck({source:'(+ 1 "nope")'}).diagnostics[0]?.message).toBe("Argument 2 to +: Expected Float, found String");
+  expect(typecheck({source:'(+ 1 "nope")'}).diagnostics[0]?.message).toBe("Argument 2 to +: Expected Int, found String");
+  // With no numeric operand checked yet, either numeric type would do.
+  expect(typecheck({source:'(+ "nope" 1)'}).diagnostics[0]).toMatchObject({message:"Argument 1 to +: Expected Int or Float, found String",details:{expected:"Int or Float",got:"String"}});
 });
 
 test("an infinite type uses local display names", () => {

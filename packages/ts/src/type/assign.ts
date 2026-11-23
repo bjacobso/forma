@@ -83,9 +83,26 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
     return new InferenceError({...error,
       message:mismatch === error.details ? error.message : `${error.message}: ${mismatch["message"]}`,
       details:{...error.details,...mismatch,code:"typecheck/type-mismatch"},
+      ...brandAdvice(b, a, error.origin ?? origin),
     });
   }));
 });
+
+/** A base value where a brand is expected: wrapping it with the brand's constructor is the repair. */
+function brandAdvice(expected: Type, actual: Type, origin: Origin): Pick<InferenceError, "help" | "fix"> | undefined {
+  if (!(expected._tag === "TApp" && expected.con._tag === "TCon" && expected.con.name === "Brand")) return undefined;
+  const [brand, base] = expected.args;
+  const actualBase = actual._tag === "TCon" ? literalBase(actual.name) ?? actual.name : undefined;
+  if (brand?._tag !== "TCon" || base?._tag !== "TCon" || actualBase !== base.name) return undefined;
+  const span = origin.macroOrigins?.length ? undefined : origin.span, sourceId = span?.sourceId ?? "";
+  return {
+    help: `Wrap the value with the brand constructor: (${brand.name} value).`,
+    fix: span ? [
+      {span:{sourceId,startOffset:span.start,endOffset:span.start},newText:`(${brand.name} `},
+      {span:{sourceId,startOffset:span.end,endOffset:span.end},newText:")"},
+    ] : undefined,
+  };
+}
 
 /** Common numeric supertype for branches and collections, without narrowing Floats to Int. */
 export const joinType = (left: Type, right: Type, origin: Origin): Effect.Effect<Type,InferenceError,InferContext> => Effect.gen(function* () {

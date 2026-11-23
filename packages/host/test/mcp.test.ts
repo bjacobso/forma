@@ -189,6 +189,21 @@ test("repl checks an Effect program cell by cell and reports declared and inferr
   expect((await repl(":ts", "fx")).code).toContain("export const findUser = (id: string): Effect.Effect<User, NotFound, Users> =>");
 });
 
+test("repl repairs edit the cell the diagnostic points into", async () => {
+  // A later cell's repair is relocated from the assembled program into that cell.
+  expect(await repl(":effect (type UserId (Brand String))\n(service Users (: find (-> UserId (Effect String))))", "fixes")).toMatchObject({ ok: true });
+  const layer = await repl(":effect (layer UsersLive Users {:find (fn [id] (succeed \"x\"))})", "fixes");
+  expect(layer.diagnostics[0].fix).toEqual(expect.arrayContaining([expect.objectContaining({ newText: ":provides ", span: expect.objectContaining({ sourceId: layer.diagnostics[0].span.sourceId, startOffset: 17 }) })]));
+  expect(layer.text).toContain("= fix: replace `:find (fn ` with `(define find `");
+  // :infer checks a synthesized definition; its repair still edits the input.
+  const brand = await repl(':infer (Users.find "u-1")', "fixes");
+  expect(brand.diagnostics[0]).toMatchObject({ help: 'Wrap the value with the brand constructor: (UserId "u-1").',
+    fix: [{ newText: "(UserId ", span: { sourceId: brand.diagnostics[0].span.sourceId, startOffset: 12, endOffset: 12 } }, { newText: ")", span: { startOffset: 17, endOffset: 17 } }] });
+  // Pure cells label their repairs with the cell, not a placeholder source.
+  expect(await repl("(define total 1)", "fixes")).toMatchObject({ ok: true });
+  expect((await repl("totl", "fixes")).text).toContain("= fix: replace `totl` with `total`");
+});
+
 test("repl runs effects only once their requirements are provided by session layers", async () => {
   await repl(`:effect ${users}\n${findUser("NotFound")}`, "run");
   const unprovided = await repl(':run (find-user "u-1")', "run");
