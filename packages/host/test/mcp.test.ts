@@ -204,6 +204,18 @@ test("repl repairs edit the cell the diagnostic points into", async () => {
   expect((await repl("totl", "fixes")).text).toContain("= fix: replace `totl` with `total`");
 });
 
+test("repl reports a runtime error inside an earlier cell's definition in that cell", async () => {
+  const defined = await repl("(define spin [n] (if (< n 0) n (spin (+ n 1))))", "cells");
+  expect(defined).toMatchObject({ ok: true });
+  const ran = await repl("(spin 0)", "cells");
+  const span = ran.diagnostics[0].span;
+  expect(ran.diagnostics[0]).toMatchObject({ code: "StepLimitExceeded", details: { function: "spin" } });
+  // The caret lands in the definition's cell, inside the body that was running.
+  expect(span).toMatchObject({ sourceId: expect.stringMatching(/^<repl:\d+>$/u), startLine: 1 });
+  expect(span.startOffset).toBeGreaterThan("(spin 0)".length);
+  expect(ran.text).toContain("1 | (define spin [n]");
+});
+
 test("repl runs effects only once their requirements are provided by session layers", async () => {
   await repl(`:effect ${users}\n${findUser("NotFound")}`, "run");
   const unprovided = await repl(':run (find-user "u-1")', "run");

@@ -21,6 +21,7 @@ export interface KernelFrontendOptions extends Omit<
   readonly env?: Env | undefined;
   readonly includePrelude?: boolean | undefined;
   readonly preludeEnv?: Env | undefined;
+  readonly sourceId?: string | undefined;
 }
 
 export interface KernelFrontendResult {
@@ -88,7 +89,7 @@ export function parseAndExpandKernelSource(
   options: KernelFrontendOptions = {},
 ): Effect.Effect<KernelFrontendResult, ParseError | KernelError, PreludeEnv> {
   return Effect.gen(function* () {
-    const exprs = yield* parseManyToSExpr(source);
+    const exprs = yield* parseManyToSExpr(source, options.sourceId);
     return yield* expandKernelExprs(exprs, options);
   });
 }
