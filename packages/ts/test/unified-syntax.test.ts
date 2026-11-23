@@ -128,7 +128,7 @@ describe("typed forms and domain surface", () => {
   test("typed holes and unknown options are diagnosed at author spans", () => {
     const result = elaborateProgram('(greeting hello 42) (greeting other "ok" :typo true)', { prelude });
     expect(result.ok).toBe(false);
-    expect(result.diagnostics.map(d => d.message)).toEqual(expect.arrayContaining(['message does not match its declared hole type', 'Unknown option :typo']));
+    expect(result.diagnostics.map(d => d.message)).toEqual(expect.arrayContaining(['message does not match its declared hole type: expected String, got Int 42', 'Unknown option :typo']));
     expect(result.diagnostics.every(d => d.span !== undefined)).toBe(true);
   });
   test("entity records are required by default and support Id references", () => {

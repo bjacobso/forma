@@ -127,7 +127,9 @@ export function diagnosticFromUnknown(
       related?: Diagnostic["related"];
       help?: string;
       fix?: readonly DiagnosticTextEdit[];
+      stackTrace?: readonly { readonly name: string }[];
     };
+    const exhausted = candidate._tag === "StepLimitExceeded" ? stepLimitAdvice(candidate.limit ?? 0, candidate.stackTrace ?? []) : undefined;
     const span: Span | undefined = candidate.origin?.span
       ? {
           sourceId: candidate.loc?.sourceId ?? sourceId,
@@ -162,10 +164,11 @@ export function diagnosticFromUnknown(
         ...(candidate.got !== undefined ? {actual:candidate.got} : {}),
         ...(candidate._tag === "ArityError" && candidate.name !== undefined ? {name:authorNames(candidate.name)} : {}),
         ...(candidate.limit !== undefined ? {limit:candidate.limit} : {}),
+        ...exhausted?.details,
         ...candidate.details,
       },
       ...(candidate.related ? {related:candidate.related.map(note => ({...note,span:{...note.span,sourceId:note.span.sourceId || sourceId}}))} : {}),
-      ...(candidate.help ? {help:candidate.help} : {}),
+      ...(candidate.help ?? exhausted?.help ? {help:candidate.help ?? exhausted?.help} : {}),
       ...(candidate.fix ? {fix:candidate.fix.map(edit => ({...edit, span: {...edit.span, sourceId: edit.span.sourceId || sourceId}}))} : {}),
     };
   }
@@ -174,6 +177,20 @@ export function diagnosticFromUnknown(
     severity: "error",
     message: String(error),
     phase,
+  };
+}
+
+/**
+ * Where the step budget ran out says little; the function that was running
+ * and the usual repairs say what to change.
+ */
+function stepLimitAdvice(limit: number, stackTrace: readonly { readonly name: string }[]): { help: string; details: Record<string, unknown> } {
+  const names = stackTrace.map(frame => authorNames(frame.name)).filter(name => /^[^<_]/.test(name));
+  const fn = names[0];
+  const where = fn ? `Evaluation was inside ${fn} when it used all ${limit} steps. Check that ${fn} reaches its base case. If it does and the work is just large,` : `Check that recursion and loops reach their base case. If they do and the work is just large,`;
+  return {
+    help: `${where} make it cheaper: carry running results in accumulator arguments so the recursive call is the last thing the function does (tail calls run as a loop), such as (define fib-iter [a b n] (if (= n 0) a (fib-iter b (+ a b) (- n 1)))). A host can raise the limit with stepLimit for work whose cost is known.`,
+    details: { ...(fn ? { function: fn } : {}) },
   };
 }
 

@@ -3,13 +3,14 @@ import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import type { Span } from "../diagnostic/diagnostic.js";
 import { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
-import { normalizeEffectProgram, serviceValues } from "../surface/effect.js";
+import { layerShapes, normalizeEffectProgram, serviceValues } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 
 export interface MechanicsArtifactDiagnostic {
   readonly code: string;
   readonly message: string;
   readonly span?: Span;
+  readonly help?: string;
 }
 
 export type MechanicsArtifactResult =
@@ -606,8 +607,9 @@ function failed(
   expr: SExpr,
   code: string,
   message: string,
+  help?: string,
 ): { readonly ok: false; readonly diagnostics: readonly MechanicsArtifactDiagnostic[] } {
-  return { ok: false, diagnostics: [diagnostic(sourceId, expr, code, message)] };
+  return { ok: false, diagnostics: [{ ...diagnostic(sourceId, expr, code, message), ...(help ? { help } : {}) }] };
 }
 
 /**
@@ -719,7 +721,7 @@ function layerDeclaration(
   operationEffects: OperationEffects,
 ): DeclarationResult {
   if (expr._tag !== "List" || expr.items.length < 3) {
-    return failed(sourceId, expr, "artifact/layer", "layer expects a name and a layer body.");
+    return failed(sourceId, expr, "artifact/layer", "layer expects a name and a layer body.", `layer has the shape ${layerShapes}`);
   }
   const name = symName(expr.items[1]);
   if (!name) return failed(sourceId, expr.items[1]!, "artifact/layer", "layer expects a layer name.");
@@ -743,7 +745,7 @@ function layerDeclaration(
     implementation = result.value;
   } else {
     if (sections.length !== 1) {
-      return failed(sourceId, expr, "artifact/layer", "a composed layer is a single layer expression.");
+      return failed(sourceId, expr, "artifact/layer", "a composed layer is a single layer expression.", `layer has the shape ${layerShapes}`);
     }
     const result = layerExprToJson(sourceId, sections[0]!);
     if (!result.ok) return result;

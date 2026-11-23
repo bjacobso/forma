@@ -1,6 +1,7 @@
 import { diagnosticLocator } from "../diagnostic/locations.js";
 /** Definition and application validation. Artifact contracts plug into checkForm. */
 import { closestName } from "../diagnostic/closest-name.js";
+import { InferenceError } from "../diagnostic/errors.js";
 import { typeDefinition } from "../surface/type-alias.js";
 import { matchFormSyntax, parseUnifiedForm } from "../surface/form.js";
 import { parseElaborationDescriptor } from "./ElaborationDescriptor.js";
@@ -146,7 +147,11 @@ export function checkDescriptorApplication(form: FormDescriptor, expr:SExpr, sou
   const diagnostic = (node:SExpr,code:string,message:string,details?:Record<string,unknown>):Diagnostic => ({code,message,severity:"error",phase:"typecheck",span:{sourceId,startOffset:node.loc.start,endOffset:node.loc.end},details:{form:form.name,...details}});
   if (form.surface) {
     try { matchFormSyntax(form.surface,expr);return []; }
-    catch (error) { return [diagnostic(expr,"surface/invalid-form",error instanceof Error ? error.message : String(error))]; }
+    catch (error) {
+      const advice = error instanceof InferenceError ? error : undefined;
+      const { code: _code, ...details } = advice?.details ?? {};
+      return [{...diagnostic(expr,"surface/invalid-form",error instanceof Error ? error.message : String(error),details),...(advice?.help ? {help:advice.help} : {})}];
+    }
   }
   return tail(expr).flatMap(arg=>{
     const name=keywordHead(arg)?.slice(1);

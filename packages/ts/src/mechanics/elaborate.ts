@@ -36,6 +36,8 @@ export interface EffectProgramDiagnostic {
   readonly code: string;
   readonly message: string;
   readonly span?: EffectProgramSpan;
+  readonly help?: string;
+  readonly fix?: readonly { readonly span: EffectProgramSpan; readonly newText: string }[];
 }
 
 export interface EffectProgramOptions {
@@ -150,7 +152,12 @@ export function elaborateEffectForms(
   const surfaceDiagnostic = (error: unknown, expression?: SExpr): EffectProgramDiagnostic => {
     const loc = error instanceof Error && "loc" in error ? error.loc as SExpr["loc"] : expression?.loc;
     const code = error instanceof InferenceError && typeof error.details["code"] === "string" ? error.details["code"] : "mechanics/ontology-operation";
-    return {phase:"project",severity:"error",code,message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {})};
+    const advice = error instanceof InferenceError ? {
+      ...(error.help ? {help:error.help} : {}),
+      ...(error.fix ? {fix:error.fix.map(edit => ({newText:edit.newText, span:locate(edit.span.startOffset, edit.span.endOffset)}))} : {}),
+      ...(Object.keys(error.details).length > 1 ? {details:Object.fromEntries(Object.entries(error.details).filter(([key]) => key !== "code"))} : {}),
+    } : {};
+    return {phase:"project",severity:"error",code,message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {}), ...advice};
   };
   const surfaceErrors: EffectProgramDiagnostic[] = [];
   for (const expression of authored) {
@@ -214,6 +221,7 @@ function projectDiagnostic(
     code: diagnostic.code,
     message: diagnostic.message,
     ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
+    ...(diagnostic.help ? { help: diagnostic.help } : {}),
   };
 }
 
@@ -228,6 +236,8 @@ function checkDiagnostic(
     message: diagnostic.message,
     ...(diagnostic.details ? {details:diagnostic.details} : {}),
     ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
+    ...(diagnostic.help ? { help: diagnostic.help } : {}),
+    ...(diagnostic.fix ? { fix: diagnostic.fix.map(edit => ({ newText: edit.newText, span: locate(edit.span.startOffset, edit.span.endOffset) })) } : {}),
   };
 }
 

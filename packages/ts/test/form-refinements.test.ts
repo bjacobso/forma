@@ -115,8 +115,8 @@ describe("child forms", () => {
     const result = elaborate(prelude, '(rule (clause 1)\n  (clause "heavy")\n  (clause 2.5))');
     expect(result.ok).toBe(false);
     expect(result.diagnostics).toEqual([
-      { message: "weight does not match its declared hole type", text: '"heavy"' },
-      { message: "weight does not match its declared hole type", text: "2.5" },
+      { message: 'weight does not match its declared hole type: expected Int, got String "heavy"', text: '"heavy"' },
+      { message: "weight does not match its declared hole type: expected Int, got Float 2.5", text: "2.5" },
     ]);
   });
 
