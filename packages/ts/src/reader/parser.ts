@@ -67,7 +67,7 @@ export function parseToSExpr(source: string): Effect.Effect<SExpr, ParseError> {
  *
  * Returns an Effect that fails with ParseError on parse errors.
  */
-export function parseManyToSExpr(source: string): Effect.Effect<readonly SExpr[], ParseError> {
+export function parseManyToSExpr(source: string, sourceId?: string): Effect.Effect<readonly SExpr[], ParseError> {
   return Effect.gen(function* () {
     const { redTree, errors } = parse(source);
 
@@ -75,7 +75,7 @@ export function parseManyToSExpr(source: string): Effect.Effect<readonly SExpr[]
       return yield* Effect.fail(errors[0]!);
     }
 
-    return toSExprMany(redTree);
+    return toSExprMany(redTree, sourceId);
   });
 }
 

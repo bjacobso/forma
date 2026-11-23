@@ -386,6 +386,7 @@ async function evaluateUnlocated(request: EvaluateRequest, contextTypes: readonl
           builtins: Builtins.defaultBuiltins,
           contextTypes,
           ...(request.env ? { env: request.env } : {}),
+          ...(request.sourceId ? { sourceId: request.sourceId } : {}),
         }),
         Evaluator.makePreludeLayer(Builtins.defaultBuiltins),
       ),

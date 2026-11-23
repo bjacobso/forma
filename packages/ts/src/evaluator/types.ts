@@ -180,6 +180,8 @@ export interface KernelOptions {
   readonly observer?: KernelObserver;
   /** Type declarations from other modules, used for implicit `Some`/`None` filling. */
   readonly contextTypes?: readonly SExpr[];
+  /** Labels the source's locations, so a later evaluation that calls into it reports them in this source. */
+  readonly sourceId?: string;
 }
 
 /**
