@@ -451,6 +451,15 @@ describe("language-host shared ABI", () => {
             { kind: "int", value: 2 },
             { kind: "int", value: 3 },
           ],
+          span: {
+            sourceId: "session",
+            startOffset: 12,
+            endOffset: 26,
+            startLine: 1,
+            startColumn: 13,
+            endLine: 1,
+            endColumn: 27,
+          },
         },
       });
       if (first.status !== "host-call") throw new Error("expected first host call");
@@ -470,6 +479,15 @@ describe("language-host shared ABI", () => {
           effect: "test/label",
           name: "host-label",
           args: [{ kind: "int", value: 5 }],
+          span: {
+            sourceId: "session",
+            startOffset: 0,
+            endOffset: 27,
+            startLine: 1,
+            startColumn: 1,
+            endLine: 1,
+            endColumn: 28,
+          },
         },
       });
       if (second.status !== "host-call") throw new Error("expected second host call");

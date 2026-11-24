@@ -4,6 +4,11 @@ export type {
   AbortEvaluationResult,
   AstNode,
   CallValueRequest,
+  CapabilityManifest,
+  CheckedRunGrant,
+  CheckedRunLimits,
+  CheckedRunRequest,
+  CheckedRunState,
   DescribeNodesRequest,
   DescribeNodesResult,
   Diagnostic,
@@ -36,6 +41,8 @@ export type {
   HostCallResumeResult,
   LanguageHost,
   LoadPhaseTimings,
+  ManifestCapability,
+  ManifestDigest,
   ModuleGraphRequest,
   ModuleGraphResult,
   ModuleLinkResult,
@@ -86,6 +93,8 @@ export { HOST_ABI_VERSION, HOST_CAPABILITIES, hostAbiSchema } from "./host-contr
 export { createLanguage, LanguageInitializationError } from "./language.js";
 export type {
   CapabilityResult,
+  HostCallDecision,
+  HostCallDecisionContext,
   Language,
   LanguageCapability,
   LanguageCheckResult,
@@ -95,4 +104,5 @@ export type {
   LanguageRunOptions,
   LanguageRunResult,
   LanguageSourceOptions,
+  OnHostCallHook,
 } from "./language.js";

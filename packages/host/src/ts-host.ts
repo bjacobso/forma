@@ -22,6 +22,10 @@ import type {
   AbortEvaluationRequest,
   AbortEvaluationResult,
   CallValueRequest,
+  CapabilityManifest,
+  CheckedRunGrant,
+  CheckedRunRequest,
+  CheckedRunState,
   CloseSessionRequest,
   CloseSessionResult,
   ConfigureSessionRequest,
@@ -74,6 +78,7 @@ import type {
   SessionInfoResult,
   SourceToOutlineRequest,
   SourceToOutlineResult,
+  Span,
   SymbolDefinition,
   SymbolIndexRequest,
   SymbolIndexResult,
@@ -81,6 +86,7 @@ import type {
   SyntaxIdentityRequest,
   SyntaxIdentityResult,
   TypePolicy,
+  TypeSchemeExpr,
   TypecheckRequest,
   TypecheckResult,
   ValueProjection,
@@ -111,16 +117,27 @@ interface TsPendingHostCall {
   readonly resume: (result: HostCallResumeResult) => void;
 }
 
+interface CheckedRunContext {
+  readonly grants: ReadonlyMap<string, { readonly name: string; readonly mode: "ask" | "allow"; readonly maxCalls?: number | undefined }>;
+  readonly maxHostCalls?: number | undefined;
+  readonly type: string;
+  readonly manifest: CapabilityManifest;
+  hostCalls: number;
+  readonly callCounts: Map<string, number>;
+}
+
 interface TsPendingEvaluation {
   readonly session: TsSession;
   readonly evaluationId: string;
   readonly sourceId: string;
+  readonly sourceText?: string | undefined;
+  readonly checkedRun?: CheckedRunContext | undefined;
   completed: boolean;
   aborted: boolean;
   pendingCall?: TsPendingHostCall | undefined;
   readonly callQueue: HostCall[];
   readonly callWaiters: ((call: HostCall) => void)[];
-  readonly completion: Promise<EvaluationState>;
+  readonly completion: Promise<EvaluationState | CheckedRunState>;
 }
 
 
@@ -254,6 +271,10 @@ export class TsLanguageHost implements LanguageHost {
 
   async evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState> {
     return this.#locateResult(await this.#evaluateInSessionUnlocated(request), { ...request, sourceId: request.sourceId ?? "session" });
+  }
+
+  async checkedRun(request: CheckedRunRequest): Promise<CheckedRunState> {
+    return this.#locateResult(await this.#checkedRunUnlocated(request), { ...request, sourceId: request.sourceId ?? "checked-run" });
   }
 
   async replSubmit(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
@@ -509,12 +530,22 @@ export class TsLanguageHost implements LanguageHost {
 
   typecheckSync(request: TypecheckRequest): TypecheckResult {
     const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
-    return Engine.typecheck({
+    const effectiveBuiltins = request.hostBuiltins ?? session?.hostBuiltins ?? [];
+    const result = Engine.typecheck({
       ...request,
       session: session?.language,
       hostBuiltins: request.hostBuiltins ?? session?.hostBuiltins,
       typePolicy: request.typePolicy ?? session?.typePolicy,
     });
+    const sourceId = request.sourceId ?? (!request.source && session?.language.orderedSources("source").length === 1
+      ? session.language.orderedSources("source")[0]!.id : "source");
+    const source = request.source ?? (request.sourceId !== undefined
+      ? session?.language.sourceText(Modules.normalizeModuleId(request.sourceId)) ?? session?.language.sourceText(request.sourceId)
+      : session?.language.orderedSources("source").length === 1 ? session.language.orderedSources("source")[0]?.text : undefined);
+    const manifest = source !== undefined
+      ? this.#buildManifest(session, sourceId, source, effectiveBuiltins).manifest
+      : undefined;
+    return manifest ? { ...result, manifest } : result;
   }
 
   /** Debug operations share the session's host type configuration. */
@@ -732,7 +763,7 @@ export class TsLanguageHost implements LanguageHost {
     }
     evaluation.pendingCall = undefined;
     pendingCall.resume(request.result);
-    return this.#nextEvaluationState(evaluation);
+    return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
   }
 
   async abortEvaluation(request: AbortEvaluationRequest): Promise<AbortEvaluationResult> {
@@ -1203,6 +1234,311 @@ export class TsLanguageHost implements LanguageHost {
     return session;
   }
 
+  async #checkedRunUnlocated(request: CheckedRunRequest): Promise<CheckedRunState> {
+    const session = this.#requireSession(request.sessionId);
+    const sourceId = request.sourceId ?? "checked-run";
+    const source = request.source;
+    const grantMap = new Map(
+      request.grants.map((grant) => [
+        grant.name,
+        { name: grant.name, mode: grant.mode ?? ("ask" as const), maxCalls: grant.maxCalls },
+      ]),
+    );
+    const grantedBuiltins = session.hostBuiltins.filter((builtin) => grantMap.has(builtin.name));
+    const parsed = Engine.parseSource({ sourceId, source });
+    const { manifest, spans } = this.#buildManifest(session, sourceId, source, session.hostBuiltins);
+    const requires = manifest.capabilities.map((cap) => cap.name);
+    if (parsed.diagnostics.some((d) => d.severity === "error")) {
+      return {
+        status: "rejected",
+        stage: "parse",
+        diagnostics: parsed.diagnostics,
+        requires,
+        manifest,
+      };
+    }
+    const ungranted = manifest.capabilities.filter((cap) => !grantMap.has(cap.name));
+    if (ungranted.length > 0) {
+      return {
+        status: "rejected",
+        stage: "grant",
+        diagnostics: ungranted.map((cap) => ({
+          code: "capability/ungranted",
+          severity: "error" as const,
+          message: `Capability "${cap.name}" is not granted.`,
+          phase: "typecheck" as const,
+          ...(spans.get(cap.name) ? { span: spans.get(cap.name) } : {}),
+          details: { capability: cap.name, effect: cap.effect },
+        })),
+        requires,
+        manifest,
+      };
+    }
+    const checked = Engine.typecheck({
+      session: session.language,
+      sourceId,
+      source,
+      hostBuiltins: grantedBuiltins,
+      typePolicy: session.typePolicy,
+    });
+    if (checked.diagnostics.some((d) => d.severity === "error")) {
+      return {
+        status: "rejected",
+        stage: "typecheck",
+        diagnostics: checked.diagnostics,
+        requires,
+        manifest,
+      };
+    }
+    const actualType = checked.display ?? "Unit";
+    if (request.expectedType !== undefined) {
+      const expectedCheck = this.#checkExpectedType(
+        session,
+        sourceId,
+        source,
+        parsed.exprs,
+        request.expectedType,
+        actualType,
+        grantedBuiltins,
+      );
+      if (expectedCheck) {
+        return {
+          status: "rejected",
+          stage: "typecheck",
+          diagnostics: [expectedCheck],
+          requires,
+          manifest,
+        };
+      }
+    }
+    const env = request.variables
+      ? session.language.env.extend(variablesToBindings(request.variables))
+      : session.language.env;
+    const stepLimit = request.limits?.steps ?? session.defaultStepLimit;
+    let expressions: readonly Reader.SExpr[];
+    try {
+      const prepared = await Engine.prepareModuleImports(
+        { session: session.language, sourceId, source, env, stepLimit },
+        sourceId,
+        source,
+        env,
+      );
+      expressions = prepared.expressions;
+      const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
+      const checkedRunContext: CheckedRunContext = {
+        grants: grantMap,
+        maxHostCalls: request.limits?.hostCalls,
+        type: actualType,
+        manifest,
+        hostCalls: 0,
+        callCounts: new Map(),
+      };
+      const evaluation = createPendingEvaluation(session, evaluationId, sourceId, source, checkedRunContext);
+      const builtins = {
+        ...Builtins.defaultBuiltins,
+        ...this.#hostBuiltinFns(evaluation, grantedBuiltins),
+      };
+      const completion = Effect.runPromise(
+        Effect.provide(
+          Evaluator.evaluateExprs(expressions, {
+            stepLimit,
+            builtins,
+            env: prepared.env,
+          }),
+          Evaluator.makePreludeLayer(builtins),
+        ),
+      )
+        .then((result): CheckedRunState => ({
+          status: "completed",
+          result: {
+            value: this.#projectValue(session, result.value, request.retainValues),
+            printed: Evaluator.printKValue(result.value),
+            steps: result.steps,
+            type: typeProjection(actualType),
+            diagnostics: [],
+          },
+          type: actualType,
+          hostCalls: checkedRunContext.hostCalls,
+          manifest,
+        }))
+        .catch((error): CheckedRunState => {
+          const locate = diagnosticLocator((id) => (id === sourceId ? source : session.language.sourceText(id)));
+          const raw = Engine.diagnosticFromUnknown(error, "evaluate", sourceId);
+          const mapped = mapCheckedRunDiagnostic(raw, locate);
+          return {
+            status: "failed",
+            stage: checkedRunFailureStage(mapped),
+            diagnostics: mapped,
+          };
+        });
+      Object.assign(evaluation, { completion });
+      session.evaluations.set(evaluationId, evaluation);
+      return (await this.#nextEvaluationState(evaluation)) as CheckedRunState;
+    } catch (error) {
+      const locate = diagnosticLocator((id) => (id === sourceId ? source : session.language.sourceText(id)));
+      const diagnostics = (error instanceof Modules.ModuleError
+        ? [...error.diagnostics]
+        : [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)]
+      ).map(locate);
+      return { status: "failed", stage: "evaluate", diagnostics };
+    }
+  }
+
+  #checkExpectedType(
+    session: TsSession,
+    sourceId: string,
+    source: string,
+    exprs: readonly Reader.SExpr[],
+    expectedType: string,
+    actualType: string,
+    hostBuiltins: readonly HostBuiltinDescriptor[],
+  ): Diagnostic | undefined {
+    const last = exprs.at(-1);
+    const lastSpan: Span | undefined = last
+      ? spanLocator(source)({ sourceId, startOffset: last.loc.start, endOffset: last.loc.end })
+      : undefined;
+    const isDecl = last?._tag === "List" && last.items[0]?._tag === "Sym" &&
+      ["define", "type", "import", "export", "export-from", "error", "service", "class", "instance"].includes(last.items[0].name);
+    const wrappedSource = !last || isDecl
+      ? `${source}\n(: nil ${expectedType})`
+      : `${source.slice(0, last.loc.start)}(: ${source.slice(last.loc.start, last.loc.end)} ${expectedType})${source.slice(last.loc.end)}`;
+    const verified = Engine.typecheck({
+      session: session.language,
+      sourceId,
+      source: wrappedSource,
+      hostBuiltins,
+      typePolicy: session.typePolicy,
+    });
+    if (!verified.diagnostics.some((d) => d.severity === "error")) return undefined;
+    return {
+      code: "typecheck/type-mismatch",
+      severity: "error",
+      message: `Expected type ${expectedType}, got ${actualType}.`,
+      phase: "typecheck",
+      ...(lastSpan ? { span: lastSpan } : {}),
+      details: { expected: expectedType, actual: actualType },
+    };
+  }
+
+  #buildManifest(
+    session: TsSession | undefined,
+    sourceId: string,
+    source: string,
+    hostBuiltins: readonly HostBuiltinDescriptor[],
+  ): { readonly manifest: CapabilityManifest; readonly spans: ReadonlyMap<string, Span> } {
+    const preludes = (session?.language.orderedSources("prelude") ?? []).map((entry) => ({
+      sourceId: entry.id,
+      sha256: sha256(entry.text),
+    }));
+    const sources = [
+      ...(session?.language.orderedSources("source") ?? [])
+        .filter((entry) => entry.id !== sourceId)
+        .map((entry) => ({ sourceId: entry.id, sha256: sha256(entry.text) })),
+      { sourceId, sha256: sha256(source) },
+    ];
+    const { reachable, spans } = this.#findReachableCapabilities(session, sourceId, source, hostBuiltins);
+    return {
+      manifest: {
+        sources,
+        preludes,
+        capabilities: reachable.map((builtin) => ({
+          name: builtin.name,
+          effect: builtin.handler.effect,
+          signature: formatTypeScheme(builtin.typeScheme),
+          ...(builtin.purity ? { purity: builtin.purity } : {}),
+        })),
+      },
+      spans,
+    };
+  }
+
+  #findReachableCapabilities(
+    session: TsSession | undefined,
+    sourceId: string,
+    source: string,
+    hostBuiltins: readonly HostBuiltinDescriptor[],
+  ): { readonly reachable: readonly HostBuiltinDescriptor[]; readonly spans: ReadonlyMap<string, Span> } {
+    const spans = new Map<string, Span>();
+    if (hostBuiltins.length === 0) return { reachable: [], spans };
+    const byName = new Map(hostBuiltins.map((builtin) => [builtin.name, builtin]));
+    const found = new Set<string>();
+    const locateEntry = spanLocator(source);
+    const index = this.#indexSymbols({ sessionId: session?.sessionId, sourceId, source });
+    const defByKey = new Map(index.definitions.map((def) => [def.key, def]));
+    const refsBySource = new Map<string, Editor.SymbolReference[]>();
+    for (const ref of index.references) {
+      let list = refsBySource.get(ref.sourceId);
+      if (!list) { list = []; refsBySource.set(ref.sourceId, list); }
+      list.push(ref);
+    }
+    const worklist: { readonly defKey: string; readonly entrySpan: Span }[] = [];
+    const visitedDefs = new Set<string>();
+    for (const ref of refsBySource.get(sourceId) ?? []) {
+      const refSpan = locateEntry(hostSpan(sourceId, ref.span));
+      if (ref.resolution !== "definition" && byName.has(ref.name)) {
+        found.add(ref.name);
+        if (!spans.has(ref.name)) spans.set(ref.name, refSpan);
+      } else if (ref.resolution === "definition" && ref.definition && !visitedDefs.has(ref.definition)) {
+        visitedDefs.add(ref.definition);
+        worklist.push({ defKey: ref.definition, entrySpan: refSpan });
+      }
+    }
+    while (worklist.length > 0) {
+      const { defKey, entrySpan } = worklist.shift()!;
+      const def = defByKey.get(defKey);
+      if (!def || def.sourceId === sourceId) continue;
+      const parsed = session?.language.parsedPreludes.get(def.sourceId) ??
+        session?.language.parsedSources.get(def.sourceId);
+      const enclosing = parsed?.find((expr) => expr.loc.start <= def.span.start && def.span.end <= expr.loc.end);
+      const docRefs = refsBySource.get(def.sourceId) ?? [];
+      for (const ref of docRefs) {
+        if (enclosing && (ref.span.start < enclosing.loc.start || ref.span.end > enclosing.loc.end)) continue;
+        if (ref.resolution !== "definition" && byName.has(ref.name)) {
+          found.add(ref.name);
+          if (!spans.has(ref.name)) spans.set(ref.name, entrySpan);
+        } else if (ref.resolution === "definition" && ref.definition && !visitedDefs.has(ref.definition)) {
+          visitedDefs.add(ref.definition);
+          worklist.push({ defKey: ref.definition, entrySpan });
+        }
+      }
+    }
+    // Also check expanded AST so macro-introduced capability calls are caught.
+    const expanded = Engine.expand({ session: session?.language, sourceId, source });
+    if (!expanded.diagnostics.some((d) => d.severity === "error")) {
+      const visitAst = (node: Engine.AstNode): void => {
+        if (node.kind === "symbol" && byName.has(node.value)) {
+          found.add(node.value);
+          if (!spans.has(node.value) && node.span) {
+            spans.set(node.value, locateEntry(node.span));
+          }
+        } else if (node.kind === "list" || node.kind === "vector" || node.kind === "set") {
+          node.items.forEach(visitAst);
+        } else if (node.kind === "map") {
+          node.entries.forEach((entry) => { visitAst(entry.key); visitAst(entry.value); });
+        }
+      };
+      expanded.ast.forEach(visitAst);
+    }
+    return {
+      reachable: hostBuiltins.filter((builtin) => found.has(builtin.name)),
+      spans,
+    };
+  }
+
+  #locateCallSpan(evaluation: TsPendingEvaluation, loc: Reader.Loc): Span {
+    const spanSourceId = loc.sourceId ?? evaluation.sourceId;
+    const rawSpan: Span = {
+      sourceId: spanSourceId,
+      startOffset: loc.start,
+      endOffset: loc.end,
+      ...(loc.line !== undefined ? { startLine: loc.line } : {}),
+      ...(loc.col !== undefined ? { startColumn: loc.col } : {}),
+    };
+    const text = (spanSourceId === evaluation.sourceId ? evaluation.sourceText : undefined) ??
+      evaluation.session.language.sourceText(spanSourceId);
+    return text !== undefined ? spanLocator(text)(rawSpan) : rawSpan;
+  }
+
   async #evaluateInSessionWithHostBuiltins(
     session: TsSession,
     request: EvaluateInSessionRequest,
@@ -1215,7 +1551,7 @@ export class TsLanguageHost implements LanguageHost {
     try {const prepared=await Engine.prepareModuleImports({session:session.language,sourceId,source,env,stepLimit:request.stepLimit ?? session.defaultStepLimit},sourceId,source,env);expressions=prepared.expressions;env=prepared.env;}
     catch(error) {return {status:"failed",diagnostics:error instanceof Modules.ModuleError ? [...error.diagnostics] : [Engine.diagnosticFromUnknown(error,"evaluate",sourceId)]};}
     const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
-    const evaluation = createPendingEvaluation(session, evaluationId, sourceId);
+    const evaluation = createPendingEvaluation(session, evaluationId, sourceId, source);
     const builtins = {
       ...Builtins.defaultBuiltins,
       ...this.#hostBuiltinFns(evaluation, session.hostBuiltins),
@@ -1257,7 +1593,7 @@ export class TsLanguageHost implements LanguageHost {
       });
       Object.assign(evaluation, { completion });
       session.evaluations.set(evaluationId, evaluation);
-      return this.#nextEvaluationState(evaluation);
+      return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
     }
     const completion = Effect.runPromise(
       Effect.provide(
@@ -1290,7 +1626,7 @@ export class TsLanguageHost implements LanguageHost {
       );
     Object.assign(evaluation, { completion });
     session.evaluations.set(evaluationId, evaluation);
-    return this.#nextEvaluationState(evaluation);
+    return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
   }
 
   #hostBuiltinFns(
@@ -1300,8 +1636,10 @@ export class TsLanguageHost implements LanguageHost {
     return Object.fromEntries(
       descriptors.map((descriptor) => [
         descriptor.name,
-        (args: readonly KValue[], apply) =>
-          this.#pauseForHostCall(evaluation, descriptor, args, apply),
+        (args: readonly KValue[], apply) => {
+          const callLoc = VM.currentBuiltinCallLoc();
+          return this.#pauseForHostCall(evaluation, descriptor, args, apply, callLoc);
+        },
       ]),
     );
   }
@@ -1311,11 +1649,52 @@ export class TsLanguageHost implements LanguageHost {
     descriptor: HostBuiltinDescriptor,
     args: readonly KValue[],
     apply: (fn: KValue, args: readonly KValue[]) => Effect.Effect<KValue, KernelError>,
+    callLoc?: Reader.Loc,
   ): Effect.Effect<KValue, KernelError> {
     return Effect.callback<KValue, KernelError>((resume) => {
       if (evaluation.aborted) {
         resume(Effect.fail(hostCallDiagnosticsError("evaluation/aborted", "Evaluation aborted")));
         return Effect.void;
+      }
+      const span = callLoc ? this.#locateCallSpan(evaluation, callLoc) : undefined;
+      if (evaluation.checkedRun) {
+        const grant = evaluation.checkedRun.grants.get(descriptor.name);
+        if (!grant) {
+          resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+            code: "capability/ungranted",
+            severity: "error",
+            message: `Capability "${descriptor.name}" is not granted.`,
+            phase: "host-effect",
+            ...(span ? { span } : {}),
+            details: { capability: descriptor.name, effect: descriptor.handler.effect },
+          }])));
+          return Effect.void;
+        }
+        if (evaluation.checkedRun.maxHostCalls !== undefined && evaluation.checkedRun.hostCalls >= evaluation.checkedRun.maxHostCalls) {
+          resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+            code: "limit/host-calls",
+            severity: "error",
+            message: `Host call limit (${evaluation.checkedRun.maxHostCalls}) exceeded.`,
+            phase: "evaluate",
+            ...(span ? { span } : {}),
+            details: { limit: evaluation.checkedRun.maxHostCalls, capability: descriptor.name },
+          }])));
+          return Effect.void;
+        }
+        const currentCount = evaluation.checkedRun.callCounts.get(descriptor.name) ?? 0;
+        if (grant.maxCalls !== undefined && currentCount >= grant.maxCalls) {
+          resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+            code: "limit/host-calls",
+            severity: "error",
+            message: `Call limit (${grant.maxCalls}) exceeded for capability "${descriptor.name}".`,
+            phase: "evaluate",
+            ...(span ? { span } : {}),
+            details: { limit: grant.maxCalls, capability: descriptor.name },
+          }])));
+          return Effect.void;
+        }
+        evaluation.checkedRun.hostCalls++;
+        evaluation.checkedRun.callCounts.set(descriptor.name, currentCount + 1);
       }
       const call: HostCall = {
         evaluationId: evaluation.evaluationId,
@@ -1327,6 +1706,8 @@ export class TsLanguageHost implements LanguageHost {
             apply(arg, callArgs),
           ),
         ),
+        ...(span ? { span } : {}),
+        ...(evaluation.checkedRun ? { mode: evaluation.checkedRun.grants.get(descriptor.name)?.mode ?? "ask" } : {}),
       };
       const pendingCall: TsPendingHostCall = {
         call,
@@ -1334,7 +1715,10 @@ export class TsLanguageHost implements LanguageHost {
           if (result.ok) {
             resume(Effect.succeed(kValueFromProjection(result.value, evaluation.session)));
           } else {
-            resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics(result.diagnostics)));
+            const diagnostics = span
+              ? result.diagnostics.map((d) => (d.span ? d : { ...d, span }))
+              : result.diagnostics;
+            resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics(diagnostics)));
           }
         },
       };
@@ -1467,7 +1851,7 @@ export class TsLanguageHost implements LanguageHost {
     return (request) => this.#invokeCallableValue(session, value, request);
   }
 
-  #invokeCallableValue(
+  async #invokeCallableValue(
     session: TsSession,
     value: KFn,
     request: CallValueRequest,
@@ -1523,10 +1907,10 @@ export class TsLanguageHost implements LanguageHost {
       );
     Object.assign(evaluation, { completion });
     session.evaluations.set(evaluationId, evaluation);
-    return this.#nextEvaluationState(evaluation);
+    return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
   }
 
-  async #nextEvaluationState(evaluation: TsPendingEvaluation): Promise<EvaluationState> {
+  async #nextEvaluationState(evaluation: TsPendingEvaluation): Promise<EvaluationState | CheckedRunState> {
     const state = await Promise.race([
       evaluation.completion.then((state) => ({ kind: "completion" as const, state })),
       waitForHostCall(evaluation).then((call) => ({ kind: "host-call" as const, call })),
@@ -1538,6 +1922,96 @@ export class TsLanguageHost implements LanguageHost {
     evaluation.session.evaluations.delete(evaluation.evaluationId);
     return state.state;
   }
+}
+
+const SHA256_K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+]);
+const utf8Encoder = new TextEncoder();
+
+/** Runtime-neutral synchronous SHA-256 (FIPS 180-4) returning lowercase hex. */
+function sha256(text: string): string {
+  const data = utf8Encoder.encode(text);
+  const bitLen = data.length * 8;
+  const paddedLen = Math.ceil((data.length + 9) / 64) * 64;
+  const padded = new Uint8Array(paddedLen);
+  padded.set(data);
+  padded[data.length] = 0x80;
+  const view = new DataView(padded.buffer);
+  view.setUint32(paddedLen - 8, Math.floor(bitLen / 0x100000000), false);
+  view.setUint32(paddedLen - 4, bitLen >>> 0, false);
+
+  let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
+  let h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+  const w = new Uint32Array(64);
+
+  for (let offset = 0; offset < paddedLen; offset += 64) {
+    for (let i = 0; i < 16; i++) w[i] = view.getUint32(offset + i * 4, false);
+    for (let i = 16; i < 64; i++) {
+      const s0 = ((w[i - 15]! >>> 7) | (w[i - 15]! << 25)) ^ ((w[i - 15]! >>> 18) | (w[i - 15]! << 14)) ^ (w[i - 15]! >>> 3);
+      const s1 = ((w[i - 2]! >>> 17) | (w[i - 2]! << 15)) ^ ((w[i - 2]! >>> 19) | (w[i - 2]! << 13)) ^ (w[i - 2]! >>> 10);
+      w[i] = (w[i - 16]! + s0 + w[i - 7]! + s1) >>> 0;
+    }
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+    for (let i = 0; i < 64; i++) {
+      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + S1 + ch + SHA256_K[i]! + w[i]!) >>> 0;
+      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + temp1) >>> 0;
+      d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0; h3 = (h3 + d) >>> 0;
+    h4 = (h4 + e) >>> 0; h5 = (h5 + f) >>> 0; h6 = (h6 + g) >>> 0; h7 = (h7 + h) >>> 0;
+  }
+  return [h0, h1, h2, h3, h4, h5, h6, h7].map((n) => n.toString(16).padStart(8, "0")).join("");
+}
+
+function formatTypeScheme(scheme?: TypeSchemeExpr): string {
+  if (!scheme) return "Unknown";
+  switch (scheme.kind) {
+    case "any": return "Unknown";
+    case "type": return scheme.name;
+    case "list": return `(List ${formatTypeScheme(scheme.item)})`;
+    case "map": return `(Map ${formatTypeScheme(scheme.key)} ${formatTypeScheme(scheme.value)})`;
+    case "function":
+      return `(-> ${[...scheme.params.map(formatTypeScheme), formatTypeScheme(scheme.result)].join(" ")})`;
+    case "variadic-function":
+      return `(-> ${[...scheme.params.map(formatTypeScheme), `& ${formatTypeScheme(scheme.rest)}`, formatTypeScheme(scheme.result)].join(" ")})`;
+  }
+}
+
+function mapCheckedRunDiagnostic(
+  diagnostic: Diagnostic,
+  locate: (d: Diagnostic) => Diagnostic,
+): readonly Diagnostic[] {
+  const details = diagnostic.details as { readonly hostDiagnostics?: readonly Diagnostic[]; readonly limit?: number } | undefined;
+  if (Array.isArray(details?.hostDiagnostics) && details.hostDiagnostics.length > 0) {
+    return details.hostDiagnostics.map((d) => locate(d.span ? d : (diagnostic.span ? { ...d, span: diagnostic.span } : d)));
+  }
+  if (diagnostic.code === "StepLimitExceeded") {
+    return [locate({
+      ...diagnostic,
+      code: "limit/steps",
+    })];
+  }
+  return [locate(diagnostic)];
+}
+
+function checkedRunFailureStage(diagnostics: readonly Diagnostic[]): "evaluate" | "limit" | "denied" | "aborted" {
+  if (diagnostics.some((d) => d.code === "limit/steps" || d.code === "limit/host-calls" || d.code === "StepLimitExceeded")) return "limit";
+  if (diagnostics.some((d) => d.code === "capability/denied")) return "denied";
+  if (diagnostics.some((d) => d.code === "evaluation/aborted")) return "aborted";
+  return "evaluate";
 }
 
 function hostSpan(sourceId: string, span: { readonly start: number; readonly end: number }) {
@@ -1572,11 +2046,15 @@ function createPendingEvaluation(
   session: TsSession,
   evaluationId: string,
   sourceId: string,
+  sourceText?: string,
+  checkedRun?: CheckedRunContext,
 ): TsPendingEvaluation {
   return {
     session,
     evaluationId,
     sourceId,
+    ...(sourceText !== undefined ? { sourceText } : {}),
+    ...(checkedRun !== undefined ? { checkedRun } : {}),
     completed: false,
     aborted: false,
     callQueue: [],

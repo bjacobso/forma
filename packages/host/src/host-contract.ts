@@ -190,9 +190,22 @@ const descriptionResult = Schema.Struct({
   functions: Schema.Array(describedDefinition), types: Schema.Array(describedDefinition), diagnostics,
 });
 
-const stateResponse = (result: Awaited<ReturnType<TsLanguageHost["evaluateInSession"]>>) => ({
-  ...envelope(result, result.status === "failed" ? result.diagnostics : result.status === "completed" ? result.result.diagnostics : []),
-  ...(result.status === "completed" && result.result.type ? { type: result.result.type.display } : {}),
+const stateResponse = (result: Awaited<ReturnType<TsLanguageHost["evaluateInSession"]>> | Awaited<ReturnType<TsLanguageHost["checkedRun"]>>) => ({
+  ...envelope(
+    result,
+    result.status === "failed" || result.status === "rejected"
+      ? result.diagnostics
+      : result.status === "completed"
+        ? result.result.diagnostics
+        : [],
+  ),
+  ...(result.status === "completed"
+    ? ("type" in result && typeof result.type === "string"
+        ? { type: result.type }
+        : result.result.type
+          ? { type: result.result.type.display }
+          : {})
+    : {}),
 });
 
 /** The only operation registry: schemas, dispatch/projection, and session scope. */
@@ -242,6 +255,22 @@ export const HOST_OPERATIONS = [
     const result = await host.observe(request); return envelope(result, result.diagnostics);
   }, evaluationResult),
   operation("evaluateInSession", { ...sessionSource, ...evaluation }, async ({host}, request) => stateResponse(await host.evaluateInSession(request))),
+  operation("checkedRun", {
+    ...session, ...source,
+    grants: Schema.Array(Schema.Struct({
+      name: id,
+      mode: Schema.optionalKey(Schema.Literals(["ask", "allow"])),
+      maxCalls: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
+    })),
+    expectedType: optionalString,
+    limits: Schema.optionalKey(Schema.Struct({
+      steps: stepLimit,
+      hostCalls: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+    })),
+    variables,
+    retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])),
+    resultProjection,
+  }, async ({host}, request) => stateResponse(await host.checkedRun(request))),
   operation("replSubmit", { ...source, ...evaluation }, async ({host}, request) => stateResponse(await host.replSubmit(request))),
   operation("emit", { ...artifact, source: optionalString }, async ({host}, request) => {
     const result = await host.emit(request); return envelope(result, result.diagnostics);

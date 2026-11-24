@@ -1,0 +1,113 @@
+{
+  "description": "RFC 0012 stage 1 conformance fixtures for checkedRun, capability manifests, HostCall spans, denials, and step limits.",
+  "builtins": [
+    {
+      "name": "read-file",
+      "arity": 1,
+      "purity": "read",
+      "typeScheme": {
+        "kind": "function",
+        "params": [{ "kind": "type", "name": "String" }],
+        "result": { "kind": "type", "name": "String" }
+      },
+      "handler": { "kind": "host-effect", "effect": "fs.read" }
+    },
+    {
+      "name": "delete-file",
+      "arity": 1,
+      "purity": "write",
+      "typeScheme": {
+        "kind": "function",
+        "params": [{ "kind": "type", "name": "String" }],
+        "result": { "kind": "type", "name": "Bool" }
+      },
+      "handler": { "kind": "host-effect", "effect": "fs.delete" }
+    }
+  ],
+  "cases": [
+    {
+      "id": "type-error-zero-host-calls",
+      "sourceId": "type-error.lisp",
+      "source": "(let [x (read-file \"a.txt\")]\n  (+ x 1))",
+      "grants": [{ "name": "read-file", "mode": "ask" }],
+      "expected": {
+        "status": "rejected",
+        "stage": "typecheck",
+        "hostCalls": 0,
+        "diagnosticCode": "typecheck/type-mismatch",
+        "requires": ["read-file"]
+      }
+    },
+    {
+      "id": "ungranted-capability-zero-host-calls-with-span",
+      "sourceId": "ungranted.lisp",
+      "source": "(let [a (read-file \"ok.txt\")]\n  (delete-file \"nope.txt\"))",
+      "grants": [{ "name": "read-file", "mode": "ask" }],
+      "expected": {
+        "status": "rejected",
+        "stage": "grant",
+        "hostCalls": 0,
+        "diagnosticCode": "capability/ungranted",
+        "spanLine": 2,
+        "spanColumn": 4,
+        "requires": ["read-file", "delete-file"]
+      }
+    },
+    {
+      "id": "granted-call-pauses-with-exact-span",
+      "sourceId": "granted.lisp",
+      "source": "(let [prefix \"hello:\"]\n  (read-file \"notes.txt\"))",
+      "grants": [{ "name": "read-file", "mode": "ask" }],
+      "expectedType": "String",
+      "resume": [{ "ok": true, "value": { "kind": "string", "value": "world" } }],
+      "expected": {
+        "status": "completed",
+        "type": "String",
+        "hostCalls": 1,
+        "callName": "read-file",
+        "callMode": "ask",
+        "callSpanText": "(read-file \"notes.txt\")",
+        "callSpanLine": 2,
+        "callSpanColumn": 3,
+        "value": { "kind": "string", "value": "world" }
+      }
+    },
+    {
+      "id": "denied-call-fails-with-capability-denied",
+      "sourceId": "denied.lisp",
+      "source": "(read-file \"secret.txt\")",
+      "grants": [{ "name": "read-file", "mode": "ask" }],
+      "resume": [
+        {
+          "ok": false,
+          "diagnostics": [
+            {
+              "code": "capability/denied",
+              "severity": "error",
+              "message": "User denied file access"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "status": "failed",
+        "stage": "denied",
+        "diagnosticCode": "capability/denied",
+        "spanLine": 1,
+        "spanColumn": 1
+      }
+    },
+    {
+      "id": "step-limit-fails-with-limit-steps",
+      "sourceId": "step-limit.lisp",
+      "source": "(define spin [n] (if (= n 0) 0 (spin (- n 1))))\n(spin 100)",
+      "grants": [],
+      "limits": { "steps": 25 },
+      "expected": {
+        "status": "failed",
+        "stage": "limit",
+        "diagnosticCode": "limit/steps"
+      }
+    }
+  ]
+}

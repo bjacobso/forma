@@ -167,7 +167,77 @@ export interface HostCall {
   readonly effect: string;
   readonly name: string;
   readonly args: readonly ValueProjection[];
+  /** Author source span of the capability call expression, when available. */
+  readonly span?: Span | undefined;
+  /** Grant mode when paused from `checkedRun`. */
+  readonly mode?: "ask" | "allow" | undefined;
 }
+
+export interface ManifestDigest {
+  readonly sourceId: string;
+  readonly sha256: string;
+}
+
+export interface ManifestCapability {
+  readonly name: string;
+  readonly effect: string;
+  readonly signature: string;
+  readonly purity?: HostBuiltinDescriptor["purity"] | undefined;
+}
+
+export interface CapabilityManifest {
+  readonly sources: readonly ManifestDigest[];
+  readonly preludes: readonly ManifestDigest[];
+  readonly capabilities: readonly ManifestCapability[];
+}
+
+export interface CheckedRunGrant {
+  readonly name: string;
+  readonly mode?: "ask" | "allow" | undefined;
+  readonly maxCalls?: number | undefined;
+}
+
+export interface CheckedRunLimits {
+  readonly steps?: number | undefined;
+  readonly hostCalls?: number | undefined;
+}
+
+export interface CheckedRunRequest {
+  readonly sessionId: string;
+  readonly source: string;
+  readonly sourceId?: string | undefined;
+  readonly grants: readonly CheckedRunGrant[];
+  readonly expectedType?: string | undefined;
+  readonly limits?: CheckedRunLimits | undefined;
+  readonly variables?: readonly SessionVariable[] | undefined;
+  readonly retainValues?: "none" | "functions" | "all" | undefined;
+  readonly resultProjection?: readonly ValueProjectionName[] | undefined;
+}
+
+export type CheckedRunState =
+  | {
+      readonly status: "rejected";
+      readonly stage: "parse" | "expand" | "typecheck" | "grant";
+      readonly diagnostics: readonly Diagnostic[];
+      readonly requires: readonly string[];
+      readonly manifest: CapabilityManifest;
+    }
+  | {
+      readonly status: "host-call";
+      readonly call: HostCall & { readonly mode: "ask" | "allow" };
+    }
+  | {
+      readonly status: "completed";
+      readonly result: EvaluationResult;
+      readonly type: string;
+      readonly hostCalls: number;
+      readonly manifest: CapabilityManifest;
+    }
+  | {
+      readonly status: "failed";
+      readonly stage: "evaluate" | "limit" | "denied" | "aborted";
+      readonly diagnostics: readonly Diagnostic[];
+    };
 
 export type ValueProjectionName = "printed" | "plain-json" | "triple-value" | "truthy" | "summary";
 
@@ -283,6 +353,7 @@ export interface TypecheckResult {
   readonly type?: TypeProjection | undefined;
   readonly display?: string | undefined;
   readonly expressionTypes?: readonly ExpressionType[] | undefined;
+  readonly manifest?: CapabilityManifest | undefined;
   readonly diagnostics: readonly Diagnostic[];
 }
 
@@ -861,6 +932,8 @@ export interface LanguageHost {
   /** Evaluate with per-expression observation enabled. */
   observe?(request: EvaluateRequest): Promise<EvaluationResult>;
   evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState>;
+  /** Check against a grant set and limits, then run with every capability call paused at its span. */
+  checkedRun?(request: CheckedRunRequest): Promise<CheckedRunState>;
   /** Atomically typecheck and evaluate, retaining bindings and types on success. */
   replSubmit?(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState>;
   callValue(request: CallValueRequest): Promise<EvaluationState>;
