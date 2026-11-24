@@ -236,6 +236,11 @@ export interface ReaderSetup {
    * earlier blocks of a docs page. It opens as `forma:earlier.lisp`.
    */
   readonly before?: string | undefined;
+  /**
+   * Open files in scope for every other open file without an import, such as a
+   * playground's language definition for its program. Editable, unlike `before`.
+   */
+  readonly implicit?: readonly string[] | undefined;
 }
 
 export const EARLIER_FILE = "forma:earlier.lisp";

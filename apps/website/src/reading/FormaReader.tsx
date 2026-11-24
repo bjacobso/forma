@@ -9,7 +9,7 @@
  *
  * For any other layout, put the parts from ./parts inside a <ReaderRoot>.
  */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { ReaderRoot, useReader } from "./model";
 import { CheckStatus, QuickOpen, ReaderEditor, ReaderInspector, ReaderPanel, ReaderSidebar, ReaderStatus, ReaderTabs, ReaderToolbar, RenameBar, TypeLine } from "./parts";
@@ -36,8 +36,11 @@ export function FormaReader({ files, focus, sidebar = roomy(), preludes }: Forma
   </ReaderRoot>;
 }
 
-/** The full reader's layout inside a <ReaderRoot>: files, the code, and the inspector beside it. */
-export function ReaderWorkspace() {
+/**
+ * The full reader's layout inside a <ReaderRoot>: files, the code, and the inspector beside it.
+ * `inspector` replaces the right sidebar's content, such as a host's inspector with its own views.
+ */
+export function ReaderWorkspace({ inspector }: { readonly inspector?: ReactNode } = {}) {
   const reader = useReader();
   return <div className={`rd-workspace${reader.sidebar ? " with-sidebar" : ""}`}>
     {reader.sidebar ? <ReaderSidebar /> : null}
@@ -49,7 +52,7 @@ export function ReaderWorkspace() {
       <ReaderPanel />
       <ReaderStatus />
     </section>
-    <aside aria-label="Selected form" className="rd-inspector"><ReaderInspector /></aside>
+    <aside aria-label="Selected form" className="rd-inspector">{inspector ?? <ReaderInspector />}</aside>
   </div>;
 }
 

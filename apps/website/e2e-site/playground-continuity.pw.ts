@@ -27,7 +27,7 @@ test("validation retains the previous output and scroll position, then updates i
     bridge.holdValidation = true;
     bridge.outputEditor = document.querySelector(".target-code-view .cm-editor");
   });
-  await page.getByRole("textbox", { name: "Example source", exact: true }).fill(source.replace("workflow before", "workflow after"));
+  await page.getByRole("textbox", { name: "Forma source", exact: true }).fill(source.replace("workflow before", "workflow after"));
   await expect(output).toHaveAttribute("aria-busy", "true");
   await expect(page.getByRole("status").filter({ hasText: "Validating… showing previous result" })).toBeVisible();
   await page.waitForFunction(() => Boolean((window as unknown as { resumeValidation?: () => void }).resumeValidation));
@@ -64,7 +64,7 @@ test("the playground uses the reader's panel surfaces and readable syntax in bot
   const reports = [];
   for (const theme of ["dark", "light"] as const) {
     await page.getByRole("combobox", { name: "Playground appearance" }).selectOption(theme);
-    for (const selector of [".studio-file-active .cm-editor", ".target-code-view .cm-editor"]) {
+    for (const selector of [".rd-editor .cm-editor", ".target-code-view .cm-editor"]) {
       const report = await page.locator(selector).evaluate(editor => {
         const rgb = (color: string) => color.match(/[\d.]+/g)!.slice(0, 3).map(Number);
         const luminance = (color: string) => {

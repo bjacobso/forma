@@ -901,66 +901,22 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--forma-blue); ou
 .studio-share-confirmation p { flex: 1; min-width: 240px; margin: 0; color: var(--rd-ink); font-size: 13px; line-height: 1.5; }
 .studio-alert { padding: 9px 12px; border-left: 3px solid var(--rd-error); border-radius: 0 8px 8px 0; background: var(--rd-error-soft); font-size: 13px; }
 
-/* Workspace: the files card, a divider, then the output and problems cards. */
-.studio-main { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, var(--studio-split)) 14px minmax(0, 1fr); }
-.studio-card { display: flex; flex-direction: column; min-width: 0; min-height: 0; overflow: hidden; border: 1px solid var(--rd-line); border-radius: 12px; background: var(--rd-panel); }
-.studio-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; min-height: 0; }
-.studio-inspector { flex: 1; }
-.studio-divider { position: relative; cursor: col-resize; touch-action: none; }
-.studio-divider::after { content: ""; position: absolute; top: 50%; left: 5px; width: 4px; height: 36px; margin-top: -18px; border-radius: 2px; background: var(--rd-line); transition: background .15s; }
-.studio-divider:hover::after, .studio-divider:focus-visible::after { background: var(--rd-accent); }
-.studio-divider:focus-visible { outline: none; }
+/* Workspace: the reader's own layout, with the files sidebar and outline, the editor, and the right sidebar. */
+.prelude-playground .studio-reader-ide { flex: 1; min-height: 0; }
+.prelude-playground .rd-workspace { grid-template-columns: minmax(0, 1fr) minmax(340px, 440px); }
+.prelude-playground .rd-workspace.with-sidebar { grid-template-columns: minmax(190px, 240px) minmax(0, 1fr) minmax(340px, 440px); }
+.prelude-playground .rd-inspector { overflow: hidden; }
+.studio-side { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; }
+.studio-definition { flex: 1; min-height: 0; overflow-y: auto; }
 
-/* Tabs: the reader's file tabs. */
+/* The right sidebar's views: the reader's file tabs. */
 .studio-tabs-row { display: flex; align-items: stretch; flex-shrink: 0; min-height: 40px; padding: 0 8px; border-bottom: 1px solid var(--rd-line); background: color-mix(in srgb, var(--rd-bg) 60%, var(--rd-panel)); }
 .studio-tablist { display: flex; gap: 2px; min-width: 0; overflow-x: auto; scrollbar-width: none; }
-.studio-tablist > button { display: inline-flex; align-items: baseline; gap: 7px; padding: 9px 10px 7px; border-bottom: 2px solid transparent; color: var(--rd-muted); font-size: 13px; font-weight: 560; white-space: nowrap; }
+.studio-tablist > button { display: inline-flex; align-items: center; gap: 6px; padding: 9px 9px 7px; border-bottom: 2px solid transparent; color: var(--rd-muted); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
 .studio-tablist > button:hover { color: var(--rd-ink); }
 .studio-tablist > button[aria-selected="true"] { border-bottom-color: var(--rd-accent); color: var(--rd-ink); }
-.studio-tabs-aside { display: inline-flex; align-items: center; gap: 6px; align-self: center; margin-left: auto; padding: 4px 8px; border-radius: 6px; color: var(--rd-muted); font-size: 12.5px; white-space: nowrap; cursor: pointer; }
+.studio-tabs-aside { display: inline-flex; align-items: center; align-self: center; margin-left: auto; padding: 4px 8px; border-radius: 6px; color: var(--rd-muted); font-size: 12px; white-space: nowrap; cursor: pointer; }
 button.studio-tabs-aside:hover, .studio-internals-toggle[aria-expanded="true"] { background: var(--rd-accent-soft); color: var(--rd-accent); }
-
-/* File picker: the reader sidebar's file tree, grouped into preludes and the program. */
-.studio-source-body { flex: 1; min-height: 0; display: grid; grid-template-columns: 196px minmax(0, 1fr); }
-.studio-picker { display: flex; flex-direction: column; min-height: 0; overflow-y: auto; padding: 10px 8px; border-right: 1px solid var(--rd-line); background: color-mix(in srgb, var(--rd-bg) 60%, var(--rd-panel)); }
-.studio-picker > header { padding: 0 6px 6px; color: var(--rd-muted); font-size: 11px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; }
-.studio-picker-files { display: flex; flex-direction: column; gap: 1px; }
-.studio-picker-group { margin: 10px 6px 3px; color: var(--rd-faint); font-size: 10.5px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; }
-.studio-picker-group:first-child { margin-top: 2px; }
-.studio-picker-files > button { display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; align-items: center; column-gap: 7px; row-gap: 1px; padding: 5px 7px; border-radius: 6px; color: var(--rd-muted); text-align: left; }
-.studio-picker-files > button:hover { background: var(--rd-accent-soft); color: var(--rd-ink); }
-.studio-picker-files > button[aria-selected="true"] { background: var(--rd-accent-soft); color: var(--rd-accent); }
-.studio-picker-name { overflow: hidden; font-family: "IBM Plex Mono", monospace; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
-.studio-picker-files > button[aria-selected="true"] .studio-picker-name { font-weight: 600; }
-.studio-picker-files > button[data-bundled] .studio-picker-name { font-style: italic; }
-.studio-picker-role { grid-column: 2 / -1; color: var(--rd-faint); font-size: 11px; }
-.studio-picker .studio-both-files { display: flex; align-items: center; gap: 6px; margin-top: auto; padding: 12px 6px 2px; color: var(--rd-muted); font-size: 12.5px; cursor: pointer; }
-.studio-picker .studio-both-files input { accent-color: var(--rd-accent); }
-.studio-file-heading-bundled { display: flex; }
-.studio-source[data-both="true"] .studio-source-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-.studio-source[data-both="true"] .studio-picker { flex-direction: row; align-items: center; gap: 8px; padding: 6px 8px; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--rd-line); }
-.studio-source[data-both="true"] :is(.studio-picker > header, .studio-picker-group, .studio-picker-role) { display: none; }
-.studio-source[data-both="true"] .studio-picker-files { flex-direction: row; }
-.studio-source[data-both="true"] .studio-picker-files > button { grid-template-columns: auto auto auto; }
-.studio-source[data-both="true"] .studio-picker .studio-both-files { margin: 0 0 0 auto; padding: 0 6px; white-space: nowrap; }
-/* Files */
-.studio-editors { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr); }
-.studio-editors-both { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-.studio-file { display: none; min-width: 0; min-height: 0; flex-direction: column; }
-.studio-file-active, .studio-editors-both .studio-file { display: flex; }
-.studio-editors-both .studio-file + .studio-file { border-left: 1px solid var(--rd-line); }
-.studio-file-heading { display: none; justify-content: space-between; gap: 8px; padding: 7px 14px; border-bottom: 1px solid var(--rd-line); color: var(--rd-muted); font-size: 12px; font-weight: 600; }
-.studio-file-heading code { color: var(--rd-faint); font-size: 11.5px; font-weight: 400; }
-.studio-editors-both .studio-file-heading { display: flex; }
-.studio-reader-host { display: flex; flex: 1; min-height: 0; }
-.studio-reader { display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; background: var(--rd-panel); container-type: inline-size; }
-.studio-reader .rd-editor { flex: 1; min-height: 0; }
-.studio-reader .rd-panel { flex-basis: 34%; }
-.studio-reader-inspector { flex: 0 0 auto; max-height: 42%; overflow-y: auto; border-top: 1px solid var(--rd-line); }
-.studio-reader-inspector .rd-subject { position: static; }
-.studio-file .cm-scroller { overflow: auto; }
-/* A narrow editor keeps its tools and drops the path, which the type line also shows. */
-@container (max-width: 520px) { .studio-reader .rd-breadcrumbs { display: none; } .studio-reader .rd-tools { margin-left: auto; } }
 
 /* Output */
 .studio-validation { display: flex; align-items: center; gap: 7px; flex-shrink: 0; padding: 8px 16px; border-bottom: 1px solid var(--rd-line); color: var(--rd-lit); font-size: 12.5px; font-weight: 600; }
@@ -1000,47 +956,31 @@ button.studio-tabs-aside:hover, .studio-internals-toggle[aria-expanded="true"] {
 .studio-timings > div { display: flex; justify-content: space-between; }
 .studio-timings dd { margin: 0; color: var(--rd-muted); font-family: "IBM Plex Mono", monospace; }
 
-/* Problems: the reader inspector's problem rows. */
-.studio-problems { flex: 0 0 auto; max-height: 34%; }
-.studio-card-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 10px 16px 8px; }
-.studio-card-head h2 { margin: 0; color: var(--rd-muted); font-size: 11.5px; font-weight: 650; letter-spacing: 0.07em; text-transform: uppercase; }
-.studio-card-head span { color: var(--rd-faint); font-family: "IBM Plex Mono", monospace; font-size: 11px; }
-.studio-problems-list { min-height: 0; padding: 0 16px 14px; overflow: auto; transition: opacity 180ms ease-out; }
-.studio-problems-list[data-stale="true"] { opacity: .5; }
+/* Problems in the Result tab: the reader inspector's problem rows. */
+.studio-problems-list { display: grid; gap: 8px; padding: 12px 16px; transition: opacity 180ms ease-out; }
+.studio-problems-list .rd-problem + .rd-problem { margin-top: 0; }
 .studio-problems-list .rd-problem-message:disabled { cursor: default; }
 .studio-problems-list .rd-problem-message:not(:disabled):hover { text-decoration: underline; }
 @media (prefers-reduced-motion: reduce) { .studio-output-snapshot, .studio-problems-list { transition: none; } }
 
-@media (max-width: 1100px) {
+@media (max-width: 1200px) {
+  .prelude-playground .rd-workspace.with-sidebar { grid-template-columns: minmax(180px, 220px) minmax(0, 1fr); }
+  .prelude-playground .rd-workspace.with-sidebar .rd-inspector { display: flex; grid-column: 1 / -1; height: 52dvh; }
   .prelude-playground.rd-page { height: auto; min-height: calc(100dvh - 73px); }
-  .studio-editors-both { grid-template-columns: minmax(0, 1fr); }
-  .studio-editors-both .studio-file:not(.studio-file-active), .prelude-playground .studio-both-files { display: none; }
-  .studio-editors-both .studio-file + .studio-file { border-left: 0; }
-  .studio-editors-both .studio-file-heading { display: none; }
-  .studio-main { display: flex; flex-direction: column; gap: 14px; }
-  .studio-divider { display: none; }
-  .studio-source { height: 62dvh; min-height: 360px; flex-shrink: 0; }
-  .studio-inspector { height: 52dvh; min-height: 320px; flex: none; }
-  .studio-problems { max-height: none; }
+  .prelude-playground .rd-editor-pane, .prelude-playground .rd-sidebar { height: 70dvh; }
+}
+@media (max-width: 900px) {
+  .prelude-playground .rd-workspace.with-sidebar .rd-inspector, .prelude-playground .rd-inspector { height: 60dvh; }
+  .prelude-playground .rd-workspace, .prelude-playground .rd-workspace.with-sidebar { grid-template-columns: minmax(0, 1fr); }
+  .prelude-playground .rd-sidebar { height: auto; max-height: 260px; }
 }
 @media (max-width: 700px) {
   .studio-actions { width: 100%; }
-  .studio-source-body { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
-  .studio-picker { flex-direction: row; align-items: center; gap: 8px; padding: 6px 8px; overflow-x: auto; border-right: 0; border-bottom: 1px solid var(--rd-line); }
-  .studio-picker > header, .studio-picker-group, .studio-picker-role { display: none; }
-  .studio-picker-files { flex-direction: row; }
-  .studio-picker-files > button { grid-template-columns: auto auto auto; }
-  .studio-picker-name { overflow: visible; }
-  .studio-picker .studio-both-files { margin: 0 0 0 auto; padding: 0 6px; white-space: nowrap; }
   .studio-theme { display: none; }
 }
 .prelude-playground.studio-embedded { height: 620px; min-height: 0; padding: 12px; gap: 10px; }
 .studio-top-embedded { align-items: center; }
-@media (max-width: 1100px) {
-  .prelude-playground.studio-embedded { height: auto; }
-  .studio-embedded .studio-source { height: 320px; min-height: 0; }
-  .studio-embedded .studio-inspector { height: 380px; min-height: 0; }
-}
+@media (max-width: 1200px) { .prelude-playground.studio-embedded { height: auto; } }
 
 @media (max-width: 1100px) {
   .site-header { flex-wrap: wrap; gap: 12px; padding-top: 16px; padding-bottom: 16px; }
