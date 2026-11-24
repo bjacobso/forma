@@ -5,7 +5,7 @@ import type { FormaWorkspace } from "../workspace.js";
 
 /** One full-document edit, or none when the document is formatted or does not parse. */
 export function formatDocument(workspace: FormaWorkspace, document: TextDocument): TextEdit[] {
-  const formatted = workspace.analysis.format(document.uri);
+  const formatted = workspace.format(document.uri);
   if (formatted === undefined || formatted === document.getText()) return [];
   return [
     {

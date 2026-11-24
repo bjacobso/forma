@@ -9,7 +9,7 @@ export function getDefinition(
   document: TextDocument,
   params: DefinitionParams,
 ): Location | null {
-  const definition = workspace.analysis.definition(
+  const definition = workspace.definition(
     document.uri,
     positionToOffset(document, params.position),
   );

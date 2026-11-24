@@ -17,7 +17,7 @@ export function getCompletions(
   document: TextDocument,
   params: CompletionParams,
 ): CompletionList {
-  const items = workspace.analysis.completions(
+  const items = workspace.completions(
     document.uri,
     positionToOffset(document, params.position),
   );

@@ -16,7 +16,7 @@ export function getDiagnostics(
   return {
     uri: document.uri,
     version: document.version,
-    diagnostics: workspace.analysis
+    diagnostics: workspace
       .diagnostics(document.uri)
       .map((diagnostic) => toLspDiagnostic(document, diagnostic, workspace)),
   };
