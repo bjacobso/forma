@@ -60,6 +60,8 @@ export interface ReaderModel {
   readonly readOnly: boolean;
   /** The host owns the set of files: no new files, and its files stay open. */
   readonly fixedFiles: boolean;
+  /** Files in scope for every other file without an import, such as a language definition. */
+  readonly implicit: readonly string[];
   readonly files: () => readonly SourceFile[];
   readonly show: (id: string) => void;
   readonly open: (location: Location) => void;
@@ -555,7 +557,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   }, [problems, diagnostics, active]);
 
   const model: ReaderModel = {
-    client, fileIds, active, readOnly: readOnly || isPreludeFile(active), fixedFiles,
+    client, fileIds, active, readOnly: readOnly || isPreludeFile(active), fixedFiles, implicit: implicit ?? [],
     files: () => filesRef.current, show, open, openFile, back, canGoBack: backStack.length > 0, addFile, closeFile,
     analysis, checking, failure, problems: shownProblems, symbols, subject, inspection, breadcrumbs, outline,
     inlineTypes, setInlineTypes: setInlineTypesState, sidebar, setSidebar, quickOpen, setQuickOpen, panel, setPanel,

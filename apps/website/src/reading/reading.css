@@ -91,6 +91,10 @@
 
 /* One row of fixed height whatever the selection: the breadcrumbs scroll instead of wrapping, and the tools drop their labels when the pane is narrow, so the code below never moves. */
 .rd-editor-pane { container-type: inline-size; }
+/* Files in scope without an import: a quiet line under the tabs. */
+.rd-scope { margin: 0; padding: 5px 14px; border-bottom: 1px solid var(--rd-line); color: var(--rd-muted); font-size: 12px; }
+.rd-scope button { padding: 0; color: var(--rd-ink); font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11.5px; text-decoration: underline; text-decoration-color: var(--rd-line); text-underline-offset: 2px; }
+.rd-scope button:hover { text-decoration-color: currentColor; }
 .rd-toolbar { display: flex; flex-wrap: nowrap; align-items: center; gap: 16px; height: 46px; padding: 0 10px 0 14px; border-bottom: 1px solid var(--rd-line); }
 .rd-breadcrumbs { display: flex; flex: 1 1 0; flex-wrap: nowrap; align-items: center; height: 26px; min-width: 0; overflow-x: auto; overflow-y: hidden; scrollbar-width: none; font-family: "IBM Plex Mono", monospace; font-size: 12px; }
 .rd-breadcrumbs::-webkit-scrollbar { display: none; }
