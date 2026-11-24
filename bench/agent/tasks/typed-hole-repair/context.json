@@ -1,0 +1,13 @@
+{
+  "tier": "hard",
+  "kind": "prelude",
+  "entry": "main.lisp",
+  "files": [
+    "docs/authoring.md",
+    "docs/cheatsheet.md",
+    "docs/modules.md",
+    "docs/domain-modeling.md",
+    "preludes/modules/kernel.lisp",
+    "bench/agent/fixtures/typed-hole-repair"
+  ]
+}

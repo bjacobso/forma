@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { failingCalls, summarizeDiagnostics, median, metrics, parseOptions, prepare, root, runAgent, taskIds, tasksRoot } from "./harness.mjs";
+import { failingCalls, mcpMetrics, summarizeDiagnostics, median, metrics, parseOptions, prepare, root, runAgent, taskIds, tasksRoot } from "./harness.mjs";
 
 const options = parseOptions(process.argv.slice(2));
 const known = await taskIds();
@@ -20,9 +20,9 @@ if (!selected.length) throw new Error("No tasks match the requested filters");
 const results = [];
 const taskCalls = [];
 for (const id of selected) {
-  const { dir, context } = await prepare(id);
+  const { dir, context } = await prepare(id, { mcp: options.mcp });
   const start = performance.now();
-  const agent = await runAgent(options["agent-cmd"], dir);
+  const agent = await runAgent(options["agent-cmd"], dir, { mcp: options.mcp });
   const wallTimeMs = performance.now() - start;
   let calls = [];
   try { calls = (await readFile(join(dir, ".forma-calls.jsonl"), "utf8")).trim().split("\n").filter(Boolean).map(JSON.parse); }
@@ -33,25 +33,43 @@ for (const id of selected) {
     acceptance = await accept(dir);
   } catch (error) { acceptance = { pass: false, reasons: [String(error)] }; }
   taskCalls.push({ calls, dir, entry: context.entry });
-  results.push({ failingCalls: failingCalls(calls), id, kind: context.kind, tier: context.tier, ...acceptance, ...metrics(calls, dir, context.entry), wallTimeMs, agent, taskDir: dir });
+  const mcpStats = mcpMetrics(calls);
+  results.push({
+    failingCalls: failingCalls(calls),
+    id,
+    kind: context.kind,
+    tier: context.tier,
+    ...acceptance,
+    ...metrics(calls, dir, context.entry),
+    ...(options.mcp || mcpStats.mcpCallCount > 0 ? mcpStats : {}),
+    wallTimeMs,
+    agent,
+    taskDir: dir,
+  });
   console.error(`${id}: ${acceptance.pass ? "PASS" : "FAIL"}${acceptance.reasons.length ? ` (${acceptance.reasons.join("; ")})` : ""}`);
 }
 const totals = rows => ({ tasks: rows.length, passed: rows.filter(r => r.pass).length,
   passRate: rows.length ? rows.filter(r => r.pass).length / rows.length : null,
   medianRepairRounds: median(rows.map(r => r.repairRounds)) });
+const allCalls = taskCalls.flatMap(entry => entry.calls);
+const overallMcp = mcpMetrics(allCalls);
 const report = {
   schemaVersion: 1, timestamp: new Date().toISOString(), node: process.version,
   revision: execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8" }).trim(),
   dirty: !!execFileSync("git", ["status", "--porcelain"], { cwd: root, encoding: "utf8" }).trim(),
+  mode: options.mcp ? "mcp" : "cli",
   agentCommand: options["agent-cmd"],
   totals: totals(results),
   tiers: Object.fromEntries(["core", "hard"].map(tier => [tier, totals(results.filter(r => r.tier === tier))])),
+  ...(options.mcp || overallMcp.mcpCallCount > 0 ? { mcp: { calls: overallMcp.mcpCallCount, tools: overallMcp.mcpTools } } : {}),
   diagnostics: summarizeDiagnostics(taskCalls),
   results,
 };
 await mkdir(dirname(resolve(options.out)), { recursive: true });
 await writeFile(options.out, `${JSON.stringify(report, null, 2)}\n`);
-console.table(results.map(({ id, tier, pass, repairRounds, cliCallCount, wallTimeMs }) => ({ id, tier, pass, repairRounds, cliCallCount, seconds: +(wallTimeMs / 1000).toFixed(2) })));
+console.table(results.map(({ id, tier, pass, repairRounds, cliCallCount, mcpCallCount, wallTimeMs }) => ({
+  id, tier, pass, repairRounds, cliCallCount, ...(options.mcp ? { mcpCallCount: mcpCallCount ?? 0 } : {}), seconds: +(wallTimeMs / 1000).toFixed(2),
+})));
 console.table(Object.entries(report.tiers).map(([tier, totals]) => ({ tier, ...totals })));
 console.table(Object.entries(report.diagnostics).slice(0, 10).map(([code, counts]) => ({ code, ...counts })));
 console.log(JSON.stringify(report.totals));
