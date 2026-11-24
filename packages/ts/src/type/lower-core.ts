@@ -32,7 +32,7 @@ import {
 } from "./core-expr.js";
 import { InferenceError } from "./errors.js";
 import type { DSLTypeProvider } from "./dsl-provider.js";
-import { sourceTraceOf } from "../evaluator/source-trace.js";
+import { atMacroCalls, sourceTraceOf } from "../evaluator/source-trace.js";
 
 // ---------------------------------------------------------------------------
 // Callback type
@@ -331,7 +331,9 @@ function lowerModule(span: Span, items: readonly SExpr[]): CoreExpr {
  * type checking, and lowers those sub-expressions into CoreExpr children.
  * The rest of the form (pattern/quoted slots) is not lowered.
  */
-function lowerDSLForm(span: Span, name: string, expr: SExpr): CoreExpr {
+function lowerDSLForm(span: Span, name: string, authored: SExpr): CoreExpr {
+  // A form a macro produced is checked at the macro call.
+  const expr = atMacroCalls(authored);
   if (!_dslProvider) {
     throw new InferenceError({ message: `No DSL provider for form: ${name}` });
   }

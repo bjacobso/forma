@@ -122,6 +122,15 @@ describe("AnalysisWorkspace", () => {
     expect(ws.analysis("doc.lisp").bindingDisplay("two")).toBeDefined();
   });
 
+  test("checks declarations a document macro produces, and reports what the macro wrote at the call", () => {
+    const spans = (source: string) => workspace(source).diagnostics("doc.lisp").map(d => `${d.code} ${source.slice(d.span!.startOffset, d.span!.endOffset)}`);
+    expect(spans("(macro (nightly n) `(workflow ~n :trigger \"cron\"))\n(nightly sync)")).toEqual([]);
+    expect(spans("(macro (nightly n) `(workflow ~n))\n(nightly sync)")).toEqual(["surface/invalid-form (nightly sync)"]);
+    expect(spans("(macro (nightly n) `(workflow ~n :trigger 5))\n(nightly sync)")).toEqual(["typecheck/type-mismatch (nightly sync)"]);
+    // What the author passed is reported where they wrote it.
+    expect(spans("(macro (on n t) `(workflow ~n :trigger ~t))\n(on sync 5)")).toEqual(["typecheck/type-mismatch 5"]);
+  });
+
   test("reports type errors at their source", () => {
     const source = '(define ok 1)\n(+ 1 "nope")';
     const [diagnostic] = workspace(source).diagnostics("doc.lisp");

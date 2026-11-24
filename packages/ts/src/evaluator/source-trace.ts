@@ -92,6 +92,24 @@ export function copyExpansion<T extends SExpr>(expr: T, args: readonly SExpr[] =
 }
 
 /**
+ * `expr` with each node a macro built moved to the call that built it, so a
+ * check that reports a node's own location reports the call. Nodes the author
+ * wrote, including a call's arguments, are kept as they are.
+ */
+export function atMacroCalls<T extends SExpr>(expr: T): T {
+  const move = (node: SExpr): SExpr => {
+    const trace = sourceTraceMap.get(node);
+    if (!trace?.macroOrigins) return node;
+    const moved: SExpr =
+      node._tag === "List" || node._tag === "Vector" || node._tag === "Set" ? { ...node, loc: trace.loc, items: node.items.map(move) }
+      : node._tag === "Map" ? { ...node, loc: trace.loc, pairs: node.pairs.map(([key, value]) => [move(key), move(value)] as const) }
+      : { ...node, loc: trace.loc };
+    return copySourceTrace(node, moved);
+  };
+  return move(expr) as T;
+}
+
+/**
  * Mark `expansion` as the expansion of the macro call `call`. Returns a
  * fresh tree that carries the call as an origin: a macro can return the
  * same template node from every expansion, and that node must not collect
