@@ -2,6 +2,7 @@
 import { Schema } from "effect";
 import * as Engine from "@formalang/ts/engine";
 import type { TypeSchemeExpr, ValueProjection, OutlineItem } from "./types.js";
+import type { JournalRequest, JournalValue } from "./journal.js";
 import type { TsLanguageHost } from "./ts-host.js";
 
 export const HOST_ABI_VERSION = "0.2.0";
@@ -73,6 +74,9 @@ const observe = Schema.optionalKey(Schema.Struct({
   maxDepth: Schema.optionalKey(Schema.Int), maxStringLength: Schema.optionalKey(Schema.Int),
 }));
 const evaluation = { ...session, variables, stepLimit, observe, resultProjection, evaluationId: optionalString,
+  timeoutMs: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+  maxExpansionSteps: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
+  maxResultBytes: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
   retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])) };
 const artifact = { ...session, sourceId: optionalString, sourceIds: Schema.optionalKey(Schema.Array(id)), backend: optionalString };
 const span = Schema.Struct({ sourceId: Schema.String, startOffset: Schema.Number, endOffset: Schema.Number,
@@ -103,6 +107,51 @@ const position = { offset: Schema.optionalKey(Schema.Int), nodeId: optionalStrin
 
 // Structural results are described explicitly; engine debug trees remain open JSON.
 const diagnostics = Schema.Array(JsonDiagnostic);
+export const JsonJournalValue: Schema.Codec<JournalValue> = Schema.suspend(() => Schema.Union([
+  Schema.Struct({ kind: Schema.Literal("nil") }),
+  Schema.Struct({ kind: Schema.Literal("bool"), value: Schema.Boolean }),
+  Schema.Struct({ kind: Schema.Literal("int"), value: Schema.Int }),
+  Schema.Struct({ kind: Schema.Literal("float"), value: Schema.Union([Schema.Number, Schema.Literals(["NaN", "Infinity", "-Infinity", "-0"])]) }),
+  Schema.Struct({ kind: Schema.Literals(["string", "symbol", "keyword"]), value: Schema.String }),
+  Schema.Struct({ kind: Schema.Literals(["list", "vector"]), items: Schema.Array(JsonJournalValue) }),
+  Schema.Struct({ kind: Schema.Literal("map"), entries: Schema.Array(Schema.Struct({ key: JsonJournalValue, value: JsonJournalValue })) }),
+  Schema.Struct({ kind: Schema.Literal("function"), ordinal: Schema.Int }),
+  Schema.Struct({ kind: Schema.Literal("redacted") }),
+])).annotate({ identifier: "JournalValue" });
+const journalDigest = Schema.Struct({ id: Schema.String, sha256: Schema.String });
+const journalHeader = Schema.Struct({
+  format: Schema.Literal("forma-journal/v1"),
+  engine: Schema.String,
+  program: Schema.Struct({
+    sources: Schema.Array(journalDigest),
+    preludes: Schema.Array(journalDigest),
+    entry: Schema.String,
+    revision: Schema.optionalKey(Schema.Int),
+  }),
+  builtins: Schema.Array(Schema.Struct({ name: id, effect: id })),
+}).annotate({ identifier: "JournalHeader" });
+const journalEntry = Schema.Struct({
+  seq: Schema.Int,
+  evaluation: Schema.Array(Schema.Int),
+  effect: Schema.String,
+  name: Schema.String,
+  args: Schema.Array(JsonJournalValue),
+  outcome: Schema.Union([
+    Schema.Struct({ ok: Schema.Literal(true), value: JsonJournalValue }),
+    Schema.Struct({ ok: Schema.Literal(false), diagnostics }),
+  ]),
+}).annotate({ identifier: "JournalEntry" });
+const journal = Schema.optionalKey(Schema.Union([
+  Schema.Struct({ mode: Schema.Literal("record") }),
+  Schema.Struct({
+    mode: Schema.Literal("replay"),
+    journal: Schema.Struct({ header: journalHeader, entries: Schema.Array(journalEntry) }).annotate({ identifier: "HostCallJournal" }),
+    onExhausted: Schema.optionalKey(Schema.Literals(["fail", "pause"])),
+    allowProgramMismatch: Schema.optionalKey(Schema.Boolean),
+    record: Schema.optionalKey(Schema.Boolean),
+  }),
+]));
+const journalArg = (input: unknown): JournalRequest | undefined => input as JournalRequest | undefined;
 const nodeDescription = Schema.Struct({
   id, kind: Schema.Literals(["List", "Vector", "Map", "Set", "Symbol", "String", "Number", "Boolean", "ReaderMacro", "Error", "Comment"]), text: Schema.String,
   parent: Schema.Union([Schema.String, Schema.Null]), head: optionalString,
@@ -190,9 +239,22 @@ const descriptionResult = Schema.Struct({
   functions: Schema.Array(describedDefinition), types: Schema.Array(describedDefinition), diagnostics,
 });
 
-const stateResponse = (result: Awaited<ReturnType<TsLanguageHost["evaluateInSession"]>>) => ({
-  ...envelope(result, result.status === "failed" ? result.diagnostics : result.status === "completed" ? result.result.diagnostics : []),
-  ...(result.status === "completed" && result.result.type ? { type: result.result.type.display } : {}),
+const stateResponse = (result: Awaited<ReturnType<TsLanguageHost["evaluateInSession"]>> | Awaited<ReturnType<TsLanguageHost["checkedRun"]>>) => ({
+  ...envelope(
+    result,
+    result.status === "failed" || result.status === "rejected"
+      ? result.diagnostics
+      : result.status === "completed"
+        ? result.result.diagnostics
+        : [],
+  ),
+  ...(result.status === "completed"
+    ? ("type" in result && typeof result.type === "string"
+        ? { type: result.type }
+        : result.result.type
+          ? { type: result.result.type.display }
+          : {})
+    : {}),
 });
 
 /** The only operation registry: schemas, dispatch/projection, and session scope. */
@@ -241,8 +303,29 @@ export const HOST_OPERATIONS = [
   operation("observe", { ...source, variables, stepLimit, observe, resultProjection, typePolicy: Schema.optionalKey(policy) }, async ({host}, request) => {
     const result = await host.observe(request); return envelope(result, result.diagnostics);
   }, evaluationResult),
-  operation("evaluateInSession", { ...sessionSource, ...evaluation }, async ({host}, request) => stateResponse(await host.evaluateInSession(request))),
-  operation("replSubmit", { ...source, ...evaluation }, async ({host}, request) => stateResponse(await host.replSubmit(request))),
+  operation("evaluateInSession", { ...sessionSource, ...evaluation, journal }, async ({host}, request) => stateResponse(await host.evaluateInSession({ ...request, journal: journalArg(request.journal) }))),
+  operation("checkedRun", {
+    ...session, ...source,
+    evaluationId: optionalString,
+    grants: Schema.Array(Schema.Struct({
+      name: id,
+      mode: Schema.optionalKey(Schema.Literals(["ask", "allow"])),
+      maxCalls: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
+    })),
+    expectedType: optionalString,
+    limits: Schema.optionalKey(Schema.Struct({
+      steps: stepLimit,
+      hostCalls: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+      timeoutMs: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+      maxExpansionSteps: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
+      maxResultBytes: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
+    })),
+    variables,
+    retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])),
+    resultProjection,
+    journal,
+  }, async ({host}, request) => stateResponse(await host.checkedRun({ ...request, journal: journalArg(request.journal) }))),
+  operation("replSubmit", { ...source, ...evaluation, journal }, async ({host}, request) => stateResponse(await host.replSubmit({ ...request, journal: journalArg(request.journal) }))),
   operation("emit", { ...artifact, source: optionalString }, async ({host}, request) => {
     const result = await host.emit(request); return envelope(result, result.diagnostics);
   }),
@@ -255,8 +338,9 @@ export const HOST_OPERATIONS = [
   operation("emitBackends", {}, async ({host}) => envelope(await host.emitBackends())),
   operation("callValue", { ...session, valueRef: id, args: Schema.Array(value), stepLimit, evaluationId: optionalString,
     retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])),
-    resultProjection: Schema.optionalKey(Schema.Array(Schema.Literals(["printed", "plain-json", "triple-value", "truthy", "summary"]))) },
-    async ({host}, request) => stateResponse(await host.callValue(request))),
+    resultProjection: Schema.optionalKey(Schema.Array(Schema.Literals(["printed", "plain-json", "triple-value", "truthy", "summary"]))),
+    journal },
+    async ({host}, request) => stateResponse(await host.callValue({ ...request, journal: journalArg(request.journal) }))),
   operation("resumeHostCall", { ...session, evaluationId: id, callId: id, result: Schema.Union([
     Schema.Struct({ok: Schema.Literal(true), value, hostEffects: Schema.optionalKey(Schema.Array(Schema.Record(Schema.String, Schema.Unknown)))}),
     Schema.Struct({ok: Schema.Literal(false), diagnostics: Schema.Array(Schema.Struct({code:id, severity:Schema.Literal("error"), message:Schema.String}))}),

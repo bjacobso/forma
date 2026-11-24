@@ -8,6 +8,7 @@ import { diagnosticLocator, spanLocator, KernelTypeError, type KernelError } fro
 import { Env } from "@formalang/ts/env";
 import * as Evaluator from "@formalang/ts/evaluator";
 import type { BuiltinFn, KFn, KValue } from "@formalang/ts/evaluator";
+import * as Expander from "@formalang/ts/expander";
 import * as Lsp from "@formalang/ts/lsp";
 import * as Reader from "@formalang/ts/reader";
 import * as Editor from "@formalang/ts/editor";
@@ -17,11 +18,25 @@ import * as Syntax from "@formalang/ts/syntax";
 import * as VM from "@formalang/ts/vm";
 
 import { typeProjection } from "./abi-projections.js";
+import {
+  JOURNAL_FORMAT,
+  JournalRuntime,
+  journalArgsFromProjections,
+  validateReplayHeader,
+  valueProjectionFromJournal,
+  type JournalHeader,
+  type JournalRequest,
+  type OnJournalEntryCallback,
+} from "./journal.js";
 import { floatProjectionValue, keyStringFromProjection, projectInlineValue } from "./value-projections.js";
 import type {
   AbortEvaluationRequest,
   AbortEvaluationResult,
   CallValueRequest,
+  CapabilityManifest,
+  CheckedRunGrant,
+  CheckedRunRequest,
+  CheckedRunState,
   CloseSessionRequest,
   CloseSessionResult,
   ConfigureSessionRequest,
@@ -74,6 +89,7 @@ import type {
   SessionInfoResult,
   SourceToOutlineRequest,
   SourceToOutlineResult,
+  Span,
   SymbolDefinition,
   SymbolIndexRequest,
   SymbolIndexResult,
@@ -81,6 +97,7 @@ import type {
   SyntaxIdentityRequest,
   SyntaxIdentityResult,
   TypePolicy,
+  TypeSchemeExpr,
   TypecheckRequest,
   TypecheckResult,
   ValueProjection,
@@ -89,6 +106,10 @@ import type {
 } from "./types.js";
 
 const DEFAULT_STEP_LIMIT = 50_000;
+const DEFAULT_MAX_HOST_CALLS = 1_000;
+const DEFAULT_TIMEOUT_MS = 5_000;
+const DEFAULT_MAX_EXPANSION_STEPS = 10_000;
+const DEFAULT_MAX_RESULT_BYTES = 1_048_576;
 
 interface TsSession {
   readonly sessionId: string;
@@ -111,16 +132,40 @@ interface TsPendingHostCall {
   readonly resume: (result: HostCallResumeResult) => void;
 }
 
+interface CheckedRunContext {
+  readonly grants: ReadonlyMap<string, { readonly name: string; readonly mode: "ask" | "allow"; readonly maxCalls?: number | undefined }>;
+  readonly maxHostCalls?: number | undefined;
+  readonly type: string;
+  readonly manifest: CapabilityManifest;
+  hostCalls: number;
+  readonly callCounts: Map<string, number>;
+}
+
+interface JournalParentContext {
+  readonly runtime: JournalRuntime;
+  readonly evaluationPath: readonly number[];
+  readonly nextChild: () => number;
+}
+
 interface TsPendingEvaluation {
   readonly session: TsSession;
   readonly evaluationId: string;
   readonly sourceId: string;
+  readonly sourceText?: string | undefined;
+  readonly checkedRun?: CheckedRunContext | undefined;
+  readonly journalRuntime?: JournalRuntime | undefined;
+  readonly evaluationPath: readonly number[];
+  nextChildIndex: number;
+  deadlineMs?: number | undefined;
+  timeoutMs?: number | undefined;
+  pausedAtMs?: number | undefined;
   completed: boolean;
   aborted: boolean;
+  abortReason?: string | undefined;
   pendingCall?: TsPendingHostCall | undefined;
   readonly callQueue: HostCall[];
   readonly callWaiters: ((call: HostCall) => void)[];
-  readonly completion: Promise<EvaluationState>;
+  readonly completion: Promise<EvaluationState | CheckedRunState>;
 }
 
 
@@ -254,6 +299,10 @@ export class TsLanguageHost implements LanguageHost {
 
   async evaluateInSession(request: EvaluateInSessionRequest): Promise<EvaluationState> {
     return this.#locateResult(await this.#evaluateInSessionUnlocated(request), { ...request, sourceId: request.sourceId ?? "session" });
+  }
+
+  async checkedRun(request: CheckedRunRequest): Promise<CheckedRunState> {
+    return this.#locateResult(await this.#checkedRunUnlocated(request), { ...request, sourceId: request.sourceId ?? "checked-run" });
   }
 
   async replSubmit(request: EvaluateInSessionRequest & { readonly source: string }): Promise<EvaluationState> {
@@ -517,12 +566,22 @@ export class TsLanguageHost implements LanguageHost {
 
   typecheckSync(request: TypecheckRequest): TypecheckResult {
     const session = request.sessionId ? this.#requireSession(request.sessionId) : undefined;
-    return Engine.typecheck({
+    const effectiveBuiltins = request.hostBuiltins ?? session?.hostBuiltins ?? [];
+    const result = Engine.typecheck({
       ...request,
       session: session?.language,
       hostBuiltins: request.hostBuiltins ?? session?.hostBuiltins,
       typePolicy: request.typePolicy ?? session?.typePolicy,
     });
+    const sourceId = request.sourceId ?? (!request.source && session?.language.orderedSources("source").length === 1
+      ? session.language.orderedSources("source")[0]!.id : "source");
+    const source = request.source ?? (request.sourceId !== undefined
+      ? session?.language.sourceText(Modules.normalizeModuleId(request.sourceId)) ?? session?.language.sourceText(request.sourceId)
+      : session?.language.orderedSources("source").length === 1 ? session.language.orderedSources("source")[0]?.text : undefined);
+    const manifest = source !== undefined
+      ? this.#buildManifest(session, sourceId, source, effectiveBuiltins).manifest
+      : undefined;
+    return manifest ? { ...result, manifest } : result;
   }
 
   /** Debug operations share the session's host type configuration. */
@@ -584,7 +643,14 @@ export class TsLanguageHost implements LanguageHost {
     const env = request.variables
       ? session.language.env.extend(variablesToBindings(request.variables))
       : session.language.env;
-    if (session.hostBuiltins.length > 0) {
+    if (
+      session.hostBuiltins.length > 0 ||
+      request.evaluationId !== undefined ||
+      request.timeoutMs !== undefined ||
+      request.maxExpansionSteps !== undefined ||
+      request.maxResultBytes !== undefined ||
+      request.journal !== undefined
+    ) {
       return this.#evaluateInSessionWithHostBuiltins(session, {...request,sourceId}, source, env);
     }
 
@@ -636,7 +702,7 @@ export class TsLanguageHost implements LanguageHost {
       session.language.rememberParsedSource("source", sourceId, parsed.exprs);
     };
     const type = typeProjection(checked.display);
-    if (session.hostBuiltins.length) return this.#evaluateInSessionWithHostBuiltins(session,
+    if (session.hostBuiltins.length || request.journal !== undefined) return this.#evaluateInSessionWithHostBuiltins(session,
       { ...request, sourceId }, request.source, session.language.env, { commit, type });
     const result = await Engine.evaluateInSession({ session: session.language, sourceId,
       source: request.source, env: session.language.env, stepLimit: request.stepLimit ?? session.defaultStepLimit,
@@ -740,7 +806,7 @@ export class TsLanguageHost implements LanguageHost {
     }
     evaluation.pendingCall = undefined;
     pendingCall.resume(request.result);
-    return this.#nextEvaluationState(evaluation);
+    return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
   }
 
   async abortEvaluation(request: AbortEvaluationRequest): Promise<AbortEvaluationResult> {
@@ -748,13 +814,14 @@ export class TsLanguageHost implements LanguageHost {
     const evaluation = session.evaluations.get(request.evaluationId);
     if (evaluation && !evaluation.completed) {
       evaluation.aborted = true;
+      evaluation.abortReason = request.reason ?? "Evaluation aborted";
       evaluation.pendingCall?.resume({
         ok: false,
         diagnostics: [
           {
             code: "evaluation/aborted",
             severity: "error",
-            message: request.reason ?? "Evaluation aborted",
+            message: evaluation.abortReason,
             phase: "evaluate",
           },
         ],
@@ -1211,6 +1278,439 @@ export class TsLanguageHost implements LanguageHost {
     return session;
   }
 
+  async #checkedRunUnlocated(request: CheckedRunRequest): Promise<CheckedRunState> {
+    const session = this.#requireSession(request.sessionId);
+    const sourceId = request.sourceId ?? "checked-run";
+    const source = request.source;
+    const grantMap = new Map(
+      request.grants.map((grant) => [
+        grant.name,
+        { name: grant.name, mode: grant.mode ?? ("ask" as const), maxCalls: grant.maxCalls },
+      ]),
+    );
+    const budget = resolveBudget(request.limits, true);
+    const guard = <T>(fn: () => T): T => Expander.withExpansionBudget(expansionBudget(budget), fn);
+    const grantedBuiltins = session.hostBuiltins.filter((builtin) => grantMap.has(builtin.name));
+    const parsed = Engine.parseSource({ sourceId, source });
+    const locateError = diagnosticLocator((id) => (id === sourceId ? source : session.language.sourceText(id)));
+    const failedFromError = (error: unknown): CheckedRunState => {
+      const mapped = mapCheckedRunDiagnostic(Engine.diagnosticFromUnknown(error, "evaluate", sourceId), locateError);
+      return { status: "failed", stage: checkedRunFailureStage(mapped), diagnostics: mapped };
+    };
+    let built: { readonly manifest: CapabilityManifest; readonly spans: ReadonlyMap<string, Span> };
+    try {
+      built = guard(() => this.#buildManifest(session, sourceId, source, session.hostBuiltins));
+    } catch (error) {
+      return failedFromError(error);
+    }
+    const { manifest, spans } = built;
+    const requires = manifest.capabilities.map((cap) => cap.name);
+    if (parsed.diagnostics.some((d) => d.severity === "error")) {
+      return {
+        status: "rejected",
+        stage: "parse",
+        diagnostics: parsed.diagnostics,
+        requires,
+        manifest,
+      };
+    }
+    const ungranted = manifest.capabilities.filter((cap) => !grantMap.has(cap.name));
+    if (ungranted.length > 0) {
+      return {
+        status: "rejected",
+        stage: "grant",
+        diagnostics: ungranted.map((cap) => ({
+          code: "capability/ungranted",
+          severity: "error" as const,
+          message: `Capability "${cap.name}" is not granted.`,
+          phase: "typecheck" as const,
+          ...(spans.get(cap.name) ? { span: spans.get(cap.name) } : {}),
+          details: { capability: cap.name, effect: cap.effect },
+        })),
+        requires,
+        manifest,
+      };
+    }
+    const checked = guard(() => Engine.typecheck({
+      session: session.language,
+      sourceId,
+      source,
+      hostBuiltins: grantedBuiltins,
+      typePolicy: session.typePolicy,
+    }));
+    if (checked.diagnostics.some((d) => d.code.startsWith("limit/"))) {
+      return { status: "failed", stage: "limit", diagnostics: checked.diagnostics };
+    }
+    if (checked.diagnostics.some((d) => d.severity === "error")) {
+      return {
+        status: "rejected",
+        stage: "typecheck",
+        diagnostics: checked.diagnostics,
+        requires,
+        manifest,
+      };
+    }
+    const actualType = checked.display ?? "Unit";
+    if (request.expectedType !== undefined) {
+      const expectedCheck = guard(() => this.#checkExpectedType(
+        session,
+        sourceId,
+        source,
+        parsed.exprs,
+        request.expectedType!,
+        actualType,
+        grantedBuiltins,
+      ));
+      if (expectedCheck) {
+        return {
+          status: "rejected",
+          stage: "typecheck",
+          diagnostics: [expectedCheck],
+          requires,
+          manifest,
+        };
+      }
+    }
+    const preparedJournal = this.#prepareJournalRuntime(
+      session,
+      sourceId,
+      source,
+      grantedBuiltins,
+      request.journal,
+      request.onJournalEntry,
+    );
+    if (!preparedJournal.ok) {
+      return { status: "failed", stage: "evaluate", diagnostics: preparedJournal.diagnostics };
+    }
+    const journalRuntime = preparedJournal.runtime;
+    const env = request.variables
+      ? session.language.env.extend(variablesToBindings(request.variables))
+      : session.language.env;
+    const stepLimit = request.limits?.steps ?? session.defaultStepLimit;
+    let expressions: readonly Reader.SExpr[];
+    try {
+      const prepared = await Engine.prepareModuleImports(
+        { session: session.language, sourceId, source, env, stepLimit },
+        sourceId,
+        source,
+        env,
+      );
+      expressions = prepared.expressions;
+      const evaluationId = request.evaluationId ?? `ts-eval-${this.#nextEvaluationId++}`;
+      const checkedRunContext: CheckedRunContext = {
+        grants: grantMap,
+        maxHostCalls: request.limits?.hostCalls ?? DEFAULT_MAX_HOST_CALLS,
+        type: actualType,
+        manifest,
+        hostCalls: 0,
+        callCounts: new Map(),
+      };
+      const evaluation = createPendingEvaluation(
+        session,
+        evaluationId,
+        sourceId,
+        source,
+        checkedRunContext,
+        journalRuntime,
+      );
+      applyBudget(evaluation, budget);
+      const builtins = {
+        ...Builtins.defaultBuiltins,
+        ...this.#hostBuiltinFns(evaluation, grantedBuiltins),
+      };
+      const completion = runBudgeted(expressions, { stepLimit, builtins, env: prepared.env }, evaluation, budget)
+        .then((result): CheckedRunState => {
+          const printed = Evaluator.printKValue(result.value);
+          const terminalJournal = journalRuntime?.toJournal();
+          const oversize = resultSizeDiagnostic(printed, budget.maxResultBytes);
+          if (oversize) {
+            return {
+              status: "failed",
+              stage: "limit",
+              diagnostics: [...(journalRuntime?.completionDiagnostics(false) ?? []), oversize],
+              ...(terminalJournal ? { journal: terminalJournal } : {}),
+            };
+          }
+          const value = this.#projectValue(session, result.value, request.retainValues);
+          const projectedOversize = resultSizeDiagnostic(JSON.stringify(value), budget.maxResultBytes);
+          if (projectedOversize) {
+            return {
+              status: "failed",
+              stage: "limit",
+              diagnostics: [...(journalRuntime?.completionDiagnostics(false) ?? []), projectedOversize],
+              ...(terminalJournal ? { journal: terminalJournal } : {}),
+            };
+          }
+          const journalDiagnostics = journalRuntime?.completionDiagnostics(true) ?? [];
+          return {
+            status: "completed",
+            result: {
+              value,
+              printed,
+              steps: result.steps,
+              type: typeProjection(actualType),
+              diagnostics: [...journalDiagnostics],
+            },
+            type: actualType,
+            hostCalls: checkedRunContext.hostCalls,
+            manifest,
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        })
+        .catch((error): CheckedRunState => {
+          const failed = failedFromError(error);
+          if (failed.status !== "failed") return failed;
+          const journalWarnings = journalRuntime?.completionDiagnostics(false) ?? [];
+          const terminalJournal = journalRuntime?.toJournal();
+          return {
+            ...failed,
+            diagnostics: [...journalWarnings, ...failed.diagnostics],
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        });
+      Object.assign(evaluation, { completion });
+      session.evaluations.set(evaluationId, evaluation);
+      return (await this.#nextEvaluationState(evaluation)) as CheckedRunState;
+    } catch (error) {
+      const diagnostics = (error instanceof Modules.ModuleError
+        ? [...error.diagnostics]
+        : [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)]
+      ).map(locateError);
+      return { status: "failed", stage: checkedRunFailureStage(diagnostics), diagnostics };
+    }
+  }
+
+  #checkExpectedType(
+    session: TsSession,
+    sourceId: string,
+    source: string,
+    exprs: readonly Reader.SExpr[],
+    expectedType: string,
+    actualType: string,
+    hostBuiltins: readonly HostBuiltinDescriptor[],
+  ): Diagnostic | undefined {
+    const last = exprs.at(-1);
+    const lastSpan: Span | undefined = last
+      ? spanLocator(source)({ sourceId, startOffset: last.loc.start, endOffset: last.loc.end })
+      : undefined;
+    const isDecl = last?._tag === "List" && last.items[0]?._tag === "Sym" &&
+      ["define", "type", "import", "export", "export-from", "error", "service", "class", "instance"].includes(last.items[0].name);
+    const wrappedSource = !last || isDecl
+      ? `${source}\n(: nil ${expectedType})`
+      : `${source.slice(0, last.loc.start)}(: ${source.slice(last.loc.start, last.loc.end)} ${expectedType})${source.slice(last.loc.end)}`;
+    const verified = Engine.typecheck({
+      session: session.language,
+      sourceId,
+      source: wrappedSource,
+      hostBuiltins,
+      typePolicy: session.typePolicy,
+    });
+    if (!verified.diagnostics.some((d) => d.severity === "error")) return undefined;
+    return {
+      code: "typecheck/type-mismatch",
+      severity: "error",
+      message: `Expected type ${expectedType}, got ${actualType}.`,
+      phase: "typecheck",
+      ...(lastSpan ? { span: lastSpan } : {}),
+      details: { expected: expectedType, actual: actualType },
+    };
+  }
+
+  #buildManifest(
+    session: TsSession | undefined,
+    sourceId: string,
+    source: string,
+    hostBuiltins: readonly HostBuiltinDescriptor[],
+  ): { readonly manifest: CapabilityManifest; readonly spans: ReadonlyMap<string, Span> } {
+    const preludes = (session?.language.orderedSources("prelude") ?? []).map((entry) => ({
+      sourceId: entry.id,
+      sha256: sha256(entry.text),
+    }));
+    const sources = [
+      ...(session?.language.orderedSources("source") ?? [])
+        .filter((entry) => entry.id !== sourceId)
+        .map((entry) => ({ sourceId: entry.id, sha256: sha256(entry.text) })),
+      { sourceId, sha256: sha256(source) },
+    ];
+    const { reachable, spans } = this.#findReachableCapabilities(session, sourceId, source, hostBuiltins);
+    return {
+      manifest: {
+        sources,
+        preludes,
+        capabilities: reachable.map((builtin) => ({
+          name: builtin.name,
+          effect: builtin.handler.effect,
+          signature: formatTypeScheme(builtin.typeScheme),
+          ...(builtin.purity ? { purity: builtin.purity } : {}),
+        })),
+      },
+      spans,
+    };
+  }
+
+  #findReachableCapabilities(
+    session: TsSession | undefined,
+    sourceId: string,
+    source: string,
+    hostBuiltins: readonly HostBuiltinDescriptor[],
+  ): { readonly reachable: readonly HostBuiltinDescriptor[]; readonly spans: ReadonlyMap<string, Span> } {
+    const spans = new Map<string, Span>();
+    if (hostBuiltins.length === 0) return { reachable: [], spans };
+    const byName = new Map(hostBuiltins.map((builtin) => [builtin.name, builtin]));
+    const found = new Set<string>();
+    const locateEntry = spanLocator(source);
+    const index = this.#indexSymbols({ sessionId: session?.sessionId, sourceId, source });
+    const defByKey = new Map(index.definitions.map((def) => [def.key, def]));
+    const refsBySource = new Map<string, Editor.SymbolReference[]>();
+    for (const ref of index.references) {
+      let list = refsBySource.get(ref.sourceId);
+      if (!list) { list = []; refsBySource.set(ref.sourceId, list); }
+      list.push(ref);
+    }
+    const worklist: { readonly defKey: string; readonly entrySpan: Span }[] = [];
+    const visitedDefs = new Set<string>();
+    for (const ref of refsBySource.get(sourceId) ?? []) {
+      const refSpan = locateEntry(hostSpan(sourceId, ref.span));
+      if (ref.resolution !== "definition" && byName.has(ref.name)) {
+        found.add(ref.name);
+        if (!spans.has(ref.name)) spans.set(ref.name, refSpan);
+      } else if (ref.resolution === "definition" && ref.definition && !visitedDefs.has(ref.definition)) {
+        visitedDefs.add(ref.definition);
+        worklist.push({ defKey: ref.definition, entrySpan: refSpan });
+      }
+    }
+    while (worklist.length > 0) {
+      const { defKey, entrySpan } = worklist.shift()!;
+      const def = defByKey.get(defKey);
+      if (!def || def.sourceId === sourceId) continue;
+      const parsed = session?.language.parsedPreludes.get(def.sourceId) ??
+        session?.language.parsedSources.get(def.sourceId);
+      const enclosing = parsed?.find((expr) => expr.loc.start <= def.span.start && def.span.end <= expr.loc.end);
+      const docRefs = refsBySource.get(def.sourceId) ?? [];
+      for (const ref of docRefs) {
+        if (enclosing && (ref.span.start < enclosing.loc.start || ref.span.end > enclosing.loc.end)) continue;
+        if (ref.resolution !== "definition" && byName.has(ref.name)) {
+          found.add(ref.name);
+          if (!spans.has(ref.name)) spans.set(ref.name, entrySpan);
+        } else if (ref.resolution === "definition" && ref.definition && !visitedDefs.has(ref.definition)) {
+          visitedDefs.add(ref.definition);
+          worklist.push({ defKey: ref.definition, entrySpan });
+        }
+      }
+    }
+    // Also check expanded AST so macro-introduced capability calls are caught.
+    const expanded = Engine.expand({ session: session?.language, sourceId, source });
+    if (!expanded.diagnostics.some((d) => d.severity === "error")) {
+      const visitAst = (node: Engine.AstNode): void => {
+        if (node.kind === "symbol" && byName.has(node.value)) {
+          found.add(node.value);
+          if (!spans.has(node.value) && node.span) {
+            spans.set(node.value, locateEntry(node.span));
+          }
+        } else if (node.kind === "list" || node.kind === "vector" || node.kind === "set") {
+          node.items.forEach(visitAst);
+        } else if (node.kind === "map") {
+          node.entries.forEach((entry) => { visitAst(entry.key); visitAst(entry.value); });
+        }
+      };
+      expanded.ast.forEach(visitAst);
+    }
+    return {
+      reachable: hostBuiltins.filter((builtin) => found.has(builtin.name)),
+      spans,
+    };
+  }
+
+  #locateCallSpan(evaluation: TsPendingEvaluation, loc: Reader.Loc): Span {
+    const spanSourceId = loc.sourceId ?? evaluation.sourceId;
+    const rawSpan: Span = {
+      sourceId: spanSourceId,
+      startOffset: loc.start,
+      endOffset: loc.end,
+      ...(loc.line !== undefined ? { startLine: loc.line } : {}),
+      ...(loc.col !== undefined ? { startColumn: loc.col } : {}),
+    };
+    const text = (spanSourceId === evaluation.sourceId ? evaluation.sourceText : undefined) ??
+      evaluation.session.language.sourceText(spanSourceId);
+    return text !== undefined ? spanLocator(text)(rawSpan) : rawSpan;
+  }
+
+  #buildJournalHeader(
+    session: TsSession,
+    sourceId: string,
+    source: string,
+    descriptors: readonly HostBuiltinDescriptor[],
+  ): JournalHeader {
+    const preludes = (session.language.orderedSources("prelude") ?? []).map((entry) => ({
+      id: entry.id,
+      sha256: sha256(entry.text),
+    }));
+    const sources = [
+      ...session.language
+        .orderedSources("source")
+        .filter((entry) => entry.id !== sourceId)
+        .map((entry) => ({ id: entry.id, sha256: sha256(entry.text) })),
+      { id: sourceId, sha256: sha256(source) },
+    ];
+    return {
+      format: JOURNAL_FORMAT,
+      engine: "typescript",
+      program: {
+        sources,
+        preludes,
+        entry: sourceId,
+      },
+      builtins: descriptors.map((b) => ({ name: b.name, effect: b.handler.effect })),
+    };
+  }
+
+  #prepareJournalRuntime(
+    session: TsSession,
+    sourceId: string,
+    source: string,
+    descriptors: readonly HostBuiltinDescriptor[],
+    journalRequest: JournalRequest | undefined,
+    onJournalEntry: OnJournalEntryCallback | undefined,
+  ):
+    | { readonly ok: true; readonly runtime?: JournalRuntime | undefined }
+    | { readonly ok: false; readonly diagnostics: readonly Diagnostic[] } {
+    if (!journalRequest) return { ok: true };
+    const currentHeader = this.#buildJournalHeader(session, sourceId, source, descriptors);
+    if (journalRequest.mode === "record") {
+      return {
+        ok: true,
+        runtime: new JournalRuntime({
+          recordHeader: currentHeader,
+          redact: journalRequest.redact,
+          onJournalEntry,
+        }),
+      };
+    }
+    const knownBuiltins = new Set(descriptors.map((b) => b.name));
+    const validation = validateReplayHeader(
+      journalRequest.journal.header,
+      currentHeader,
+      knownBuiltins,
+      journalRequest.allowProgramMismatch === true,
+    );
+    if (!validation.ok) {
+      return { ok: false, diagnostics: validation.diagnostics };
+    }
+    return {
+      ok: true,
+      runtime: new JournalRuntime({
+        recordHeader: journalRequest.record ? currentHeader : undefined,
+        redact: journalRequest.redact,
+        onJournalEntry,
+        replay: {
+          entries: journalRequest.journal.entries,
+          onExhausted: journalRequest.onExhausted ?? "fail",
+          warnings: validation.diagnostics,
+        },
+      }),
+    };
+  }
+
   async #evaluateInSessionWithHostBuiltins(
     session: TsSession,
     request: EvaluateInSessionRequest,
@@ -1219,11 +1719,25 @@ export class TsLanguageHost implements LanguageHost {
     repl?: { readonly commit: (env: Env) => void; readonly type: import("./types.js").TypeProjection },
   ): Promise<EvaluationState> {
     const sourceId = request.sourceId ?? "session";
+    const preparedJournal = this.#prepareJournalRuntime(
+      session,
+      sourceId,
+      source,
+      session.hostBuiltins,
+      request.journal,
+      request.onJournalEntry,
+    );
+    if (!preparedJournal.ok) {
+      return { status: "failed", diagnostics: preparedJournal.diagnostics };
+    }
+    const journalRuntime = preparedJournal.runtime;
     let expressions:readonly Reader.SExpr[];
     try {const prepared=await Engine.prepareModuleImports({session:session.language,sourceId,source,env,stepLimit:request.stepLimit ?? session.defaultStepLimit},sourceId,source,env);expressions=prepared.expressions;env=prepared.env;}
     catch(error) {return {status:"failed",diagnostics:error instanceof Modules.ModuleError ? [...error.diagnostics] : [Engine.diagnosticFromUnknown(error,"evaluate",sourceId)]};}
-    const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
-    const evaluation = createPendingEvaluation(session, evaluationId, sourceId);
+    const evaluationId = request.evaluationId ?? `ts-eval-${this.#nextEvaluationId++}`;
+    const evaluation = createPendingEvaluation(session, evaluationId, sourceId, source, undefined, journalRuntime);
+    const budget = resolveBudget(request, false);
+    applyBudget(evaluation, budget);
     const builtins = {
       ...Builtins.defaultBuiltins,
       ...this.#hostBuiltinFns(evaluation, session.hostBuiltins),
@@ -1243,62 +1757,83 @@ export class TsLanguageHost implements LanguageHost {
           result,
           request.retainValues,
         );
+        const terminalJournal = journalRuntime?.toJournal();
         if (result.diagnostics.length > 0) {
+          const journalWarnings = journalRuntime?.completionDiagnostics(false) ?? [];
           return {
             status: "failed",
-            diagnostics: result.diagnostics,
+            diagnostics: [...journalWarnings, ...result.diagnostics],
             ...(observations ? { observations } : {}),
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
           };
         }
         if (repl && !evaluation.aborted) repl.commit(result.env!);
+        const journalDiagnostics = journalRuntime?.completionDiagnostics(true) ?? [];
         return {
           status: "completed",
           result: {
             value: this.#projectValue(session, result.value, request.retainValues),
             printed: Evaluator.printKValue(result.value),
             steps: result.steps,
-            diagnostics: [],
+            diagnostics: [...journalDiagnostics],
             ...(repl ? { type: repl.type } : {}),
             ...(observations ? { observations } : {}),
           },
+          ...(terminalJournal ? { journal: terminalJournal } : {}),
         };
       });
       Object.assign(evaluation, { completion });
       session.evaluations.set(evaluationId, evaluation);
-      return this.#nextEvaluationState(evaluation);
+      return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
     }
-    const completion = Effect.runPromise(
-      Effect.provide(
-        Evaluator.evaluateExprs(expressions, {
-          stepLimit: request.stepLimit ?? session.defaultStepLimit,
-          builtins,
-          env,
-        }),
-        Evaluator.makePreludeLayer(builtins),
-      ),
+    const completion = runBudgeted(
+      expressions,
+      { stepLimit: request.stepLimit ?? session.defaultStepLimit, builtins, env },
+      evaluation,
+      budget,
     )
       .then((result): EvaluationState => {
+        const printed = Evaluator.printKValue(result.value);
+        const terminalJournal = journalRuntime?.toJournal();
+        const oversize = resultSizeDiagnostic(printed, budget.maxResultBytes);
+        if (oversize) {
+          return {
+            status: "failed",
+            diagnostics: [...(journalRuntime?.completionDiagnostics(false) ?? []), oversize],
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        }
         if (repl && !evaluation.aborted) repl.commit(result.env);
+        const journalDiagnostics = journalRuntime?.completionDiagnostics(true) ?? [];
         return {
           status: "completed",
           result: {
             value: this.#projectValue(session, result.value, request.retainValues),
-            printed: Evaluator.printKValue(result.value),
+            printed,
             steps: result.steps,
-            diagnostics: [],
+            diagnostics: [...journalDiagnostics],
             ...(repl ? { type: repl.type } : {}),
           },
+          ...(terminalJournal ? { journal: terminalJournal } : {}),
         };
       })
       .catch(
-        (error): EvaluationState => ({
-          status: "failed",
-          diagnostics: [diagnosticLocator(id => id === sourceId ? source : session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))],
-        }),
+        (error): EvaluationState => {
+          const journalWarnings = journalRuntime?.completionDiagnostics(false) ?? [];
+          const terminalJournal = journalRuntime?.toJournal();
+          return {
+            status: "failed",
+            diagnostics: [
+              ...journalWarnings,
+              diagnosticLocator(id => id === sourceId ? source : session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId)),
+            ],
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        },
       );
     Object.assign(evaluation, { completion });
     session.evaluations.set(evaluationId, evaluation);
-    return this.#nextEvaluationState(evaluation);
+    return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
   }
 
   #hostBuiltinFns(
@@ -1308,8 +1843,10 @@ export class TsLanguageHost implements LanguageHost {
     return Object.fromEntries(
       descriptors.map((descriptor) => [
         descriptor.name,
-        (args: readonly KValue[], apply) =>
-          this.#pauseForHostCall(evaluation, descriptor, args, apply),
+        (args: readonly KValue[], apply) => {
+          const callLoc = VM.currentBuiltinCallLoc();
+          return this.#pauseForHostCall(evaluation, descriptor, args, apply, callLoc);
+        },
       ]),
     );
   }
@@ -1319,34 +1856,169 @@ export class TsLanguageHost implements LanguageHost {
     descriptor: HostBuiltinDescriptor,
     args: readonly KValue[],
     apply: (fn: KValue, args: readonly KValue[]) => Effect.Effect<KValue, KernelError>,
+    callLoc?: Reader.Loc,
   ): Effect.Effect<KValue, KernelError> {
     return Effect.callback<KValue, KernelError>((resume) => {
       if (evaluation.aborted) {
-        resume(Effect.fail(hostCallDiagnosticsError("evaluation/aborted", "Evaluation aborted")));
+        resume(Effect.fail(hostCallDiagnosticsError("evaluation/aborted", evaluation.abortReason ?? "Evaluation aborted")));
         return Effect.void;
+      }
+      const span = callLoc ? this.#locateCallSpan(evaluation, callLoc) : undefined;
+      if (evaluation.deadlineMs !== undefined && Date.now() >= evaluation.deadlineMs) {
+        resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+          code: "limit/time",
+          severity: "error",
+          message: evaluation.timeoutMs !== undefined
+            ? `Evaluation exceeded the time limit of ${evaluation.timeoutMs}ms.`
+            : "Evaluation exceeded its time limit.",
+          phase: "evaluate",
+          ...(span ? { span } : {}),
+          ...(evaluation.timeoutMs !== undefined ? { details: { limit: evaluation.timeoutMs } } : {}),
+        }])));
+        return Effect.void;
+      }
+      if (evaluation.checkedRun) {
+        const grant = evaluation.checkedRun.grants.get(descriptor.name);
+        if (!grant) {
+          resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+            code: "capability/ungranted",
+            severity: "error",
+            message: `Capability "${descriptor.name}" is not granted.`,
+            phase: "host-effect",
+            ...(span ? { span } : {}),
+            details: { capability: descriptor.name, effect: descriptor.handler.effect },
+          }])));
+          return Effect.void;
+        }
+        if (evaluation.checkedRun.maxHostCalls !== undefined && evaluation.checkedRun.hostCalls >= evaluation.checkedRun.maxHostCalls) {
+          resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+            code: "limit/host-calls",
+            severity: "error",
+            message: `Host call limit (${evaluation.checkedRun.maxHostCalls}) exceeded.`,
+            phase: "evaluate",
+            ...(span ? { span } : {}),
+            details: { limit: evaluation.checkedRun.maxHostCalls, capability: descriptor.name },
+          }])));
+          return Effect.void;
+        }
+        const currentCount = evaluation.checkedRun.callCounts.get(descriptor.name) ?? 0;
+        if (grant.maxCalls !== undefined && currentCount >= grant.maxCalls) {
+          resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+            code: "limit/host-calls",
+            severity: "error",
+            message: `Call limit (${grant.maxCalls}) exceeded for capability "${descriptor.name}".`,
+            phase: "evaluate",
+            ...(span ? { span } : {}),
+            details: { limit: grant.maxCalls, capability: descriptor.name },
+          }])));
+          return Effect.void;
+        }
+        evaluation.checkedRun.hostCalls++;
+        evaluation.checkedRun.callCounts.set(descriptor.name, currentCount + 1);
+      }
+      const journalParent: JournalParentContext | undefined = evaluation.journalRuntime
+        ? {
+            runtime: evaluation.journalRuntime,
+            evaluationPath: evaluation.evaluationPath,
+            nextChild: () => evaluation.nextChildIndex++,
+          }
+        : undefined;
+      const projectedArgs = args.map((arg) =>
+        this.#projectValue(
+          evaluation.session,
+          arg,
+          "functions",
+          (callArgs) => apply(arg, callArgs),
+          journalParent,
+        ),
+      );
+      const actualJournalArgs = evaluation.journalRuntime
+        ? journalArgsFromProjections(projectedArgs)
+        : undefined;
+      if (evaluation.journalRuntime?.isReplaying) {
+        const step = evaluation.journalRuntime.matchReplayCall(
+          evaluation.evaluationPath,
+          descriptor.handler.effect,
+          descriptor.name,
+          actualJournalArgs!,
+          span,
+        );
+        if (step.action === "fail") {
+          resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([step.diagnostic])));
+          return Effect.void;
+        }
+        if (step.action === "resume") {
+          if (step.entry.outcome.ok) {
+            try {
+              const decoded = valueProjectionFromJournal(step.entry.outcome.value);
+              resume(Effect.succeed(kValueFromProjection(decoded, evaluation.session)));
+            } catch (error) {
+              resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+                code: "journal/invalid",
+                severity: "error",
+                message: error instanceof Error ? error.message : String(error),
+                phase: "host-effect",
+                ...(span ? { span } : {}),
+              }])));
+            }
+          } else {
+            const diagnostics = span
+              ? step.entry.outcome.diagnostics.map((d) => (d.span ? d : { ...d, span }))
+              : step.entry.outcome.diagnostics;
+            resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics(diagnostics)));
+          }
+          return Effect.void;
+        }
       }
       const call: HostCall = {
         evaluationId: evaluation.evaluationId,
         callId: `ts-call-${this.#nextCallId++}`,
         effect: descriptor.handler.effect,
         name: descriptor.name,
-        args: args.map((arg) =>
-          this.#projectValue(evaluation.session, arg, "functions", (callArgs) =>
-            apply(arg, callArgs),
-          ),
-        ),
+        args: projectedArgs,
+        ...(span ? { span } : {}),
+        ...(evaluation.checkedRun ? { mode: evaluation.checkedRun.grants.get(descriptor.name)?.mode ?? "ask" } : {}),
       };
       const pendingCall: TsPendingHostCall = {
         call,
         resume: (result) => {
+          // Time spent waiting on the host does not count against the evaluation deadline.
+          if (evaluation.pausedAtMs !== undefined && evaluation.deadlineMs !== undefined) {
+            evaluation.deadlineMs += Date.now() - evaluation.pausedAtMs;
+          }
+          evaluation.pausedAtMs = undefined;
+          if (!evaluation.aborted && evaluation.journalRuntime?.isRecording) {
+            try {
+              evaluation.journalRuntime.recordCall(
+                evaluation.evaluationPath,
+                descriptor.handler.effect,
+                descriptor.name,
+                actualJournalArgs!,
+                result,
+              );
+            } catch (error) {
+              resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+                code: "journal/invalid",
+                severity: "error",
+                message: error instanceof Error ? error.message : String(error),
+                phase: "host-effect",
+                ...(span ? { span } : {}),
+              }])));
+              return;
+            }
+          }
           if (result.ok) {
             resume(Effect.succeed(kValueFromProjection(result.value, evaluation.session)));
           } else {
-            resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics(result.diagnostics)));
+            const diagnostics = span
+              ? result.diagnostics.map((d) => (d.span ? d : { ...d, span }))
+              : result.diagnostics;
+            resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics(diagnostics)));
           }
         },
       };
       evaluation.pendingCall = pendingCall;
+      evaluation.pausedAtMs = Date.now();
       enqueueHostCall(evaluation, call);
       return Effect.sync(() => {
         if (evaluation.pendingCall === pendingCall) {
@@ -1361,6 +2033,7 @@ export class TsLanguageHost implements LanguageHost {
     value: KValue,
     retainValues: EvaluateInSessionRequest["retainValues"] | undefined,
     apply?: ((args: readonly KValue[]) => Effect.Effect<KValue, KernelError>) | undefined,
+    journalParent?: JournalParentContext | undefined,
   ): ValueProjection {
     if (Evaluator.isKKeyword(value) || Evaluator.isKSymbol(value)) {
       return this.#maybeRetainProjectedValue(session,value,{kind:Evaluator.isKKeyword(value) ? "keyword" : "symbol",value:value.name},retainValues);
@@ -1394,7 +2067,7 @@ export class TsLanguageHost implements LanguageHost {
         value,
         {
           kind: "list",
-          items: value.map((item) => this.#projectValue(session, item, retainValues)),
+          items: value.map((item) => this.#projectValue(session, item, retainValues, undefined, journalParent)),
         },
         retainValues,
       );
@@ -1412,7 +2085,7 @@ export class TsLanguageHost implements LanguageHost {
               mapKeyProjection(key),
               retainValues,
             ),
-            value: this.#projectValue(session, nested, retainValues),
+            value: this.#projectValue(session, nested, retainValues, undefined, journalParent),
           })),
         },
         retainValues,
@@ -1424,7 +2097,7 @@ export class TsLanguageHost implements LanguageHost {
           session,
           value,
           apply,
-          this.#callableValueInvoker(session, value),
+          this.#callableValueInvoker(session, value, journalParent),
         );
         return { kind: "function", valueRef, display: Evaluator.printKValue(value) };
       }
@@ -1470,19 +2143,51 @@ export class TsLanguageHost implements LanguageHost {
   #callableValueInvoker(
     session: TsSession,
     value: KValue,
+    journalParent?: JournalParentContext | undefined,
   ): ((request: CallValueRequest) => Promise<EvaluationState>) | undefined {
     if (!Evaluator.isKFn(value)) return undefined;
-    return (request) => this.#invokeCallableValue(session, value, request);
+    return (request) => this.#invokeCallableValue(session, value, request, journalParent);
   }
 
-  #invokeCallableValue(
+  async #invokeCallableValue(
     session: TsSession,
     value: KFn,
     request: CallValueRequest,
+    journalParent?: JournalParentContext | undefined,
   ): Promise<EvaluationState> {
     const sourceId = "value-ref";
-    const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
-    const evaluation = createPendingEvaluation(session, evaluationId, sourceId);
+    const evaluationId = request.evaluationId ?? `ts-eval-${this.#nextEvaluationId++}`;
+    let journalRuntime: JournalRuntime | undefined;
+    let evaluationPath: readonly number[] = [];
+    let ownsJournal = false;
+    if (request.journal) {
+      const prepared = this.#prepareJournalRuntime(
+        session,
+        sourceId,
+        "",
+        session.hostBuiltins,
+        request.journal,
+        request.onJournalEntry,
+      );
+      if (!prepared.ok) {
+        return { status: "failed", diagnostics: prepared.diagnostics };
+      }
+      journalRuntime = prepared.runtime;
+      ownsJournal = true;
+    } else if (journalParent) {
+      journalRuntime = journalParent.runtime;
+      evaluationPath = [...journalParent.evaluationPath, journalParent.nextChild()];
+      journalRuntime.markPathEntered(evaluationPath);
+    }
+    const evaluation = createPendingEvaluation(
+      session,
+      evaluationId,
+      sourceId,
+      undefined,
+      undefined,
+      journalRuntime,
+      evaluationPath,
+    );
     const builtins = {
       ...Builtins.defaultBuiltins,
       ...this.#hostBuiltinFns(evaluation, session.hostBuiltins),
@@ -1514,27 +2219,40 @@ export class TsLanguageHost implements LanguageHost {
       })),
     )
       .then(
-        (value): EvaluationState => ({
-          status: "completed",
-          result: {
-            value: this.#projectValue(session, value, request.retainValues),
-            printed: Evaluator.printKValue(value),
-            diagnostics: [],
-          },
-        }),
+        (value): EvaluationState => {
+          const journalDiagnostics = ownsJournal ? (journalRuntime?.completionDiagnostics(true) ?? []) : [];
+          const terminalJournal = ownsJournal ? journalRuntime?.toJournal() : undefined;
+          return {
+            status: "completed",
+            result: {
+              value: this.#projectValue(session, value, request.retainValues),
+              printed: Evaluator.printKValue(value),
+              diagnostics: [...journalDiagnostics],
+            },
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        },
       )
       .catch(
-        (error): EvaluationState => ({
-          status: "failed",
-          diagnostics: [diagnosticLocator(id => session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))],
-        }),
+        (error): EvaluationState => {
+          const journalWarnings = ownsJournal ? (journalRuntime?.completionDiagnostics(false) ?? []) : [];
+          const terminalJournal = ownsJournal ? journalRuntime?.toJournal() : undefined;
+          return {
+            status: "failed",
+            diagnostics: [
+              ...journalWarnings,
+              diagnosticLocator(id => session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId)),
+            ],
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        },
       );
     Object.assign(evaluation, { completion });
     session.evaluations.set(evaluationId, evaluation);
-    return this.#nextEvaluationState(evaluation);
+    return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
   }
 
-  async #nextEvaluationState(evaluation: TsPendingEvaluation): Promise<EvaluationState> {
+  async #nextEvaluationState(evaluation: TsPendingEvaluation): Promise<EvaluationState | CheckedRunState> {
     const state = await Promise.race([
       evaluation.completion.then((state) => ({ kind: "completion" as const, state })),
       waitForHostCall(evaluation).then((call) => ({ kind: "host-call" as const, call })),
@@ -1546,6 +2264,96 @@ export class TsLanguageHost implements LanguageHost {
     evaluation.session.evaluations.delete(evaluation.evaluationId);
     return state.state;
   }
+}
+
+const SHA256_K = new Uint32Array([
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
+]);
+const utf8Encoder = new TextEncoder();
+
+/** Runtime-neutral synchronous SHA-256 (FIPS 180-4) returning lowercase hex. */
+function sha256(text: string): string {
+  const data = utf8Encoder.encode(text);
+  const bitLen = data.length * 8;
+  const paddedLen = Math.ceil((data.length + 9) / 64) * 64;
+  const padded = new Uint8Array(paddedLen);
+  padded.set(data);
+  padded[data.length] = 0x80;
+  const view = new DataView(padded.buffer);
+  view.setUint32(paddedLen - 8, Math.floor(bitLen / 0x100000000), false);
+  view.setUint32(paddedLen - 4, bitLen >>> 0, false);
+
+  let h0 = 0x6a09e667, h1 = 0xbb67ae85, h2 = 0x3c6ef372, h3 = 0xa54ff53a;
+  let h4 = 0x510e527f, h5 = 0x9b05688c, h6 = 0x1f83d9ab, h7 = 0x5be0cd19;
+  const w = new Uint32Array(64);
+
+  for (let offset = 0; offset < paddedLen; offset += 64) {
+    for (let i = 0; i < 16; i++) w[i] = view.getUint32(offset + i * 4, false);
+    for (let i = 16; i < 64; i++) {
+      const s0 = ((w[i - 15]! >>> 7) | (w[i - 15]! << 25)) ^ ((w[i - 15]! >>> 18) | (w[i - 15]! << 14)) ^ (w[i - 15]! >>> 3);
+      const s1 = ((w[i - 2]! >>> 17) | (w[i - 2]! << 15)) ^ ((w[i - 2]! >>> 19) | (w[i - 2]! << 13)) ^ (w[i - 2]! >>> 10);
+      w[i] = (w[i - 16]! + s0 + w[i - 7]! + s1) >>> 0;
+    }
+    let a = h0, b = h1, c = h2, d = h3, e = h4, f = h5, g = h6, h = h7;
+    for (let i = 0; i < 64; i++) {
+      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + S1 + ch + SHA256_K[i]! + w[i]!) >>> 0;
+      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + temp1) >>> 0;
+      d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    h0 = (h0 + a) >>> 0; h1 = (h1 + b) >>> 0; h2 = (h2 + c) >>> 0; h3 = (h3 + d) >>> 0;
+    h4 = (h4 + e) >>> 0; h5 = (h5 + f) >>> 0; h6 = (h6 + g) >>> 0; h7 = (h7 + h) >>> 0;
+  }
+  return [h0, h1, h2, h3, h4, h5, h6, h7].map((n) => n.toString(16).padStart(8, "0")).join("");
+}
+
+function formatTypeScheme(scheme?: TypeSchemeExpr): string {
+  if (!scheme) return "Unknown";
+  switch (scheme.kind) {
+    case "any": return "Unknown";
+    case "type": return scheme.name;
+    case "list": return `(List ${formatTypeScheme(scheme.item)})`;
+    case "map": return `(Map ${formatTypeScheme(scheme.key)} ${formatTypeScheme(scheme.value)})`;
+    case "function":
+      return `(-> ${[...scheme.params.map(formatTypeScheme), formatTypeScheme(scheme.result)].join(" ")})`;
+    case "variadic-function":
+      return `(-> ${[...scheme.params.map(formatTypeScheme), `& ${formatTypeScheme(scheme.rest)}`, formatTypeScheme(scheme.result)].join(" ")})`;
+  }
+}
+
+function mapCheckedRunDiagnostic(
+  diagnostic: Diagnostic,
+  locate: (d: Diagnostic) => Diagnostic,
+): readonly Diagnostic[] {
+  const details = diagnostic.details as { readonly hostDiagnostics?: readonly Diagnostic[]; readonly limit?: number } | undefined;
+  if (Array.isArray(details?.hostDiagnostics) && details.hostDiagnostics.length > 0) {
+    return details.hostDiagnostics.map((d) => locate(d.span ? d : (diagnostic.span ? { ...d, span: diagnostic.span } : d)));
+  }
+  if (diagnostic.code === "StepLimitExceeded") {
+    return [locate({
+      ...diagnostic,
+      code: "limit/steps",
+    })];
+  }
+  return [locate(diagnostic)];
+}
+
+function checkedRunFailureStage(diagnostics: readonly Diagnostic[]): "evaluate" | "limit" | "denied" | "aborted" {
+  if (diagnostics.some((d) => d.code.startsWith("limit/") || d.code === "StepLimitExceeded")) return "limit";
+  if (diagnostics.some((d) => d.code === "capability/denied")) return "denied";
+  if (diagnostics.some((d) => d.code === "evaluation/aborted")) return "aborted";
+  return "evaluate";
 }
 
 function hostSpan(sourceId: string, span: { readonly start: number; readonly end: number }) {
@@ -1576,15 +2384,108 @@ function failedEvaluation(code: string, message: string): EvaluationState {
   };
 }
 
+interface BudgetLimits {
+  readonly timeoutMs?: number | undefined;
+  readonly maxExpansionSteps?: number | undefined;
+  readonly maxResultBytes?: number | undefined;
+}
+
+interface ResolvedBudget {
+  readonly timeoutMs?: number | undefined;
+  /** Wall-clock deadline (epoch ms) counted from when the run started. */
+  readonly deadlineMs?: number | undefined;
+  readonly maxExpansionSteps?: number | undefined;
+  readonly maxResultBytes: number;
+}
+
+/** Resolve limits; `defaults` applies the RFC 0012 defaults to omitted budgets. */
+function resolveBudget(limits: BudgetLimits | undefined, defaults: boolean): ResolvedBudget {
+  const timeoutMs = limits?.timeoutMs ?? (defaults ? DEFAULT_TIMEOUT_MS : undefined);
+  return {
+    timeoutMs,
+    deadlineMs: timeoutMs !== undefined ? Date.now() + timeoutMs : undefined,
+    maxExpansionSteps: limits?.maxExpansionSteps ?? (defaults ? DEFAULT_MAX_EXPANSION_STEPS : undefined),
+    maxResultBytes: limits?.maxResultBytes ?? (defaults ? DEFAULT_MAX_RESULT_BYTES : Number.POSITIVE_INFINITY),
+  };
+}
+
+function expansionBudget(budget: ResolvedBudget): Expander.ExpansionBudget {
+  return {
+    maxExpansionSteps: budget.maxExpansionSteps,
+    deadlineMs: budget.deadlineMs,
+    timeoutMs: budget.timeoutMs,
+  };
+}
+
+function applyBudget(evaluation: TsPendingEvaluation, budget: ResolvedBudget): void {
+  evaluation.deadlineMs = budget.deadlineMs;
+  evaluation.timeoutMs = budget.timeoutMs;
+}
+
+function resultSizeDiagnostic(text: string, limit: number): Diagnostic | undefined {
+  if (!Number.isFinite(limit)) return undefined;
+  const actual = utf8Encoder.encode(text).length;
+  if (actual <= limit) return undefined;
+  return {
+    code: "limit/result-size",
+    severity: "error",
+    message: `Result size (${actual} bytes) exceeds the limit of ${limit} bytes.`,
+    phase: "evaluate",
+    details: { limit, actual },
+  };
+}
+
+/**
+ * Expand under the expansion budget, then evaluate with cooperative deadline and
+ * abort control checked inside the VM loop. Rejects (never throws) on failure.
+ */
+function runBudgeted(
+  expressions: readonly Reader.SExpr[],
+  options: { readonly stepLimit: number; readonly builtins: Record<string, BuiltinFn>; readonly env: Env },
+  evaluation: TsPendingEvaluation,
+  budget: ResolvedBudget,
+): Promise<Evaluator.KernelResult> {
+  try {
+    const gensym = { next: 0 };
+    const expanded = Expander.withExpansionBudget(expansionBudget(budget), () =>
+      Effect.runSync(
+        Evaluator.expandExprs(expressions, options).pipe(Effect.provideService(Evaluator.GensymScope, gensym)),
+      ),
+    );
+    const control: VM.VMExecutionControl = {
+      get deadlineMs() { return evaluation.deadlineMs; },
+      timeoutMs: budget.timeoutMs,
+      shouldAbort: () => (evaluation.aborted ? (evaluation.abortReason ?? true) : undefined),
+      yieldToEventLoop: true,
+    };
+    return Effect.runPromise(
+      Evaluator.evaluateExpandedExprs(expanded, options).pipe(
+        Effect.provideService(VM.VMExecutionControlScope, control),
+      ),
+    );
+  } catch (error) {
+    return Promise.reject(error);
+  }
+}
+
 function createPendingEvaluation(
   session: TsSession,
   evaluationId: string,
   sourceId: string,
+  sourceText?: string,
+  checkedRun?: CheckedRunContext,
+  journalRuntime?: JournalRuntime,
+  evaluationPath: readonly number[] = [],
 ): TsPendingEvaluation {
   return {
     session,
     evaluationId,
     sourceId,
+    ...(sourceText !== undefined ? { sourceText } : {}),
+    ...(checkedRun !== undefined ? { checkedRun } : {}),
+    ...(journalRuntime !== undefined ? { journalRuntime } : {}),
+    evaluationPath,
+    nextChildIndex: 0,
     completed: false,
     aborted: false,
     callQueue: [],
@@ -1630,7 +2531,18 @@ function hostCallDiagnosticsErrorFromDiagnostics(
     message: first?.message ?? "Host call failed",
     expected: "successful host call",
     got: code,
-    details: { code, hostDiagnostics: diagnostics },
+    ...(first?.span
+      ? {
+          loc: {
+            sourceId: first.span.sourceId,
+            start: first.span.startOffset,
+            end: first.span.endOffset,
+            line: first.span.startLine ?? 1,
+            col: first.span.startColumn ?? 1,
+          },
+        }
+      : {}),
+    details: { ...(first?.details ?? {}), code, hostDiagnostics: diagnostics },
   });
 }
 

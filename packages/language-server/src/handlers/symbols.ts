@@ -6,7 +6,7 @@ import { spanToRange } from "../document.js";
 import type { FormaWorkspace } from "../workspace.js";
 
 export function getDocumentSymbols(workspace: FormaWorkspace, document: TextDocument): DocumentSymbol[] {
-  return workspace.analysis.documentSymbols(document.uri).map((symbol) => ({
+  return workspace.documentSymbols(document.uri).map((symbol) => ({
     name: symbol.name,
     detail: symbol.form,
     kind: symbolKind(symbol.kind),

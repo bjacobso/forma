@@ -160,4 +160,49 @@ describe("Int and Float semantics", () => {
     expect(() => generated.modulo!(1, 0)).toThrow(/nonzero/);
   });
 
+  it("coerces Int results to Float at mixed numeric branch joins", async () => {
+    const cases = [
+      ["(if false 0.0 1)", "Float", "1.0"],
+      ["(if true 0 1.0)", "Float", "0.0"],
+      ["(cond false 0.0 :else 1)", "Float", "1.0"],
+      ["(let [x 1] (if true x 1.0))", "Float", "1.0"],
+      ["(let [y 1.0] (if false y 1))", "Float", "1.0"],
+      ["(let [y 1.0] (cond false y :else 1))", "Float", "1.0"],
+      ["(if true 1 (if false 2 3.0))", "Float", "1.0"],
+      ["(if false (/ 1 2) 1)", "Float", "1.0"],
+      ["(type Choice (Tagged (Picked Int) Empty)) (match (Picked 1) (Picked n) n Empty 0.0)", "Float", "1.0"],
+      ["(define f [b x] (if b x 1.0)) [(f true 1) (f true 1.5) (f false 2)]", "List<Float>", "[1.0 1.5 1.0]"],
+    ] as const;
+    for (const [source, type, printed] of cases) {
+      expect(await Effect.runPromise(Type.inferSourceStr(source)), source).toBe(type);
+      expect(Evaluator.printKValue(run(source, false)), source).toBe(printed);
+      if (!source.includes("(cond ")) {
+        expect(Evaluator.printKValue(run(source, true)), source).toBe(printed);
+      }
+    }
+    // Integer-only paths stay unboxed Ints; 2-arg if still yields nil when false.
+    expect(run("(if true 1 2)")).toBe(1);
+    expect(Evaluator.isKFloat(run("(if true 1 2)"))).toBe(false);
+    expect(run("(if false 1.0)")).toBe(null);
+    // Overflow, NaN, infinity, and signed zero are preserved across mixed joins.
+    for (const interpreter of [false, true]) {
+      expect(() => run("(if true (+ 9007199254740991 1) 1.0)", interpreter)).toThrow();
+      expect(run("(if true (/ 0 0) 1)", interpreter)).toEqual(new Evaluator.KFloat(NaN));
+      expect(run("(if true (/ -1 0) 1)", interpreter)).toEqual(new Evaluator.KFloat(-Infinity));
+      expect(Evaluator.printKValue(run("(if true -0.0 1)", interpreter))).toBe("-0.0");
+    }
+    // Incompatible branch types remain rejected by the checker and runnable unchecked.
+    await expect(Effect.runPromise(Type.inferSourceStr('(if true "hello" 1.0)'))).rejects.toThrow();
+    expect(run('(if true "hello" 1.0)')).toBe("hello");
+    // Coerced branch evaluates once.
+    let calls = 0;
+    const bump = () => Effect.sync(() => { calls++; return 1; });
+    const value = Effect.runSync(Evaluator.evaluateExprs(forms("(if true (bump) 0.0)"), {
+      builtins: { ...builtins, bump },
+      stepLimit: 100_000,
+    })).value;
+    expect(calls).toBe(1);
+    expect(Evaluator.printKValue(value)).toBe("1.0");
+  });
+
 });

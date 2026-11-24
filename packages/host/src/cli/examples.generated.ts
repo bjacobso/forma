@@ -76,10 +76,28 @@ export const effectExamples = [
     "program": ";; Regressions from adversarial testing. Each definition once generated\n;; TypeScript that failed to typecheck or computed the wrong answer:\n;; double negation, template escaping, binders captured by builtins,\n;; prototype keys, shadowing, literal widening, matches on primitives and\n;; error unions, builtins passed as functions, constants that call\n;; functions at load time, and provide inside a layer method.\n(type Role (Union :admin :member))\n(type Member {:name String :role Role})\n(error NotFound {:key String})\n(error Forbidden {:user String})\n(service\n  Store\n  (: read (-> String (Effect String [NotFound Forbidden] [])))\n  (: save (-> Member (Effect Unit))))\n(service Clock (: now (Effect Int)))\n(service Greeter (: greet (-> String (Effect String))))\n(: neg-neg (-> Int Int))\n(define neg-neg [x] (- (- x)))\n(: neg-literal Int)\n(define neg-literal (- -1))\n(: answer Int)\n(define answer (neg-neg 42))\n(: price-tag (-> String String))\n(define price-tag [amount] (str \"cost: $\" \"{amount} `\" amount \"`\"))\n(: reset-key (-> (Map String Int) String (Map String Int)))\n(define reset-key [counts key] (assoc (dissoc counts key) key 0))\n(: lookup (-> (Map String Int) String (Option Int)))\n(define lookup [counts key] (get counts key))\n(: rebound (-> Int Int))\n(define rebound [x] (let [x (+ x 1) x (* x 10)] x))\n(: shout-all (-> (List String) (List String)))\n(define shout-all [names] (map upcase names))\n(: status-text (-> Int String))\n(define status-text [code] (match code 200 \"ok\" 404 \"missing\" _ \"other\"))\n(: yes-no (-> Bool String))\n(define yes-no [flag] (match flag true \"yes\" false \"no\"))\n(: invite (-> String (Effect Member [] [Store.save])))\n(define\n  invite\n  [name]\n  (do!\n    [:let [member (Member {:name name :role \"member\"})] _ (Store.save member)]\n    (succeed member)))\n(: explain (-> String (Effect String [] [Store.read])))\n(define\n  explain\n  [key]\n  (catch\n    (Store.read key)\n    (_ error)\n    (succeed\n      (match\n        error\n        (NotFound missing)\n        (str \"missing \" (get missing :key))\n        (Forbidden denied)\n        (str \"denied \" (get denied :user))))))\n(: exclaim (-> String (Effect String [NotFound Forbidden] [Store.read])))\n(define\n  exclaim\n  [key]\n  (do! [value (Store.read key) :let [value (str value \"!\")]] (succeed value)))\n(: stamp (-> String (Effect String [] [Clock])))\n(define stamp [name] (do! [time Clock.now] (succeed (str name \"@\" time))))\n(layer ClockFixed :provides Clock (define now [] (succeed 7)))\n(layer\n  GreeterLive\n  :provides\n  Greeter\n  (define greet [name] (provide (stamp name) ClockFixed)))\n\n;; Second adversarial pass: literals in positions TypeScript does not type\n;; from context, constants that reach other constants through functions,\n;; and builtins used as values.\n(type\n  Shape\n  (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))\n(: default-role (Effect Role))\n(define default-role (succeed \"admin\"))\n(: circles (-> (List Float) (Effect (List Shape))))\n(define\n  circles\n  [radii]\n  (for-each\n    radii\n    (fn\n      [r]\n      (if\n        (> r 1)\n        (succeed {:kind \"Circle\" :radius r})\n        (succeed {:kind \"Square\" :side r})))))\n(: pair (Effect (Tuple Shape Role)))\n(define pair (all [(succeed {:kind \"Circle\" :radius 1}) (succeed \"member\")]))\n(: roles (-> (List Role)))\n(define roles [] (let [rs (: [\"admin\" \"member\"] (List Role))] rs))\n(: by-name (-> (Map String Member) (Map String Member)))\n(define\n  by-name\n  [members]\n  (let [next (assoc members \"b\" {:name \"b\" :role \"member\"})] next))\n(: largest (-> (List Float) (Effect Shape)))\n(define\n  largest\n  [sizes]\n  (stream-run-fold\n    (stream-of sizes)\n    (Shape {:kind \"Square\" :side 0})\n    (fn [acc size] {:kind \"Circle\" :radius size})))\n(: lower-all (-> (List String) (List String)))\n(define lower-all [names] (let [f downcase] (map f names)))\n(: scaled Int)\n(define scaled (scale 3))\n(: scale (-> Int Int))\n(define scale [x] (* x factor))\n(: factor Int)\n(define factor 2)\n"
   },
   {
+    "name": "effect-polymorphic-union",
+    "summary": "RFC 0023: a wrapper over two callbacks unions their sets with [e1 e2] and [r1 r2]; an effect-free pair still needs no capabilities.",
+    "outcome": "runs",
+    "program": ";; RFC 0023: a wrapper over two callbacks unions their sets with [e1 e2] and\n;; [r1 r2]; an effect-free pair still needs no capabilities.\n(error NotFound {:key String})\n(error Timeout)\n(service Store (: get (-> String (Effect String [NotFound] []))))\n(service Cache (: peek (-> String (Effect String [Timeout] []))))\n\n(: from-store (-> String (Effect String [NotFound] [Store.get])))\n(define from-store [key] (Store.get key))\n\n(: from-cache (-> String (Effect String [Timeout] [Cache.peek])))\n(define from-cache [key] (Cache.peek key))\n\n(: constant (-> String (Effect String)))\n(define constant [key] (succeed (str \"const-\" key)))\n\n(: first-of\n  (-> (-> String (Effect a [e1] [r1])) (-> String (Effect a [e2] [r2])) String\n      (Effect a [e1 e2] [r1 r2])))\n(define first-of [left right key]\n  (do! [l (left key)\n        _ (right key)]\n    l))\n\n(: both (-> String (Effect String [NotFound Timeout] [Store.get Cache.peek])))\n(define both [key] (first-of from-store from-cache key))\n\n(: store-and-constant (-> String (Effect String [NotFound] [Store.get])))\n(define store-and-constant [key] (first-of from-store constant key))\n\n(: constants (-> String (Effect String)))\n(define constants [key] (first-of constant constant key))\n"
+  },
+  {
+    "name": "effect-polymorphic-wrapper",
+    "summary": "RFC 0023: a wrapper passes its callback's errors and requirements through and adds its own. `e` is an error-set variable and `r` a requirement-set variable, solved afresh at every call.",
+    "outcome": "runs",
+    "program": ";; RFC 0023: a wrapper passes its callback's errors and requirements through\n;; and adds its own. `e` is an error-set variable and `r` a requirement-set\n;; variable, solved afresh at every call.\n(error Declined {:reason String})\n(error AuditDown)\n(service Stripe (: charge (-> Int (Effect String [Declined] []))))\n(service Audit (: log (-> String (Effect Unit [AuditDown] []))))\n\n(: charge (-> Int (Effect String [Declined] [Stripe.charge])))\n(define charge [n] (Stripe.charge n))\n\n(: lookup-cached (-> Int (Effect String)))\n(define lookup-cached [n] (succeed (str \"cached-\" n)))\n\n(: with-audit\n  (-> (-> Int (Effect a [e] [r])) Int\n      (Effect a [e AuditDown] [r Audit.log])))\n(define with-audit [f n]\n  (do! [v (f n)\n        _ (Audit.log \"called\")]\n    v))\n\n(: charged (-> Int (Effect String [Declined AuditDown] [Stripe.charge Audit.log])))\n(define charged [n] (with-audit charge n))\n\n(: charged-inline (-> Int (Effect String [Declined AuditDown] [Stripe.charge Audit.log])))\n(define charged-inline [n] (with-audit (fn [m] (Stripe.charge m)) n))\n\n(: free (-> Int (Effect String [AuditDown] [Audit.log])))\n(define free [n] (with-audit lookup-cached n))\n\n(: free-inline (-> Int (Effect String [AuditDown] [Audit.log])))\n(define free-inline [n] (with-audit (fn [m] (lookup-cached m)) n))\n"
+  },
+  {
     "name": "multi-service-checkout",
     "summary": "A checkout application wired from several services. Forma implements the catalog, the notifier, and the checkout workflow as layers; the harness supplies the clock, inventory, and payment adapters.",
     "outcome": "runs",
     "program": ";; A checkout application wired from several services. Forma implements the\n;; catalog, the notifier, and the checkout workflow as layers; the harness\n;; supplies the clock, inventory, and payment adapters.\n(type Sku (Brand String))\n(type OrderLine {:sku Sku :quantity Int})\n(type OrderRequest {:customer String :lines (List OrderLine)})\n(type Receipt {:charge-id String :total-cents Int :placed-at Int})\n(error OutOfStock {:sku Sku})\n(error PaymentDeclined {:reason String})\n(error InvalidOrder {:reason String})\n(service Clock (: now (Effect Int)))\n(service Catalog (: price (-> Sku (Effect (Option Int)))))\n(service\n  Inventory\n  (: reserve (-> Sku Int (Effect Unit [OutOfStock] [])))\n  (: release (-> Sku Int (Effect Unit))))\n(service\n  Payments\n  (: charge (-> String Int (Effect String [PaymentDeclined] []))))\n(service Notifier (: send (-> String String (Effect Unit))))\n(service\n  Checkout\n  (:\n    place\n    (->\n      OrderRequest\n      (Effect Receipt [InvalidOrder OutOfStock PaymentDeclined] []))))\n(: line-total (-> OrderLine Int Int))\n(define line-total [line unit-cents] (* (get line :quantity) unit-cents))\n(:\n  price-lines\n  (-> (List OrderLine) (Effect Int [InvalidOrder] [Catalog.price])))\n(define\n  price-lines\n  [lines]\n  (do!\n    [\n      totals\n      (for-each\n        lines\n        (fn\n          [line]\n          (do!\n            [price (Catalog.price (get line :sku))]\n            (match\n              price\n              (Some cents)\n              (succeed (line-total line cents))\n              None\n              (fail\n                (InvalidOrder {:reason (str \"unknown sku \" (get line :sku))}))))))]\n    (succeed (sum totals))))\n(:\n  reserve-all\n  (-> (List OrderLine) (Effect Unit [OutOfStock] [Inventory.reserve])))\n(define\n  reserve-all\n  [lines]\n  (do!\n    [\n      _\n      (for-each\n        lines\n        (fn [line] (Inventory.reserve (get line :sku) (get line :quantity))))]\n    (succeed nil)))\n(: release-all (-> (List OrderLine) (Effect Unit [] [Inventory.release])))\n(define\n  release-all\n  [lines]\n  (do!\n    [\n      _\n      (for-each\n        lines\n        (fn [line] (Inventory.release (get line :sku) (get line :quantity))))]\n    (succeed nil)))\n(: price-list (Map String Int))\n(define price-list {\"apple\" 120 \"pear\" 90 \"fig\" 300})\n(layer\n  CatalogStatic\n  :provides\n  Catalog\n  (define price [sku] (succeed (get price-list sku))))\n(layer\n  NotifierLog\n  :provides\n  Notifier\n  (define send [customer message] (log \"notify\" customer message)))\n(layer\n  CheckoutLive\n  :provides\n  Checkout\n  (define\n    place\n    [request]\n    (do!\n      [\n        _\n        (when\n          (empty? (get request :lines))\n          (fail (InvalidOrder {:reason \"an order needs at least one line\"})))\n        total\n        (price-lines (get request :lines))\n        _\n        (reserve-all (get request :lines))\n        charge-id\n        (catch\n          (Payments.charge (get request :customer) total)\n          (PaymentDeclined declined)\n          (do! [_ (release-all (get request :lines))] (fail declined)))\n        placed-at\n        Clock.now\n        _\n        (Notifier.send (get request :customer) (str \"charged \" total \" cents\"))]\n      (succeed {:charge-id charge-id :total-cents total :placed-at placed-at}))))\n(: AppLive (Layer [Checkout] [] [Clock Inventory Payments]))\n(layer\n  AppLive\n  (layer-provide CheckoutLive (layer-merge CatalogStatic NotifierLog)))\n(:\n  place-order\n  (->\n    OrderRequest\n    (Effect\n      Receipt\n      [InvalidOrder OutOfStock PaymentDeclined]\n      [Clock Inventory Payments])))\n(define place-order [request] (provide (Checkout.place request) AppLive))\n"
+  },
+  {
+    "name": "named-callbacks",
+    "summary": "RFC 0019 section 10: a declared operation stands wherever a lambda does.",
+    "outcome": "runs",
+    "program": ";; RFC 0019 section 10: a declared operation stands wherever a lambda does.\n(error UnknownSku {:sku String})\n(service Catalog (: price (-> String (Effect (Option Int) [] []))))\n\n(: price-line (-> String (Effect Int [UnknownSku] [Catalog.price])))\n(define price-line [sku]\n  (do! [found (Catalog.price sku)]\n    (match found\n      (Some cents) (succeed cents)\n      None (fail (UnknownSku {:sku sku})))))\n\n(: price-all (-> (List String) (Effect (List Int) [UnknownSku] [Catalog.price])))\n(define price-all [skus] (for-each skus price-line))\n\n(: price-all-concurrently (-> (List String) (Effect (List Int) [UnknownSku] [Catalog.price])))\n(define price-all-concurrently [skus] (for-each skus price-line :concurrency 2))\n\n(: shout (-> String (Effect String)))\n(define shout [word] (succeed (str word \"!\")))\n\n(: shout-all (-> (List String) (Effect (List String))))\n(define shout-all [words] (for-each words shout))\n"
   },
   {
     "name": "ontology-actions",
@@ -164,6 +182,38 @@ export const effectExamples = [
         "message": "Duplicate map key",
         "line": 3,
         "column": 24
+      }
+    ]
+  },
+  {
+    "name": "reject-effect-polymorphic-escape",
+    "summary": "A rigid set variable cannot be dropped: the body calls f, so the result must declare e and r. `declined` is not silently a variable either.",
+    "outcome": "rejected",
+    "program": ";; A rigid set variable cannot be dropped: the body calls f, so the result\n;; must declare e and r. `declined` is not silently a variable either.\n(error Declined {:reason String})\n(service Stripe (: charge (-> Int (Effect String [Declined] []))))\n\n(: leaky (-> (-> Int (Effect a [e] [r])) Int (Effect a [] [])))\n(define leaky [f n] (f n))\n\n(: unsolvable (-> Int (Effect Int [declined] [])))\n(define unsolvable [n] (succeed n))\n\n(: kinds (-> (-> Int (Effect a [e] [e])) Int (Effect a [e] [e])))\n(define kinds [f n] (f n))\n",
+    "diagnostics": [
+      {
+        "code": "mechanics/undeclared-error",
+        "message": "Operation leaky can fail with the errors of e, but its signature declares no errors.",
+        "line": 7,
+        "column": 21
+      },
+      {
+        "code": "mechanics/undeclared-requirement",
+        "message": "Operation leaky requires the requirements of r, but its signature declares no requirements.",
+        "line": 7,
+        "column": 21
+      },
+      {
+        "code": "mechanics/unbound-set-variable",
+        "message": "Set variable declined appears in the result but in no parameter, so nothing can solve it. Did you mean the error Declined?",
+        "line": 9,
+        "column": 23
+      },
+      {
+        "code": "mechanics/set-variable-kind",
+        "message": "e is used as both an error set and a requirement set.",
+        "line": 12,
+        "column": 22
       }
     ]
   },
@@ -464,6 +514,32 @@ export const effectExamples = [
         "message": "Recursive schema Entry reaches the class Folder; recursion through brands and classes is not supported yet.",
         "line": 10,
         "column": 1
+      }
+    ]
+  },
+  {
+    "name": "reject-refinement-literals",
+    "summary": "RFC 0019 section 11: a literal is held to its refinements where it is written.",
+    "outcome": "rejected",
+    "program": ";; RFC 0019 section 11: a literal is held to its refinements where it is written.\n(type Cents (Int :min 0))\n(type Bags (Brand (Int :min 1 :max 200)))\n(type Sku (String :pattern \"^[A-Z]+-[0-9]+$\"))\n(type Line {:sku Sku :bags Bags})\n\n(: refund Cents)\n(define refund -5)\n\n(: nothing (-> Int (Effect Bags [] [])))\n(define nothing [n] (succeed (Bags 0)))\n\n(: line (-> Int (Effect Line [] [])))\n(define line [n] (succeed {:sku \"bean-1\" :bags (Bags 7)}))\n\n(: fine (-> Int (Effect Line [] [])))\n(define fine [n] (succeed {:sku \"BEAN-1\" :bags (Bags 200)}))\n",
+    "diagnostics": [
+      {
+        "code": "mechanics/refinement",
+        "message": "-5 must be at least 0, as (Int :min 0) requires.",
+        "line": 8,
+        "column": 16
+      },
+      {
+        "code": "mechanics/refinement",
+        "message": "0 must be at least 1, as (Int :min 1 :max 200) requires.",
+        "line": 11,
+        "column": 36
+      },
+      {
+        "code": "mechanics/refinement",
+        "message": "\"bean-1\" must match the pattern ^[A-Z]+-[0-9]+$, as (String :pattern \"^[A-Z]+-[0-9]+$\") requires.",
+        "line": 14,
+        "column": 33
       }
     ]
   },

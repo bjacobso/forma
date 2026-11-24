@@ -14,8 +14,14 @@ The TypeScript engine distinguishes Int and Float, including integral Float
 literals and results; Int arithmetic checks the JavaScript safe integer range.
 Effect generation, canonical artifact validation, host/CLI checks, and workspace
 analysis share mechanics semantic checks for supported explicit Effect
-declarations. Low-level HM inference remains separate; language-server file
-import resolution and complete mechanics editor parity are unfinished.
+declarations, including Effect signature polymorphism (RFC 0023 stages 1–3).
+The host layer ships `checkedRun`, `CapabilityManifest` pre-execution inspection,
+typed `createLanguage` capabilities with `onHostCall` author-span hooks,
+cooperative resource budgets, and `forma-journal/v1` host-call record and
+deterministic replay. The language server resolves multi-file local imports,
+`forma:*` libraries, and `forma.json` packages; workspace analysis memoizes
+closed HM SCCs per document. Complete mechanics editor parity and an
+independent trusted kernel remain unfinished.
 A fresh clone uses
 `pnpm install --frozen-lockfile` without a sibling checkout or link step.
 
@@ -34,6 +40,7 @@ A fresh clone uses
 ## For agents
 
 - [MCP server](https://forma-lang.com/mcp): Configure Claude Code or Codex with structured check, run, format, diagnostic explanation, and node-addressed editing tools, plus a code-mode REPL that checks, expands, generates and runs Effect programs and can evolve the language through session preludes. The REPL is also hosted at https://forma-lang.com/mcp, without `:run`.
+- [Flagship host example](https://raw.githubusercontent.com/bjacobso/forma/main/examples/flagship/README.md): End-to-end incident-response policy host demonstrating `describe()`, `CapabilityManifest` inspection, ungranted capability rejection, `node:worker_threads` budgets with `onHostCall` span approval, and `forma-journal/v1` deterministic replay.
 
 - [Writing a form](https://raw.githubusercontent.com/bjacobso/forma/main/docs/writing-a-form.md): Define domain vocabulary with typed forms, form-local constant extensions, checked documentation examples, and elaboration hooks.
 - [Preludes](https://forma-lang.com/preludes/): Catalog of the repository preludes with maturity labels; each reference page is generated at site build from form descriptors, `(: name type)` signatures, docstrings, comments, and per-form examples checked by `pnpm check`.

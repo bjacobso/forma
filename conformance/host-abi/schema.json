@@ -981,6 +981,21 @@
             "evaluationId": {
               "type": "string"
             },
+            "timeoutMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxExpansionSteps": {
+              "type": "integer",
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": 0
+            },
+            "maxResultBytes": {
+              "type": "integer",
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": 0
+            },
             "retainValues": {
               "type": "string",
               "enum": [
@@ -988,11 +1003,251 @@
                 "functions",
                 "all"
               ]
+            },
+            "journal": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "record"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "mode"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "replay"
+                      ]
+                    },
+                    "journal": {
+                      "$ref": "#/$defs/HostCallJournal"
+                    },
+                    "onExhausted": {
+                      "type": "string",
+                      "enum": [
+                        "fail",
+                        "pause"
+                      ]
+                    },
+                    "allowProgramMismatch": {
+                      "type": "boolean"
+                    },
+                    "record": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "journal"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
             }
           },
           "required": [
             "op",
             "sessionId"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "op": {
+              "type": "string",
+              "enum": [
+                "checkedRun"
+              ]
+            },
+            "abiVersion": {
+              "type": "string",
+              "pattern": "^(0|[1-9]\\d*)\\.(0|[1-9]\\d*)\\.(0|[1-9]\\d*)(?:-(?:0|[1-9]\\d*|\\d*[A-Za-z-][0-9A-Za-z-]*)(?:\\.(?:0|[1-9]\\d*|\\d*[A-Za-z-][0-9A-Za-z-]*))*)?(?:\\+[0-9A-Za-z-]+(?:\\.[0-9A-Za-z-]+)*)?$"
+            },
+            "sessionId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "source": {
+              "type": "string"
+            },
+            "sourceId": {
+              "type": "string"
+            },
+            "evaluationId": {
+              "type": "string"
+            },
+            "grants": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "mode": {
+                    "type": "string",
+                    "enum": [
+                      "ask",
+                      "allow"
+                    ]
+                  },
+                  "maxCalls": {
+                    "type": "integer",
+                    "maximum": 9007199254740991,
+                    "exclusiveMinimum": 0
+                  }
+                },
+                "required": [
+                  "name"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "expectedType": {
+              "type": "string"
+            },
+            "limits": {
+              "type": "object",
+              "properties": {
+                "steps": {
+                  "type": "integer",
+                  "maximum": 9007199254740991,
+                  "exclusiveMinimum": 0
+                },
+                "hostCalls": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "timeoutMs": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                "maxExpansionSteps": {
+                  "type": "integer",
+                  "maximum": 9007199254740991,
+                  "exclusiveMinimum": 0
+                },
+                "maxResultBytes": {
+                  "type": "integer",
+                  "maximum": 9007199254740991,
+                  "exclusiveMinimum": 0
+                }
+              },
+              "additionalProperties": false
+            },
+            "variables": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value": {
+                    "$ref": "#/$defs/ValueProjection"
+                  }
+                },
+                "required": [
+                  "name",
+                  "value"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "retainValues": {
+              "type": "string",
+              "enum": [
+                "none",
+                "functions",
+                "all"
+              ]
+            },
+            "resultProjection": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "printed",
+                  "plain-json",
+                  "triple-value",
+                  "truthy",
+                  "summary"
+                ]
+              }
+            },
+            "journal": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "record"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "mode"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "replay"
+                      ]
+                    },
+                    "journal": {
+                      "$ref": "#/$defs/HostCallJournal"
+                    },
+                    "onExhausted": {
+                      "type": "string",
+                      "enum": [
+                        "fail",
+                        "pause"
+                      ]
+                    },
+                    "allowProgramMismatch": {
+                      "type": "boolean"
+                    },
+                    "record": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "journal"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
+            }
+          },
+          "required": [
+            "op",
+            "sessionId",
+            "source",
+            "grants"
           ],
           "additionalProperties": false
         },
@@ -1089,12 +1344,78 @@
             "evaluationId": {
               "type": "string"
             },
+            "timeoutMs": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxExpansionSteps": {
+              "type": "integer",
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": 0
+            },
+            "maxResultBytes": {
+              "type": "integer",
+              "maximum": 9007199254740991,
+              "exclusiveMinimum": 0
+            },
             "retainValues": {
               "type": "string",
               "enum": [
                 "none",
                 "functions",
                 "all"
+              ]
+            },
+            "journal": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "record"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "mode"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "replay"
+                      ]
+                    },
+                    "journal": {
+                      "$ref": "#/$defs/HostCallJournal"
+                    },
+                    "onExhausted": {
+                      "type": "string",
+                      "enum": [
+                        "fail",
+                        "pause"
+                      ]
+                    },
+                    "allowProgramMismatch": {
+                      "type": "boolean"
+                    },
+                    "record": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "journal"
+                  ],
+                  "additionalProperties": false
+                }
               ]
             }
           },
@@ -1293,6 +1614,57 @@
                   "summary"
                 ]
               }
+            },
+            "journal": {
+              "anyOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "record"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "mode"
+                  ],
+                  "additionalProperties": false
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "mode": {
+                      "type": "string",
+                      "enum": [
+                        "replay"
+                      ]
+                    },
+                    "journal": {
+                      "$ref": "#/$defs/HostCallJournal"
+                    },
+                    "onExhausted": {
+                      "type": "string",
+                      "enum": [
+                        "fail",
+                        "pause"
+                      ]
+                    },
+                    "allowProgramMismatch": {
+                      "type": "boolean"
+                    },
+                    "record": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "mode",
+                    "journal"
+                  ],
+                  "additionalProperties": false
+                }
+              ]
             }
           },
           "required": [
@@ -2775,6 +3147,655 @@
           "nextId",
           "nodes",
           "errors"
+        ],
+        "additionalProperties": false
+      },
+      "JournalHeader": {
+        "type": "object",
+        "properties": {
+          "format": {
+            "type": "string",
+            "enum": [
+              "forma-journal/v1"
+            ]
+          },
+          "engine": {
+            "type": "string"
+          },
+          "program": {
+            "type": "object",
+            "properties": {
+              "sources": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "sha256"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "preludes": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "sha256": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "sha256"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "entry": {
+                "type": "string"
+              },
+              "revision": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "sources",
+              "preludes",
+              "entry"
+            ],
+            "additionalProperties": false
+          },
+          "builtins": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "effect": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "name",
+                "effect"
+              ],
+              "additionalProperties": false
+            }
+          }
+        },
+        "required": [
+          "format",
+          "engine",
+          "program",
+          "builtins"
+        ],
+        "additionalProperties": false
+      },
+      "JournalValue": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "nil"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "bool"
+                ]
+              },
+              "value": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "int"
+                ]
+              },
+              "value": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "float"
+                ]
+              },
+              "value": {
+                "anyOf": [
+                  {
+                    "type": "number"
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "Infinity",
+                      "-Infinity",
+                      "NaN"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "enum": [
+                      "NaN",
+                      "Infinity",
+                      "-Infinity",
+                      "-0"
+                    ]
+                  }
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "string",
+                  "symbol",
+                  "keyword"
+                ]
+              },
+              "value": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "kind",
+              "value"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "list",
+                  "vector"
+                ]
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/$defs/JournalValue"
+                }
+              }
+            },
+            "required": [
+              "kind",
+              "items"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "map"
+                ]
+              },
+              "entries": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "key": {
+                      "$ref": "#/$defs/JournalValue"
+                    },
+                    "value": {
+                      "$ref": "#/$defs/JournalValue"
+                    }
+                  },
+                  "required": [
+                    "key",
+                    "value"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": [
+              "kind",
+              "entries"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "function"
+                ]
+              },
+              "ordinal": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+              }
+            },
+            "required": [
+              "kind",
+              "ordinal"
+            ],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "redacted"
+                ]
+              }
+            },
+            "required": [
+              "kind"
+            ],
+            "additionalProperties": false
+          }
+        ]
+      },
+      "Span": {
+        "type": "object",
+        "properties": {
+          "sourceId": {
+            "type": "string"
+          },
+          "startOffset": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ]
+              }
+            ]
+          },
+          "endOffset": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ]
+              }
+            ]
+          },
+          "startLine": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "startColumn": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endLine": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "endColumn": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "string",
+                "enum": [
+                  "Infinity",
+                  "-Infinity",
+                  "NaN"
+                ]
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "sourceId",
+          "startOffset",
+          "endOffset"
+        ],
+        "additionalProperties": false
+      },
+      "Diagnostic": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "info"
+            ]
+          },
+          "message": {
+            "type": "string"
+          },
+          "phase": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "span": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/Span"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "details": {
+            "anyOf": [
+              {
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "related": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "span": {
+                      "$ref": "#/$defs/Span"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "span",
+                    "message"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "help": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "fix": {
+            "anyOf": [
+              {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "span": {
+                      "$ref": "#/$defs/Span"
+                    },
+                    "newText": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "span",
+                    "newText"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "message"
+        ],
+        "additionalProperties": false
+      },
+      "JournalEntry": {
+        "type": "object",
+        "properties": {
+          "seq": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "evaluation": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": -9007199254740991,
+              "maximum": 9007199254740991
+            }
+          },
+          "effect": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/JournalValue"
+            }
+          },
+          "outcome": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "ok": {
+                    "type": "boolean",
+                    "enum": [
+                      true
+                    ]
+                  },
+                  "value": {
+                    "$ref": "#/$defs/JournalValue"
+                  }
+                },
+                "required": [
+                  "ok",
+                  "value"
+                ],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "ok": {
+                    "type": "boolean",
+                    "enum": [
+                      false
+                    ]
+                  },
+                  "diagnostics": {
+                    "type": "array",
+                    "items": {
+                      "$ref": "#/$defs/Diagnostic"
+                    }
+                  }
+                },
+                "required": [
+                  "ok",
+                  "diagnostics"
+                ],
+                "additionalProperties": false
+              }
+            ]
+          }
+        },
+        "required": [
+          "seq",
+          "evaluation",
+          "effect",
+          "name",
+          "args",
+          "outcome"
+        ],
+        "additionalProperties": false
+      },
+      "HostCallJournal": {
+        "type": "object",
+        "properties": {
+          "header": {
+            "$ref": "#/$defs/JournalHeader"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/JournalEntry"
+            }
+          }
+        },
+        "required": [
+          "header",
+          "entries"
         ],
         "additionalProperties": false
       },
@@ -8690,6 +9711,268 @@
       }
     },
     "evaluateInSession": {
+      "dialect": "draft-2020-12",
+      "schema": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "value": {},
+          "type": {
+            "type": "string"
+          },
+          "typedCore": {},
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Diagnostic"
+            }
+          }
+        },
+        "required": [
+          "ok",
+          "diagnostics"
+        ],
+        "additionalProperties": true
+      },
+      "definitions": {
+        "Span": {
+          "type": "object",
+          "properties": {
+            "sourceId": {
+              "type": "string"
+            },
+            "startOffset": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "Infinity",
+                    "-Infinity",
+                    "NaN"
+                  ]
+                }
+              ]
+            },
+            "endOffset": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "Infinity",
+                    "-Infinity",
+                    "NaN"
+                  ]
+                }
+              ]
+            },
+            "startLine": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "Infinity",
+                    "-Infinity",
+                    "NaN"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "startColumn": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "Infinity",
+                    "-Infinity",
+                    "NaN"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endLine": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "Infinity",
+                    "-Infinity",
+                    "NaN"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "endColumn": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "string",
+                  "enum": [
+                    "Infinity",
+                    "-Infinity",
+                    "NaN"
+                  ]
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "sourceId",
+            "startOffset",
+            "endOffset"
+          ],
+          "additionalProperties": true
+        },
+        "Diagnostic": {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string"
+            },
+            "severity": {
+              "type": "string",
+              "enum": [
+                "error",
+                "warning",
+                "info"
+              ]
+            },
+            "message": {
+              "type": "string"
+            },
+            "phase": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "span": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/Span"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "details": {
+              "anyOf": [
+                {
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "related": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "span": {
+                        "$ref": "#/$defs/Span"
+                      },
+                      "message": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "span",
+                      "message"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "help": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "fix": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "span": {
+                        "$ref": "#/$defs/Span"
+                      },
+                      "newText": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "span",
+                      "newText"
+                    ],
+                    "additionalProperties": true
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "code",
+            "severity",
+            "message"
+          ],
+          "additionalProperties": true
+        }
+      }
+    },
+    "checkedRun": {
       "dialect": "draft-2020-12",
       "schema": {
         "type": "object",
@@ -16193,6 +17476,10 @@
     },
     {
       "name": "evaluateInSession",
+      "sessionScope": "required"
+    },
+    {
+      "name": "checkedRun",
       "sessionScope": "required"
     },
     {

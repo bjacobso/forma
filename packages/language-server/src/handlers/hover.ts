@@ -9,7 +9,7 @@ export function getHover(
   document: TextDocument,
   params: HoverParams,
 ): Hover | null {
-  const hover = workspace.analysis.hover(document.uri, positionToOffset(document, params.position));
+  const hover = workspace.hover(document.uri, positionToOffset(document, params.position));
   if (!hover) return null;
   return {
     contents: { kind: MarkupKind.Markdown, value: hover.markdown },

@@ -26,6 +26,7 @@ function effectPackageRoot(): string {
 // Runs inside the restricted child: strip types, import the module, run the entry, report the Exit as JSON.
 const runner = `
 import { stripTypeScriptTypes } from "node:module";
+for (const key of Object.keys(process.env)) delete process.env[key];
 let input = "";
 for await (const chunk of process.stdin) input += chunk;
 const { code, effectUrl, entry } = JSON.parse(input);

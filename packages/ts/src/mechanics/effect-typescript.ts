@@ -41,6 +41,7 @@ import {
   containsLiterals,
   isAssignable,
   isRecord,
+  isSetVariable,
   requirementService,
   resolve,
   stringItems,
@@ -173,6 +174,8 @@ class Generator {
   private serviceVars = new Map<string, string>();
   private contextVar: string | undefined;
   private typeVariables = new Map<number,string>();
+  /** TypeScript names for the set variables of the operation being printed (RFC 0023). */
+  private setVariableNames = new Map<string,string>();
   /**
    * Whether the value being rendered has a contextual type in TypeScript
    * (a typed parameter, a function's declared return, or a field of such a
@@ -407,17 +410,53 @@ class Generator {
     const names = new Names(undefined, this.reserved);
     const services = this.servicesUsed(body);
     // Parameters keep their names; a colliding service variable becomes `fooService`.
+    const generics = signature ? this.bindSignatureVariables([...signature.params.map((param) => param.type), signature.result]) : "";
     const params = (signature?.params ?? []).map(
       (param) => `${names.bind(param.name, unusedPrefix(param.name, body))}: ${this.typeTs(param.type)}`,
     );
     this.serviceVars = new Map();
     for (const service of services) this.serviceVars.set(service, bindService(names, service));
     const returns = signature ? this.effectTypeTs(signature.result) : "Effect.Effect<unknown>";
-    const lines = [operation["value"] === true ? `export const ${camelIdentifier(name)}: ${returns} =` : signatureHead(camelIdentifier(name), params, returns), "  Effect.gen(function* () {"];
+    const lines = [operation["value"] === true ? `export const ${camelIdentifier(name)}: ${returns} =` : signatureHead(camelIdentifier(name), params, returns, generics), "  Effect.gen(function* () {"];
     for (const service of services) lines.push(`    const ${this.serviceVars.get(service)!} = yield* ${typeName(service)};`);
     lines.push(...this.statements(body, names, "    ", "return"));
     lines.push("  });");
+    this.typeVariables = new Map();
+    this.setVariableNames = new Map();
     return lines;
+  }
+
+  /**
+   * Names the type and set variables of an operation signature: type
+   * variables become `A0`, `A1`, error-set variables `E` (or `E1`, `E2`),
+   * requirement-set variables `R` (or `R1`, `R2`). Returns the `<...>` list.
+   */
+  private bindSignatureVariables(types: readonly MType[]): string {
+    this.typeVariables = new Map();
+    this.setVariableNames = new Map();
+    const errorKeys: string[] = [];
+    const requirementKeys: string[] = [];
+    const visit = (type: MType): void => {
+      if (type.kind === "var" && !type.numeric && !this.typeVariables.has(type.id)) this.typeVariables.set(type.id, `A${this.typeVariables.size}`);
+      if (type.kind === "effect" || type.kind === "stream") {
+        for (const key of type.errors.keys()) if (isSetVariable(key) && !errorKeys.includes(key)) errorKeys.push(key);
+        for (const key of type.requirements.keys()) if (isSetVariable(key) && !requirementKeys.includes(key)) requirementKeys.push(key);
+      }
+      for (const value of Object.values(type)) {
+        if (Array.isArray(value)) value.forEach((item) => { if (item && typeof item === "object") { if ("kind" in item) visit(item as MType); else if ("type" in item) visit(item.type as MType); } });
+        else if (value && typeof value === "object" && "kind" in value) visit(value as MType);
+      }
+    };
+    types.forEach(visit);
+    const unique = (base: string): string => {
+      let candidate = base;
+      while (this.reserved.has(candidate) || [...this.setVariableNames.values()].includes(candidate)) candidate = `${candidate}_`;
+      return candidate;
+    };
+    errorKeys.forEach((key, index) => this.setVariableNames.set(key, unique(errorKeys.length === 1 ? "E" : `E${index + 1}`)));
+    requirementKeys.forEach((key, index) => this.setVariableNames.set(key, unique(requirementKeys.length === 1 ? "R" : `R${index + 1}`)));
+    const all = [...this.typeVariables.values(), ...this.setVariableNames.values()];
+    return all.length > 0 ? `<${all.join(", ")}>` : "";
   }
 
   private layerLines(layer: JsonRecord): string[] {
@@ -802,7 +841,12 @@ class Generator {
     // Callbacks passed to Effect functions are contextually typed by them.
     const value = (index: number): Render => (inner) =>
       (this.isCallback(args[index]) ? this.contextualValue(args[index], names, inner) : this.value(args[index], names, inner)).code;
-    const lambda = (index: number): Render => (inner) => this.lambda(args[index], names, inner);
+    const lambda = (index: number): Render => (inner) => {
+      const callback = args[index];
+      // A declared operation passed by name is a callback as it stands.
+      if (isRecord(callback) && callback["kind"] === "Var") return this.value(callback, names, inner).code;
+      return this.lambda(callback, names, inner);
+    };
     const option = (key: string): JsonValue | undefined => {
       for (const entry of arrayItems(node["options"])) {
         if (isRecord(entry) && entry["key"] === key) return entry["value"];
@@ -1501,7 +1545,7 @@ class Generator {
   }
 
   private errorUnion(errors: Provenance): string {
-    const names = [...errors.keys()].map((error) => this.errorTypeName(error));
+    const names = [...errors.keys()].map((error) => (isSetVariable(error) ? this.setVariableNames.get(error) ?? "never" : this.errorTypeName(error)));
     return names.length === 0 ? "never" : names.join(" | ");
   }
 
@@ -1517,7 +1561,9 @@ class Generator {
   private requirementUnion(requirements: Provenance): string {
     const services = new Set<string>();
     for (const requirement of requirements.keys()) {
-      if (requirement === "Scope") {
+      if (isSetVariable(requirement)) {
+        services.add(this.setVariableNames.get(requirement) ?? "never");
+      } else if (requirement === "Scope") {
         this.use("Scope");
         services.add("Scope.Scope");
       } else {

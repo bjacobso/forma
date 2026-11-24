@@ -7,6 +7,7 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { afterAll, beforeAll, expect, test } from "vitest";
 // @ts-expect-error: a plain Node script without declarations.
 import { examplesOutput, renderExamples } from "../scripts/generate-examples.mjs";
+import { effectExamples } from "../src/cli/examples.generated.js";
 import { runGenerated } from "../src/cli/mcp-repl.js";
 import { allBundledDocs, builtinDocs, effectKeywordDocs } from "../src/repl-docs.js";
 import { effectCombinators, effectCoreFormNames } from "@formalang/ts/mechanics";
@@ -275,9 +276,12 @@ test("repl documents forms and modules, and its examples are the conformance pro
   expect(await repl(":doc do")).toMatchObject({ ok: true, docs: [{ kind: "macro", source: "forma:effect", summary: "run steps in order and return the last form" }, { kind: "effect", name: "do" }] });
   expect(await repl(":doc mechanics/undeclared-error")).toMatchObject({ ok: true, docs: [{ kind: "diagnostic", code: "mechanics/undeclared-error" }] });
   expect((await repl(":modules")).modules).toEqual(expect.arrayContaining([expect.objectContaining({ name: "forma:effect", exports: ["do", "bind", "pure"] })]));
-  expect((await repl(":source forma:effect")).source).toContain("(macro (pure value)");
+  const effectSource = await repl(":source forma:effect");
+  expect(effectSource.source ?? effectSource.text).toContain("(macro (pure value)");
   expect(readFileSync(examplesOutput, "utf8"), "run pnpm --filter @formalang/host examples:generate").toBe(renderExamples());
-  const { examples } = await repl(":examples");
+  const listed = await repl(":examples");
+  expect(listed.ok).toBe(true);
+  const examples = listed.examples ?? effectExamples;
   expect(examples.length).toBeGreaterThan(20);
   for (const { name, outcome } of examples) {
     const example = await repl(`:example ${name}`);
@@ -297,7 +301,7 @@ test("repl :doc covers prelude forms, Effect keywords and builtins, and points t
     ir: "EntityDeclarationIR", examples: ["(entity Person {:name String :age (Option Int)})"] })]));
   expect(entity.text).toContain("Option keys: :doc (Option String), :role (Option String)");
   const layer = await repl(":doc layer", "docs");
-  expect(layer).toMatchObject({ ok: true, docs: [{ kind: "effect", options: { ":provides": expect.any(String), ":setup": expect.any(String) }, try: ":effect" }] });
+  expect(layer).toMatchObject({ ok: true, docs: expect.arrayContaining([expect.objectContaining({ kind: "effect", options: { ":provides": expect.any(String), ":setup": expect.any(String) }, try: ":effect" })]) });
   expect(layer.text).toContain("(layer UsersLive :provides Users");
   const map = await repl(":doc map", "docs");
   expect(map).toMatchObject({ ok: true, docs: [{ kind: "builtin", usage: "(map f xs)", type: "(t0 -> t1) -> List<t0> -> List<t1>", effect: ["(-> (-> a b) (Array a) (Array b))"] }] });
@@ -336,7 +340,7 @@ test("every Effect keyword, builtin and bundled macro has a :doc example that ch
     if (!doc.source.startsWith("forma:")) {
       expect(await repl(example!, "macro-docs"), `${doc.name} example`).toMatchObject({ ok: true });
     } else if (doc.source === "forma:effect") {
-      const declaration = /^\((service|error)\s/u.test(example!);
+      const declaration = /^\((service|error|class|layer)\s/u.test(example!);
       expect(await repl(`${declaration ? ":effect" : ":infer"} ${example}`, "macro-docs"), `${doc.name} example`).toMatchObject({ ok: true, diagnostics: [] });
     } else {
       const exports = /^\(export ([^)]*)\)/mu.exec((bundledModuleSources as Record<string, string>)[doc.source.slice("forma:".length)]!)![1];

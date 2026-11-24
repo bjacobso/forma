@@ -13,6 +13,12 @@
  * @module
  */
 import type { JsonValue } from "../artifact/artifact.js";
+import {
+  decideDataRelation,
+  literalBasePrimitive,
+  type DataLiteral,
+  type DataNode,
+} from "../type/data-relation.js";
 
 export type PrimitiveName =
   | "String"
@@ -36,8 +42,21 @@ export interface MField {
 /** Errors and requirements carry the span where they first entered a type. */
 export type Provenance = ReadonlyMap<string, JsonValue | undefined>;
 
+/**
+ * Literal-checkable refinements carried by a primitive that was written with
+ * `:min`, `:max`, `:min-length`, `:max-length`, or `:pattern`. They only affect
+ * the compile-time check of literals; assignability ignores them.
+ */
+export interface Refinement {
+  readonly min?: number;
+  readonly max?: number;
+  readonly minLength?: number;
+  readonly maxLength?: number;
+  readonly pattern?: string;
+}
+
 export type MType =
-  | { readonly kind: "prim"; readonly name: PrimitiveName }
+  | { readonly kind: "prim"; readonly name: PrimitiveName; readonly refine?: Refinement }
   | { readonly kind: "never" }
   | { readonly kind: "unknown" }
   | { readonly kind: "literal"; readonly numericKind?: "int" | "float"; readonly value: string | number | boolean }
@@ -88,6 +107,76 @@ export const tUnit = prim("Unit");
 export const tNever: MType = { kind: "never" };
 export const tUnknown: MType = { kind: "unknown" };
 export const emptySet: Provenance = new Map();
+
+/**
+ * Error-set and requirement-set variables (RFC 0023) live in a `Provenance`
+ * under a `$`-prefixed key, which no declared error or service can spell, so
+ * unions, spans and inclusion treat a variable as an opaque member.
+ */
+export const isSetVariable = (key: string): boolean => key.startsWith("$");
+export const setVariableName = (key: string): string => key.slice(1);
+export const setVariableKey = (name: string): string => `$${name}`;
+export const hasSetVariable = (set: Provenance): boolean => [...set.keys()].some(isSetVariable);
+const showSetKeys = (set: Provenance): string => [...set.keys()].map((key) => (isSetVariable(key) ? setVariableName(key) : key)).join(" ");
+
+function withSetVariables(set: Provenance, variables: JsonValue | undefined): Provenance {
+  const items = arrayItems(variables).flatMap((item) => (isRecord(item) && item["kind"] === "Var" && typeof item["name"] === "string" ? [item["name"]] : []));
+  if (items.length === 0) return set;
+  const merged = new Map(set);
+  for (const name of items) if (!merged.has(setVariableKey(name))) merged.set(setVariableKey(name), undefined);
+  return merged;
+}
+
+function refinementFromMetadata(metadata: JsonValue | undefined): Refinement | undefined {
+  if (!isRecord(metadata)) return undefined;
+  const refine: { -readonly [K in keyof Refinement]: Refinement[K] } = {};
+  if (typeof metadata["min"] === "number") refine.min = metadata["min"];
+  if (typeof metadata["max"] === "number") refine.max = metadata["max"];
+  if (typeof metadata["min-length"] === "number") refine.minLength = metadata["min-length"];
+  if (typeof metadata["max-length"] === "number") refine.maxLength = metadata["max-length"];
+  if (typeof metadata["pattern"] === "string") refine.pattern = metadata["pattern"];
+  return Object.keys(refine).length > 0 ? refine : undefined;
+}
+
+function withRefinement(type: MType, refine: Refinement): MType {
+  if (type.kind === "prim") return { ...type, refine: { ...type.refine, ...refine } };
+  if (type.kind === "brand") return { ...type, base: withRefinement(type.base, refine) };
+  return type;
+}
+
+/** Renders refinements the way they are written, for diagnostics. */
+export function showRefinement(type: MType & { readonly kind: "prim" }): string {
+  const refine = type.refine;
+  if (!refine) return type.name;
+  const parts = [
+    ...(refine.min !== undefined ? [`:min ${refine.min}`] : []),
+    ...(refine.max !== undefined ? [`:max ${refine.max}`] : []),
+    ...(refine.minLength !== undefined ? [`:min-length ${refine.minLength}`] : []),
+    ...(refine.maxLength !== undefined ? [`:max-length ${refine.maxLength}`] : []),
+    ...(refine.pattern !== undefined ? [`:pattern ${JSON.stringify(refine.pattern)}`] : []),
+  ];
+  return `(${type.name} ${parts.join(" ")})`;
+}
+
+/** Why a literal falls outside a primitive's refinements, or undefined when it fits. */
+export function refinementViolation(refine: Refinement, value: string | number | boolean): string | undefined {
+  if (typeof value === "number") {
+    if (refine.min !== undefined && value < refine.min) return `must be at least ${refine.min}`;
+    if (refine.max !== undefined && value > refine.max) return `must be at most ${refine.max}`;
+  }
+  if (typeof value === "string") {
+    if (refine.minLength !== undefined && value.length < refine.minLength) return `must have at least ${refine.minLength} character${refine.minLength === 1 ? "" : "s"}`;
+    if (refine.maxLength !== undefined && value.length > refine.maxLength) return `must have at most ${refine.maxLength} character${refine.maxLength === 1 ? "" : "s"}`;
+    if (refine.pattern !== undefined) {
+      try {
+        if (!new RegExp(refine.pattern).test(value)) return `must match the pattern ${refine.pattern}`;
+      } catch {
+        return undefined;
+      }
+    }
+  }
+  return undefined;
+}
 
 export const effectOf = (
   success: MType,
@@ -202,13 +291,16 @@ export function typeFromJson(json: JsonValue | undefined, env: TypeEnvironment):
         }),
       );
     }
-    case "Annotated":
-      return typeFromJson(json["schema"], env);
+    case "Annotated": {
+      const inner = typeFromJson(json["schema"], env);
+      const refine = refinementFromMetadata(json["metadata"]);
+      return refine ? withRefinement(inner, refine) : inner;
+    }
     case "Effect":
       return effectOf(
         typeFromJson(json["success"], env),
-        setOf(stringItems(json["errors"])),
-        setOf(stringItems(json["requirements"])),
+        withSetVariables(setOf(stringItems(json["errors"])), json["errorVariables"]),
+        withSetVariables(setOf(stringItems(json["requirements"])), json["requirementVariables"]),
       );
     case "Result":
       return {
@@ -222,8 +314,8 @@ export function typeFromJson(json: JsonValue | undefined, env: TypeEnvironment):
       return {
         kind: "stream",
         item: typeFromJson(json["item"], env),
-        errors: setOf(stringItems(json["errors"])),
-        requirements: setOf(stringItems(json["requirements"])),
+        errors: withSetVariables(setOf(stringItems(json["errors"])), json["errorVariables"]),
+        requirements: withSetVariables(setOf(stringItems(json["requirements"])), json["requirementVariables"]),
       };
     case "Fiber":
       return {
@@ -297,12 +389,38 @@ export function join(left: MType, right: MType, env: TypeEnvironment): MType {
   return union([left, right]);
 }
 
+function toMechanicsLiteral(type: MType & { readonly kind: "literal" }): DataLiteral {
+  if (typeof type.value === "string") return { kind: "string", value: type.value };
+  if (typeof type.value === "boolean") return { kind: "boolean", value: type.value };
+  return type.numericKind === "float" || !Number.isInteger(type.value)
+    ? { kind: "float", value: type.value }
+    : { kind: "int", value: type.value };
+}
+
+function toMechanicsDataNode(type: MType): DataNode<MType> {
+  switch (type.kind) {
+    case "unknown":
+      return { kind: "unknown", raw: type };
+    case "never":
+      return { kind: "never", raw: type };
+    case "prim":
+      return { kind: "prim", name: type.name, raw: type };
+    case "literal":
+      return { kind: "literal", literal: toMechanicsLiteral(type), raw: type };
+    case "brand":
+      return { kind: "brand", name: type.name, base: type.base, raw: type };
+    case "option":
+      return { kind: "option", item: type.item, raw: type };
+    default:
+      return { kind: "other", raw: type };
+  }
+}
+
 /** Widens a literal produced by inference to its primitive (`"a"` → String). */
 export function widenLiteral(type: MType): MType {
   if (type.kind !== "literal") return type;
-  if (typeof type.value === "string") return tString;
-  if (typeof type.value === "boolean") return tBool;
-  return type.numericKind === "float" || !Number.isInteger(type.value) ? tFloat : tInt;
+  const base = literalBasePrimitive(toMechanicsLiteral(type));
+  return base === "Keyword" ? tString : prim(base);
 }
 
 /**
@@ -448,23 +566,12 @@ export function isAssignable(
     return t.members.some((member) => isAssignable(s, member, env, subst));
   }
 
-  // A branded value is still a value of its base type (`UserId` is a `String`).
-  if (s.kind === "brand" && t.kind !== "brand") return isAssignable(s.base, t, env, subst);
+  const dataDecision = decideDataRelation(toMechanicsDataNode(s), toMechanicsDataNode(t));
+  if (dataDecision.verdict === "accept") return true;
+  if (dataDecision.verdict === "reject") return false;
+  if (dataDecision.verdict === "check") return isAssignable(dataDecision.actual, dataDecision.expected, env, subst);
 
   switch (t.kind) {
-    case "prim":
-      if (s.kind === "prim") return s.name === t.name || (s.name === "Int" && t.name === "Float");
-      if (s.kind === "literal") {
-        if (typeof s.value === "string") return t.name === "String";
-        if (typeof s.value === "boolean") return t.name === "Bool";
-        return t.name === "Float" || (t.name === "Int" && s.numericKind !== "float" && Number.isSafeInteger(s.value));
-      }
-      if (s.kind === "brand") return false;
-      return false;
-    case "literal":
-      return s.kind === "literal" && s.value === t.value;
-    case "brand":
-      return s.kind === "brand" && s.name === t.name;
     case "struct": {
       if (s.kind !== "struct") return false;
       return t.fields.every((field) => {
@@ -486,8 +593,6 @@ export function isAssignable(
         s.items.length === t.items.length &&
         s.items.every((item, index) => isAssignable(item, t.items[index]!, env, subst))
       );
-    case "option":
-      return s.kind === "option" && isAssignable(s.item, t.item, env, subst);
     case "result":
       return (
         s.kind === "result" &&
@@ -502,15 +607,15 @@ export function isAssignable(
       return (
         s.kind === "effect" &&
         isAssignable(s.success, t.success, env, subst) &&
-        [...s.errors.keys()].every((error) => t.errors.has(error)) &&
-        [...s.requirements.keys()].every((requirement) => coversRequirement(t.requirements, requirement))
+        setIncluded(s.errors, t.errors) &&
+        setIncluded(s.requirements, t.requirements, true)
       );
     case "stream":
       return (
         s.kind === "stream" &&
         isAssignable(s.item, t.item, env, subst) &&
-        [...s.errors.keys()].every((error) => t.errors.has(error)) &&
-        [...s.requirements.keys()].every((requirement) => coversRequirement(t.requirements, requirement))
+        setIncluded(s.errors, t.errors) &&
+        setIncluded(s.requirements, t.requirements, true)
       );
     case "fiber":
       return (
@@ -536,6 +641,15 @@ export function isAssignable(
     default:
       return false;
   }
+}
+
+/**
+ * `source` fits `target` when every entry is listed, or when the target has a
+ * set variable, which a call solves as the union of what flows into it.
+ */
+function setIncluded(source: Provenance, target: Provenance, requirements = false): boolean {
+  if (hasSetVariable(target)) return true;
+  return [...source.keys()].every((key) => (requirements ? coversRequirement(target, key) : target.has(key)));
 }
 
 /**
@@ -591,7 +705,7 @@ export function showType(type: MType): string {
     case "result":
       return `(Result ${showType(type.success)} ${showType(type.failure)})`;
     case "effect":
-      return `(Effect ${showType(type.success)} [${[...type.errors.keys()].join(" ")}] [${[...type.requirements.keys()].join(" ")}])`;
+      return `(Effect ${showType(type.success)} [${showSetKeys(type.errors)}] [${showSetKeys(type.requirements)}])`;
     case "function":
       return `(-> ${[...type.params, type.result].map(showType).join(" ")})`;
     case "ref":
@@ -599,7 +713,7 @@ export function showType(type: MType): string {
     case "fiber":
       return `(Fiber ${showType(type.success)} [${[...type.errors.keys()].join(" ")}])`;
     case "stream":
-      return `(Stream ${showType(type.item)} [${[...type.errors.keys()].join(" ")}] [${[...type.requirements.keys()].join(" ")}])`;
+      return `(Stream ${showType(type.item)} [${showSetKeys(type.errors)}] [${showSetKeys(type.requirements)}])`;
     case "layer":
       return `(Layer [${type.layer.provides.join(" ")}] [${[...type.layer.errors.keys()].join(" ")}] [${[...type.layer.requirements.keys()].join(" ")}])`;
     case "var":

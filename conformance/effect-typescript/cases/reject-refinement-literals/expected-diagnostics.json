@@ -1,0 +1,35 @@
+{
+  "typescript": "accepts",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/refinement",
+      "message": "-5 must be at least 0, as (Int :min 0) requires.",
+      "line": 8,
+      "column": 16,
+      "endLine": 8,
+      "endColumn": 18
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/refinement",
+      "message": "0 must be at least 1, as (Int :min 1 :max 200) requires.",
+      "line": 11,
+      "column": 36,
+      "endLine": 11,
+      "endColumn": 37
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/refinement",
+      "message": "\"bean-1\" must match the pattern ^[A-Z]+-[0-9]+$, as (String :pattern \"^[A-Z]+-[0-9]+$\") requires.",
+      "line": 14,
+      "column": 33,
+      "endLine": 14,
+      "endColumn": 41
+    }
+  ]
+}

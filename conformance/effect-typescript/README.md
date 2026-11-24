@@ -56,6 +56,9 @@ For each positive case the runner checks that:
 | `config-and-logging` | `Config` reads with defaults, `ConfigError`, `log` |
 | `pure-domain-logic` | `Schema.Class`, typed constants, pure functions, value-level `match`, collection and string functions |
 | `checker-parity-records` | RFC 0019 E1–E3: qualified constructors through local bindings and collection joins; copying optional fields, `Some`, `None`, and plain field values |
+| `effect-polymorphic-wrapper` | RFC 0023: a generic operation with error-set and requirement-set variables, called with an effectful and an effect-free callback, by lambda and by name; instantiated types asserted in the harness |
+| `effect-polymorphic-union` | RFC 0023: a wrapper over two callbacks with `[e1 e2]` and `[r1 r2]` |
+| `named-callbacks` | RFC 0019 section 10: a declared operation passed to `for-each` |
 | `stream-pipeline` | Stream construction, effectful mapping with concurrency, `take`, folds, `runForEach`, functions returning streams |
 | `operational-effects` | The shared operational-effects fixture (`../operational-effects`) |
 | `cluster-account` | A `cluster.lisp` entity: persisted, deduplicated commands, a guarded withdrawal, a forked query, and an unkeyed control that applies a retried deposit twice on `TestRunner` |

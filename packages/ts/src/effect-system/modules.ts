@@ -8,11 +8,39 @@ import type { Scheme } from "../type/types.js";
 import { head } from "../surface/effect.js";
 import type { ModuleGraph, ResolvedModule } from "../modules/graph.js";
 import { moduleOutputName, type LinkedEffectProgram, type LinkedEffectModule } from "../modules/link.js";
+import { type LibraryAdapter } from "../modules/linker.js";
 import { moduleImportPath, type EffectModuleOutputOptions } from "../modules/output-path.js";
 import { effectLibraries, isEffectLibrary } from "./libraries.js";
 import { linkEffectSystem, type EffectExtension, type EffectSystemGraph } from "./link.js";
 
 export const hasEffectLibraries = (graph: ModuleGraph): boolean => graph.modules.some(m => isEffectLibrary(m.id));
+
+/** Effect TypeScript implementation of the output-neutral LibraryAdapter interface. */
+export const effectLibraryAdapter: LibraryAdapter<string> = {
+  id: "effect-typescript",
+  format: "typescript",
+  matches: hasEffectLibraries,
+  link: (graph, context) => {
+    const linked = linkEffectLibraryModules(
+      graph,
+      context.environments,
+      context.outputPath ? { outputPath: context.outputPath } : {},
+    );
+    return {
+      ok: linked.ok,
+      entry: linked.entry,
+      format: "typescript",
+      modules: linked.modules.map(m => ({
+        moduleId: m.moduleId,
+        fileName: m.fileName,
+        format: "typescript",
+        output: m.code,
+      })),
+      system: linked.system,
+      diagnostics: linked.diagnostics,
+    };
+  },
+};
 
 export function moduleExtensions(module: ResolvedModule): readonly EffectExtension[] {
   return [...new Set([...module.dependencies, ...[...module.imports.values(), ...module.namespaceImports].map(b => b.identity.moduleId)])]

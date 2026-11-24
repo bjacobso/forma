@@ -5,6 +5,7 @@ import { KKeyword, mapKey, quotedDatum } from "../evaluator/types.js";
  */
 
 import { runtimeTypeDefinitions } from "../surface/core.js";
+import { ArityError } from "../diagnostic/errors.js";
 import type { SExpr } from "../reader/index.js";
 import type { SourceTrace } from "../evaluator/source-trace.js";
 import { sourceTraceOf } from "../evaluator/source-trace.js";
@@ -320,6 +321,14 @@ function compileList(
 
       case "quasiquote":
         compileQuasiquote(items, chunk, scope, globals, builtins, context, trace, compileSExpr);
+        return;
+
+      case "__float":
+        if (items.length !== 2) {
+          throw new ArityError({ name: "__float", expected: 1, got: items.length - 1, ...trace });
+        }
+        compileSExpr(items[1]!, chunk, scope, globals, builtins, context, false, false);
+        emit(chunk, Op.TO_FLOAT, trace);
         return;
     }
 

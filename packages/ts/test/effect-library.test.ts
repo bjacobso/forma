@@ -146,4 +146,66 @@ describe("forma:effect do/bind/pure", () => {
     expect(at(Mechanics.elaborateEffectProgram(source))).toEqual(expected);
     expect(at(checkModule(source))[0]).toEqual(expected[0]);
   });
+
+  // Stage 3: forma:effect lowers class, layer, and catch in every Effect program, preserving author spans.
+  test("class and layer declarations lower without an import", () => {
+    const source = [
+      "(class Item {:name String})",
+      "(service Items (: make (-> String (Effect Item))))",
+      "(layer ItemsLive :provides Items",
+      "  (define prefix \"item:\")",
+      "  (define make [name] (succeed (Item {:name (str prefix name)}))))",
+      "(: run (-> String (Effect Item)))",
+      "(define run [name] (provide (Items.make name) ItemsLive))",
+      "",
+    ].join("\n");
+    const generated = Mechanics.generateEffectProgram(source);
+    expect(generated.diagnostics).toEqual([]);
+    expect(generated.code).toContain("class Item extends Schema.Class");
+    expect(generated.code).toContain("ItemsLive");
+    expect(checkModule(source).diagnostics).toEqual([]);
+  });
+
+  test("empty (layer) reports surface/invalid-form at the form", () => {
+    const source = "(service S (: run (Effect Int)))\n(layer)\n";
+    expect(located(source, Mechanics.elaborateEffectProgram(source))).toEqual([["surface/invalid-form", "(layer)"]]);
+  });
+
+  test.each([
+    ["(layer 123 S)", "surface/invalid-form", "123"],
+    ["(layer L)", "surface/invalid-form", "(layer L)"],
+    ["(layer L :provides)", "surface/invalid-form", ":provides"],
+    ["(layer L :provides S (define))", "surface/invalid-form", "(define)"],
+    ["(layer L :provides S (bad 1))", "surface/invalid-form", "(bad 1)"],
+  ])("malformed %s reports %s at %s", (form, code, text) => {
+    const source = `(service S (: run (Effect Int)))\n${form}\n`;
+    expect(located(source, Mechanics.elaborateEffectProgram(source))).toEqual([[code, text]]);
+    expect(located(source, checkModule(source))[0]).toEqual([code, text]);
+  });
+
+  test("catch shorthand err lowers identically to (_ err)", () => {
+    const program = (pattern: string) => [
+      "(error Boom {:detail String})",
+      "(service S (: run (Effect String [Boom] [])))",
+      "(: safe (Effect String [] [S.run]))",
+      `(define safe (catch S.run ${pattern} (succeed (get err :detail))))`,
+      "",
+    ].join("\n");
+    const explicit = Mechanics.generateEffectProgram(program("(_ err)"));
+    const shorthand = Mechanics.generateEffectProgram(program("err"));
+    expect(explicit.diagnostics).toEqual([]);
+    expect(shorthand.diagnostics).toEqual([]);
+    expect(shorthand.code).toBe(explicit.code);
+  });
+
+  test.each([
+    ["(catch S.run (Boom e))", "artifact/effect-body", "(catch S.run (Boom e))"],
+    ["(catch S.run Boom (succeed \"x\"))", "artifact/effect-body", "Boom"],
+    ["(catch S.run (Boom) (succeed \"x\"))", "artifact/effect-body", "(Boom)"],
+    ["(catch S.run 42 (succeed \"x\"))", "artifact/effect-body", "42"],
+  ])("malformed %s reports %s at %s", (body, code, text) => {
+    const source = `(error Boom {:detail String})\n(service S (: run (Effect String [Boom] [])))\n(: safe (Effect String [] [S.run]))\n(define safe ${body})\n`;
+    expect(located(source, Mechanics.elaborateEffectProgram(source))).toEqual([[code, text]]);
+    expect(located(source, checkModule(source))[0]).toEqual([code, text]);
+  });
 });

@@ -151,17 +151,19 @@ export function elaborateEffectForms(
   let exprs: readonly SExpr[];
   const surfaceDiagnostic = (error: unknown, expression?: SExpr): EffectProgramDiagnostic => {
     const loc = error instanceof Error && "loc" in error ? error.loc as SExpr["loc"] : expression?.loc;
-    const code = error instanceof InferenceError && typeof error.details["code"] === "string" ? error.details["code"] : "mechanics/ontology-operation";
-    const advice = error instanceof InferenceError ? {
-      ...(error.help ? {help:error.help} : {}),
-      ...(error.fix ? {fix:error.fix.map(edit => ({newText:edit.newText, span:locate(edit.span.startOffset, edit.span.endOffset)}))} : {}),
-      ...(Object.keys(error.details).length > 1 ? {details:Object.fromEntries(Object.entries(error.details).filter(([key]) => key !== "code"))} : {}),
-    } : {};
+    const details = error instanceof InferenceError ? error.details : error instanceof Error && "details" in error && typeof error.details === "object" && error.details !== null ? error.details as Record<string, unknown> : undefined;
+    const code = typeof details?.["code"] === "string" ? details["code"] : "mechanics/ontology-operation";
+    const help = error instanceof InferenceError ? error.help : error instanceof Error && "help" in error && typeof error.help === "string" ? error.help : undefined;
+    const advice = {
+      ...(help ? {help} : {}),
+      ...(error instanceof InferenceError && error.fix ? {fix:error.fix.map(edit => ({newText:edit.newText, span:locate(edit.span.startOffset, edit.span.endOffset)}))} : {}),
+      ...(error instanceof InferenceError && Object.keys(error.details).length > 1 ? {details:Object.fromEntries(Object.entries(error.details).filter(([key]) => key !== "code"))} : {}),
+    };
     return {phase:"project",severity:"error",code,message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {}), ...advice};
   };
   const surfaceErrors: EffectProgramDiagnostic[] = [];
   for (const expression of authored) {
-    if (expression._tag !== "List" || expression.items[0]?._tag !== "Sym" || !["type", "class", "error", "service"].includes(expression.items[0].name)) continue;
+    if (expression._tag !== "List" || expression.items[0]?._tag !== "Sym" || !["type", "class", "error", "service", "layer"].includes(expression.items[0].name)) continue;
     try { normalizeEffectProgram([expression]); }
     catch (error) { surfaceErrors.push(surfaceDiagnostic(error, expression)); }
   }

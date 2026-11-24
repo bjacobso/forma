@@ -19,7 +19,7 @@ describe("experimental embedding facade", () => {
     const lang = await createLanguage({
       ...(module ? { modules: [{ id: "details.lisp", source: `${source}\n(export Details valid?)` }] }
         : { preludes: [{ id: "details.lisp", source }] }),
-      ...(mode.endsWith("capability") ? { capabilities: { ping: { arity: 0, handler: () => ({ ok: true as const, value: true }) } } } : {}),
+      ...(mode.endsWith("capability") ? { capabilities: { ping: { arity: 0, typeScheme: { kind: "function", params: [], result: { kind: "type", name: "Bool" } }, handler: () => ({ ok: true as const, value: true }) } } } : {}),
     });
     try {
       const source = '(: request Details) (define request {}) [(= request.vendor None) (valid? {:vendor "Acme"})]';
@@ -92,7 +92,7 @@ describe("experimental embedding facade", () => {
 
   it("checks without evaluating and refuses to run a failed check", async () => {
     const handler = vi.fn(() => ({ ok: true as const, value: 1 }));
-    const lang = await createLanguage({ capabilities: { touch: { arity: 0, handler } } });
+    const lang = await createLanguage({ capabilities: { touch: { arity: 0, typeScheme: { kind: "function", params: [], result: { kind: "type", name: "Int" } }, handler } } });
     try {
       expect(await lang.check("(touch)")).toMatchObject({ ok: true });
       const source = '(touch) (if true 1 "bad")';
@@ -112,7 +112,7 @@ describe("experimental embedding facade", () => {
 
   it("drives repeated capabilities with plain JSON arguments and results", async () => {
     const handler = vi.fn(async (value: unknown) => ({ ok: true as const, value: value as LanguageJson }));
-    const lang = await createLanguage({ capabilities: { echo: { arity: 1, handler } } });
+    const lang = await createLanguage({ capabilities: { echo: { arity: 1, untyped: true, handler } } });
     try {
       expect(await lang.run('(echo (echo {"name" "Ada" "scores" [1 2]}))')).toMatchObject({ ok: true, value: { name: "Ada", scores: [1, 2] } });
       expect(handler).toHaveBeenCalledTimes(2);
@@ -129,8 +129,8 @@ describe("experimental embedding facade", () => {
 
   it("reports explicit handler failures and catches thrown exceptions", async () => {
     const lang = await createLanguage({ capabilities: {
-      denied: { arity: 0, handler: () => ({ ok: false, diagnostics: [{ code: "host-effect/failed", severity: "error", message: "Vendor unavailable" }] }) },
-      broken: { arity: 0, handler: () => { throw new Error("private implementation detail"); } },
+      denied: { arity: 0, typeScheme: { kind: "function", params: [], result: { kind: "type", name: "Int" } }, handler: () => ({ ok: false, diagnostics: [{ code: "host-effect/failed", severity: "error", message: "Vendor unavailable" }] }) },
+      broken: { arity: 0, typeScheme: { kind: "function", params: [], result: { kind: "type", name: "Int" } }, handler: () => { throw new Error("private implementation detail"); } },
     } });
     try {
       expect(await lang.run("(denied)")).toMatchObject({ ok: false, diagnostics: [expect.objectContaining({ code: "host-effect/failed", message: "Vendor unavailable" })] });
@@ -146,7 +146,7 @@ describe("experimental embedding facade", () => {
   });
 
   it("aborts a suspended evaluation without waiting for its handler", async () => {
-    const lang = await createLanguage({ capabilities: { wait: { arity: 0, handler: () => new Promise(() => {}) } } });
+    const lang = await createLanguage({ capabilities: { wait: { arity: 0, typeScheme: { kind: "function", params: [], result: { kind: "type", name: "Int" } }, handler: () => new Promise(() => {}) } } });
     try {
       expect(await lang.run("(wait)", { limits: { timeoutMs: 10 } })).toMatchObject({ ok: false, diagnostics: [{ code: "evaluation/aborted" }] });
       expect(await lang.run("42")).toMatchObject({ ok: true, value: 42 });
@@ -155,8 +155,8 @@ describe("experimental embedding facade", () => {
 
   it("rejects invalid host values as diagnostics", async () => {
     const lang = await createLanguage({ capabilities: {
-      invalid: { arity: 0, handler: () => ({ ok: true, value: NaN }) },
-      empty: { arity: 0, handler: () => ({ ok: false, diagnostics: [] }) },
+      invalid: { arity: 0, untyped: true, handler: () => ({ ok: true, value: NaN }) },
+      empty: { arity: 0, untyped: true, handler: () => ({ ok: false, diagnostics: [] }) },
     } });
     try {
       for (const source of ["(invalid)", "(empty)"]) {
@@ -186,6 +186,87 @@ describe("experimental embedding facade", () => {
       expect(await lang.run("answer")).toMatchObject({ ok: true, value: 42, type: { display: "Int" } });
       expect(lang.describe()).toMatchObject({ forms: [{ name: "item", slots: [expect.objectContaining({ name: "value" }), expect.objectContaining({ name: "doc" })] }] });
       expect(await lang.emit('(item "first" "value")', { sourceId: "main.lisp" })).toMatchObject({ ok: true, artifacts: [{ content: { declarationCount: 1, declarations: [expect.objectContaining({ payload: { kind: "Item", id: "first", value: "value" } })] } }] });
+    } finally { await lang.close(); }
+  });
+
+  it("requires typed capability schemes by default unless untyped: true is explicitly set", async () => {
+    await expect(createLanguage({
+      capabilities: {
+        // @ts-expect-error runtime guard for JS callers omitting typeScheme and untyped
+        unsafe: { arity: 1, handler: () => ({ ok: true, value: null }) },
+      },
+    })).rejects.toThrow(TypeError);
+  });
+
+  it("returns a capability manifest from check with SHA-256 digests and reachable signatures", async () => {
+    const lang = await createLanguage({
+      preludes: [{ id: "helpers.lisp", source: "(define answer 42)" }],
+      capabilities: {
+        readFile: {
+          arity: 1,
+          purity: "read",
+          typeScheme: { kind: "function", params: [{ kind: "type", name: "String" }], result: { kind: "type", name: "String" } },
+          handler: () => ({ ok: true, value: "contents" }),
+        },
+        writeFile: {
+          arity: 2,
+          purity: "write",
+          typeScheme: { kind: "function", params: [{ kind: "type", name: "String" }, { kind: "type", name: "String" }], result: { kind: "type", name: "Bool" } },
+          handler: () => ({ ok: true, value: true }),
+        },
+      },
+    });
+    try {
+      const checked = await lang.check('(readFile "notes.txt")', { sourceId: "app.lisp" });
+      expect(checked.ok).toBe(true);
+      expect(checked.manifest.preludes).toEqual([{ sourceId: "helpers.lisp", sha256: expect.stringMatching(/^[0-9a-f]{64}$/) }]);
+      expect(checked.manifest.sources).toEqual([{ sourceId: "app.lisp", sha256: expect.stringMatching(/^[0-9a-f]{64}$/) }]);
+      expect(checked.manifest.capabilities).toEqual([
+        { name: "readFile", effect: "readFile", signature: "(-> String String)", purity: "read" },
+      ]);
+    } finally { await lang.close(); }
+  });
+
+  it("invokes onHostCall with exact spans and denies without running the handler", async () => {
+    const handler = vi.fn((path: unknown) => ({ ok: true as const, value: `read:${String(path)}` }));
+    const seen: { name: string; args: readonly unknown[]; startLine: number | undefined; startColumn: number | undefined; snippet: string | undefined }[] = [];
+    const source = '(let [a (readFile "allowed.txt")]\n  (readFile "secret.txt"))';
+    const lang = await createLanguage({
+      capabilities: {
+        readFile: {
+          arity: 1,
+          typeScheme: { kind: "function", params: [{ kind: "type", name: "String" }], result: { kind: "type", name: "String" } },
+          handler,
+        },
+      },
+      onHostCall: ({ call, args, span }) => {
+        seen.push({
+          name: call.name,
+          args,
+          startLine: span?.startLine,
+          startColumn: span?.startColumn,
+          snippet: span ? source.slice(span.startOffset, span.endOffset) : undefined,
+        });
+        if (args[0] === "secret.txt") return { action: "deny", reason: "Forbidden path" };
+        return { action: "allow" };
+      },
+    });
+    try {
+      const result = await lang.run(source, { sourceId: "policy.lisp" });
+      expect(result.ok).toBe(false);
+      expect(result.diagnostics).toMatchObject([
+        {
+          code: "capability/denied",
+          message: "Forbidden path",
+          span: { sourceId: "policy.lisp", startLine: 2, startColumn: 3 },
+        },
+      ]);
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(handler).toHaveBeenCalledWith("allowed.txt");
+      expect(seen).toEqual([
+        { name: "readFile", args: ["allowed.txt"], startLine: 1, startColumn: 9, snippet: '(readFile "allowed.txt")' },
+        { name: "readFile", args: ["secret.txt"], startLine: 2, startColumn: 3, snippet: '(readFile "secret.txt")' },
+      ]);
     } finally { await lang.close(); }
   });
 });

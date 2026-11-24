@@ -10,7 +10,7 @@ export function getReferences(
   document: TextDocument,
   params: ReferenceParams,
 ): Location[] {
-  return workspace.analysis
+  return workspace
     .references(document.uri, positionToOffset(document, params.position), {
       includeDeclaration: params.context.includeDeclaration,
     })

@@ -1,9 +1,10 @@
 # Cold-agent benchmark
 
-Twenty tasks measure whether a cold coding agent can author checked Forma.
+Twenty-two tasks measure whether a cold coding agent can author checked Forma.
 The `core` tier preserves the original twelve tasks: four kernel programs,
 four library consumers, and four module-defined forms (including vendor risk).
-The `hard` tier adds eight integration tasks targeting 20–60 minutes each.
+The `hard` tier adds ten integration tasks targeting 20–60 minutes each,
+including typed-hole repair and `forma describe`-driven domain authoring.
 The original real-agent baseline passed 12/12 core tasks with a median of zero
 repairs (gpt-6.1-sol, revision bb59a29); compare core separately when measuring
 progress. Hard-task times are design estimates, not measured agent baselines;
@@ -83,16 +84,19 @@ on successful calls do not enter this failure summary. The runner prints its
 top ten codes after the results tables. Core pass rates and repair-round rules
 remain unchanged.
 
-Print a saved run or compare models/revisions side by side:
+Print a saved run or compare models/revisions/arms side by side:
 
 ```sh
 node bench/agent/report.mjs results.json
 node bench/agent/report.mjs model-a-results.json model-b-results.json
+node bench/agent/report.mjs cli-results.json mcp-results.json
 ```
 
-Columns use the input filenames as labels. The report prints core and hard pass
-rates and median repair rounds, the union of each run's top ten diagnostic codes
-(with calls, tasks, and attributed rounds), and each task's failing-code sequence.
+Columns use the input filenames as labels. The report prints run mode (`cli` vs
+`mcp`), core and hard pass rates and median repair rounds, CLI and MCP call
+totals plus per-tool MCP usage when any run uses `--mcp`, the union of each
+run's top ten diagnostic codes (with calls, tasks, and attributed rounds), and
+each task's failing-code sequence.
 `+` joins codes on the same call; `->` separates failed calls; `(no code)` marks
 a failure without a captured diagnostic. A task absent from a run shows `—`;
 an absent tier has `n/a` metrics. Older result files without telemetry show
@@ -101,17 +105,53 @@ those files; rerun with the updated wrapper to collect them. Compare equivalent
 task selections and inspect attributed rounds to identify diagnostics associated
 with repeated entry-file repairs.
 
+## MCP arm and Gate 3 telemetry sweep
+
+Pass `--mcp` to `bench/agent/run.mjs` to expose `forma mcp` to the benchmarked
+agent through a logged stdio JSON-RPC proxy (`bin/forma-mcp`) and a generated
+`.mcp.json` in the task directory. The harness sets `FORMA_MCP_CONFIG` (path to
+`.mcp.json`) and `FORMA_MCP_SERVER` (path to `bin/forma-mcp`), and routes
+`forma mcp` through the same logged proxy.
+
+Every MCP `tools/call` request is appended to `.forma-calls.jsonl` alongside
+wrapped CLI calls with `transport: "mcp"`, `tool`, `args`, `argv`, `ok`,
+`exitCode`, `durationMs`, `diagnosticCodes`, and `messages`. MCP `check` and
+`run` calls targeting `context.entry` participate in the same repair-round and
+`firstPassingCall` metrics as CLI `check`/`run` calls, while `cliCallCount` and
+`mcpCallCount` (plus per-tool `mcpTools`) remain separately observable.
+
+To run the Gate 3 CLI vs. MCP telemetry sweep on the same model, revision, and
+task slice (never calling any model API from this repository; supply your own
+authenticated agent command):
+
+```sh
+# 1. CLI-only baseline arm
+node bench/agent/run.mjs --tier hard \
+  --agent-cmd 'claude -p "$(cat brief.md)"' \
+  --out gate3-cli.json
+
+# 2. MCP-enabled arm (pass --mcp-config "$FORMA_MCP_CONFIG" or point your agent at $FORMA_MCP_SERVER)
+node bench/agent/run.mjs --tier hard --mcp \
+  --agent-cmd 'claude -p --mcp-config "$FORMA_MCP_CONFIG" "$(cat brief.md)"' \
+  --out gate3-mcp.json
+
+# 3. Compare pass rates, median repair rounds, CLI/MCP call counts, and diagnostics side by side
+node bench/agent/report.mjs gate3-cli.json gate3-mcp.json
+```
+
 ## Hard tasks
 
 | Task | Stress case |
 | --- | --- |
 | approval-network | Five modules, imported policy helpers in hooks, multiple located errors, expiry and money boundaries |
+| described-domain | `forma describe` vocabulary discovery on an undocumented form library, multi-error `:check` hooks, IR projection |
 | optional-enrollment | Nested imported Option records, omitted fields, inline arguments, fallback and aggregation |
 | tagged-ledger | Closed literal unions and tagged events through polymorphic helpers and map/filter/reduce |
 | effect-checkout | Errors and service requirements, recovery, generated Effect execution against test services |
 | embedded-gate | Isolated facade modules, typed capability, no effects before checking, step limits and lifecycle |
 | repair-dispatch | Seven seeded module, visibility, arity, name, Option, numeric, and boundary faults |
 | numeric-invoice | Integer per-line tax rounding, negative credits, Float telemetry and smoothing |
+| typed-hole-repair | Seeded repair-protocol diagnostics (`defn`, unbound typo, field typo) and typed `?holes` across modules |
 | workflow-planner | Stable topological scheduling, validation precedence, projected workflow IR |
 
 These tasks draw on the expense-rules and vendor-risk trials, the domain and
@@ -144,12 +184,13 @@ Create `tasks/<id>/` with:
 then runs the real harness with a simulated agent that fails once, copies a
 reference, and checks it. It verifies both acceptance and telemetry. Update
 its explicit task/kind/tier counts when intentionally extending the suite.
-All twenty empty submissions, references, and simulated agents are validated.
+All twenty-two empty submissions, references, and simulated agents are validated.
 Reference checks use at most two worker processes to bound validation time.
 The simulator uses the legacy file commands for core and a human check followed
 by a file check for hard, pinning both telemetry paths. Harness
-unit tests pin option parsing, repair-count semantics, human stderr capture,
-diagnostic attribution, and two-file report output. This infrastructure
+unit tests pin option parsing (including `--mcp`), repair-count semantics, human
+stderr capture, live MCP stdio proxy logging, diagnostic attribution, and
+two-file CLI vs. MCP report output. This infrastructure
 does not change Forma semantics and does not rewrite surface goldens.
 
 ## Latency tracking

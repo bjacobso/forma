@@ -451,6 +451,15 @@ describe("language-host shared ABI", () => {
             { kind: "int", value: 2 },
             { kind: "int", value: 3 },
           ],
+          span: {
+            sourceId: "session",
+            startOffset: 12,
+            endOffset: 26,
+            startLine: 1,
+            startColumn: 13,
+            endLine: 1,
+            endColumn: 27,
+          },
         },
       });
       if (first.status !== "host-call") throw new Error("expected first host call");
@@ -470,6 +479,15 @@ describe("language-host shared ABI", () => {
           effect: "test/label",
           name: "host-label",
           args: [{ kind: "int", value: 5 }],
+          span: {
+            sourceId: "session",
+            startOffset: 0,
+            endOffset: 27,
+            startLine: 1,
+            startColumn: 1,
+            endLine: 1,
+            endColumn: 28,
+          },
         },
       });
       if (second.status !== "host-call") throw new Error("expected second host call");
@@ -734,7 +752,7 @@ describe("language-host shared ABI", () => {
     }
   });
 
-  it("retains evaluator-only TS closures and invokes them through callValue", async () => {
+  it("rejects bare unquote directly in the VM without tree fallback", async () => {
     const { sessionId } = await tsHost.openSession({ defaultStepLimit: 500 });
     try {
       const evaluated = await tsHost.evaluateInSession({
@@ -743,29 +761,13 @@ describe("language-host shared ABI", () => {
         retainValues: "functions",
       });
       expect(evaluated).toMatchObject({
-        status: "completed",
-        result: {
-          value: { kind: "function", valueRef: expect.any(String) },
-          diagnostics: [],
-        },
-      });
-      if (evaluated.status !== "completed") throw new Error("expected completed result");
-      const retained = evaluated.result.value;
-      if (retained.kind !== "function") throw new Error("expected function ref");
-
-      await expect(
-        tsHost.callValue({
-          sessionId,
-          valueRef: retained.valueRef,
-          args: [{ kind: "int", value: 8 }],
-        }),
-      ).resolves.toMatchObject({
-        status: "completed",
-        result: {
-          value: { kind: "int", value: 10 },
-          printed: "10",
-          diagnostics: [],
-        },
+        status: "failed",
+        diagnostics: [
+          expect.objectContaining({
+            code: "KernelTypeError",
+            message: "unquote outside of quasiquote",
+          }),
+        ],
       });
     } finally {
       await tsHost.closeSession({ sessionId });

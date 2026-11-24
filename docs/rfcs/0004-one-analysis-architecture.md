@@ -2,8 +2,9 @@
 
 | | |
 | --- | --- |
-| Status | Accepted; stages 1–4 implemented, stages 5–8 proposed; decision 2 superseded (the OCaml engine was removed) |
+| Status | Accepted; stages 1–4 implemented, stage 4b (LSP file-module resolution) and T5 stages 2–3 queued, stages 5–8 proposed; decision 2 superseded (the OCaml engine was removed) |
 | Created | 2026-10-07 |
+| Updated | 2026-11-24 |
 | Scope | Engine roles, language services, the TypeScript compiler's internal structure |
 | Direction | Language services live in one TypeScript analysis workspace; TypeScript is the only engine |
 
@@ -151,8 +152,10 @@ queries   parse(id)            lossless tree and errors; never fails
 | 1 | `@formalang/ts/analysis`: a prelude-aware workspace of memoized language-service queries | Implemented |
 | 2 | Language server on the workspace; OCaml bridge and bundled artifact removed; rename, document symbols, semantic tokens, and slot completion added | Implemented |
 | 3 | Remove the `elaboration/` and `form/` frameworks, the registry type-provider bridge, and unused reader combinators | Implemented |
-| 4 | `Diagnostic` and `Span` in `diagnostic/`; symbol indexing reuses unchanged documents and prelude expansion | Implemented |
-| 5 | Per-form memoization of expansion, lowering, and inference with early cutoff | Proposed |
+| 4 | `Diagnostic` and `Span` in `diagnostic/`; symbol indexing reuses unchanged documents and prelude expansion; `DocumentAnalysis` moved off raw HM `TypeEnv` (`T5` stage 1) and env-substitution caching (`A6b`) landed | Implemented |
+| 4b | LSP `FormaWorkspace` resolves file-module `import` graphs, `forma:*` libraries, and `forma.json`/`forma.lock` packages with unsaved-file overlays and cross-file diagnostics/definitions | Accepted (queued) |
+| 4c | Checker boundary convergence (`docs/proposals/one-checker.md` stages 2–3): cross-pass contract parity and shared primitive/literal/brand/Option data-type relation between HM and mechanics | Accepted (queued) |
+| 5 | Per-form SCC memoization of expansion, lowering, and inference with early cutoff (`docs/proposals/memoization.md`) | Designed; queued after 4b |
 | 6 | Spans and origins on syntax nodes; remove the provenance `WeakMap`s and the global node-id counter | Proposed |
 | 7 | IR defined with Effect Schema; one combinator table; mechanics checker over the typed IR | Proposed |
 | 8 | Union-find inference with levels producing a typed core tree | Proposed |

@@ -3,7 +3,10 @@ export { compileProgram, GlobalRegistry, BuiltinRegistry, type CompileResult } f
 export {
   runChunk,
   runChunkWithStats,
+  currentBuiltinCallLoc,
+  VMExecutionControlScope,
   type VMClosureData,
+  type VMExecutionControl,
   type VMOptions,
   type VMRunResult,
   getVMClosure,

@@ -30,6 +30,15 @@ import {
 } from "./infer-state.js";
 import { Scheme, mono } from "./types.js";
 import { reportHoles } from "./holes.js";
+import {
+  buildComponentCacheKey,
+  captureCachedSccEntry,
+  collectComponentNodes,
+  getActiveSccMemoSession,
+  isClosedEnv,
+  isDocumentEligibleForSccMemo,
+  replayCachedSccEntry,
+} from "./scc-memo.js";
 
 // ---------------------------------------------------------------------------
 // Binding groups
@@ -131,6 +140,14 @@ export const inferProgram = (
       const ctx = yield* InferContext;
       let env: TypeEnv = new Map(initialEnv ?? []);
       let lastType: Type = tNil;
+      // Closed successful components are reused only inside an analysis workspace,
+      // for documents without holes, declarations, descriptors or macros.
+      const session = getActiveSccMemoSession();
+      const memo = session !== undefined &&
+        isDocumentEligibleForSccMemo(exprs, rawExprs) && isClosedEnv(env) &&
+        (yield* Ref.get(ctx.pendingConstraints)).length === 0
+        ? session : undefined;
+      if (session !== undefined && memo === undefined) session.cache.recordFallback();
       // A name whose definition does not type is anything to its users.
       const unknownScheme = Effect.map(ctx.freshTVar, (unknown) =>
         unknown._tag === "TVar" ? Scheme([unknown.id], [], unknown) : mono(unknown),
@@ -200,7 +217,38 @@ export const inferProgram = (
             // Split the run of definitions into binding groups so each name is
             // generalized before the definitions that use it are typed.
             const lastDefType = new Map<string, Type>();
+            let envOwned = false;
             for (const component of definitionComponents(defGroup)) {
+              let memoKey: string | null = null;
+              if (memo !== undefined) {
+                memoKey = buildComponentCacheKey(memo.scopeKey, component, env);
+                const cached = memoKey === null ? undefined : memo.cache.get(memoKey);
+                if (cached !== undefined) {
+                  const supply = yield* ctx.supply;
+                  const replay = replayCachedSccEntry(cached, component, supply.type, supply.row, supply.effect);
+                  yield* ctx.reserveSupply(cached.tvarsAllocated, cached.rvarsAllocated, cached.evarsAllocated);
+                  const nodes = collectComponentNodes(component);
+                  yield* Ref.update(ctx.nodeTypes, (types) => {
+                    // The analysis builder is operation-owned; see makeOwnedInferContext.
+                    replay.nodeTypes.forEach((type, index) => {
+                      if (type !== undefined) types.set(nodes[index]!.id, type);
+                    });
+                    return types;
+                  });
+                  if (!envOwned) { env = new Map(env); envOwned = true; }
+                  const mutable = env as Map<string, import("./types.js").Scheme>;
+                  component.forEach((defExpr, index) => {
+                    mutable.set(defExpr.name, replay.schemes[index]!);
+                    lastDefType.set(defExpr.name, replay.defTypes[index]!);
+                  });
+                  memo.cache.recordHit();
+                  continue;
+                }
+                if (memoKey !== null) memo.cache.recordMiss(); else memo.cache.recordFallback();
+              }
+              const supplyBefore = memoKey !== null ? yield* ctx.supply : undefined;
+              const diagnosticsBefore = memoKey !== null ? (yield* Ref.get(ctx.diagnostics)).length : 0;
+              const pendingBeforeComponent = memoKey !== null ? (yield* Ref.get(ctx.pendingConstraints)).length : 0;
               const seedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
               for (const defExpr of component) {
                 if (defExpr.signature) {
@@ -277,7 +325,30 @@ export const inferProgram = (
                 updatedEnv.set(name, yield* unknownScheme);
               }
               env = updatedEnv;
+              envOwned = true;
               for (const inferredDef of inferredDefs) lastDefType.set(inferredDef.name, inferredDef.type);
+
+              if (memo !== undefined && memoKey !== null && supplyBefore !== undefined &&
+                  failedNames.length === 0 && inferredDefs.length === component.length &&
+                  (yield* Ref.get(ctx.pendingConstraints)).length === pendingBeforeComponent &&
+                  (yield* Ref.get(ctx.diagnostics)).length === diagnosticsBefore) {
+                const supplyAfter = yield* ctx.supply;
+                const settled = yield* Ref.get(ctx.subst);
+                const nodeTypes = yield* Ref.get(ctx.nodeTypes);
+                const entry = captureCachedSccEntry({
+                  tStart: supplyBefore.type, tEnd: supplyAfter.type,
+                  rStart: supplyBefore.row, rEnd: supplyAfter.row,
+                  eStart: supplyBefore.effect, eEnd: supplyAfter.effect,
+                  schemes: inferredDefs.map((def) => schemes.get(def.name)!),
+                  defTypes: inferredDefs.map((def) => applyType(settled, def.type)),
+                  nodeTypes: collectComponentNodes(component).map((node) => {
+                    const recorded = nodeTypes.get(node.id);
+                    return recorded === undefined ? undefined : applyType(settled, recorded);
+                  }),
+                });
+                if (entry === null) memo.cache.recordFallback();
+                else { memo.cache.set(memoKey, entry); memo.cache.recordStore(); }
+              }
             }
             const finalType = lastDefType.get(defGroup[defGroup.length - 1]!.name);
             if (finalType) lastType = finalType;

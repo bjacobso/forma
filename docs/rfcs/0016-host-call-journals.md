@@ -2,8 +2,9 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Accepted for stages 2–3 (recording and deterministic replay); stage 1 lossless values implemented |
 | Created | 2026-10-16 |
+| Updated | 2026-11-24 |
 | Scope | Recording host calls and their outcomes, deterministic replay, divergence diagnostics, journal format, lossless value projection |
 | Direction | Every source of nondeterminism in a kernel evaluation is a host call, so recording host-call outcomes is enough to reproduce an evaluation exactly |
 
@@ -273,16 +274,12 @@ OCaml engine was removed.)
    offers replay after an edit. `forma run` gains `--record <file>` and
    `--replay <file>`.
 
-## Decisions still required
+## Resolved defaults (2026-11-24)
 
-- Whether replay should require the header digests to match unless a flag
-  allows a changed program.
-- How a host should treat calls whose arguments include functions, which match
-  by position only.
-- Whether journals should carry the outcomes of `callValue` evaluations
-  started by the host, or only host calls made by Forma.
-- Whether [RFC 0015](./0015-tests-in-forma.md) tests can name a journal
-  fixture, and how such fixtures are re-recorded.
+- **Digest matching:** Replay requires header source/prelude digests to match by default; callers may pass `allowProgramMismatch: true` to replay across edits (emitting a warning and stopping at the first `journal/diverged` call).
+- **Function arguments:** Match by ordinal position only (`{kind: "function", ordinal: n}`) and cannot appear in a recorded outcome.
+- **Scope of entries:** Record Forma-initiated host calls only (including those made inside `callValue` callbacks via the `evaluation` path), not top-level host-to-Forma `callValue` return values.
+- **Remaining open question:** Whether [RFC 0015](./0015-tests-in-forma.md) tests can name a journal fixture, and how such fixtures are re-recorded.
 
 ## Durable workflows are a separate runtime obligation
 

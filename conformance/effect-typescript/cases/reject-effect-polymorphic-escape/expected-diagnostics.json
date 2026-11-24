@@ -1,0 +1,45 @@
+{
+  "typescript": "rejects",
+  "diagnostics": [
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-error",
+      "message": "Operation leaky can fail with the errors of e, but its signature declares no errors.",
+      "line": 7,
+      "column": 21,
+      "endLine": 7,
+      "endColumn": 26
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/undeclared-requirement",
+      "message": "Operation leaky requires the requirements of r, but its signature declares no requirements.",
+      "line": 7,
+      "column": 21,
+      "endLine": 7,
+      "endColumn": 26
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/unbound-set-variable",
+      "message": "Set variable declined appears in the result but in no parameter, so nothing can solve it. Did you mean the error Declined?",
+      "line": 9,
+      "column": 23,
+      "endLine": 9,
+      "endColumn": 49
+    },
+    {
+      "phase": "check",
+      "severity": "error",
+      "code": "mechanics/set-variable-kind",
+      "message": "e is used as both an error set and a requirement set.",
+      "line": 12,
+      "column": 22,
+      "endLine": 12,
+      "endColumn": 40
+    }
+  ]
+}

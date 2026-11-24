@@ -1202,6 +1202,8 @@ function combinatorArgToJson(
       return { kind: "TypeArg", type: type.value, span: spanJson(sourceId, expr) };
     }
     case "lambda": {
+      // A declared operation or signed function may stand where a lambda is expected (RFC 0019, section 10).
+      if (expr._tag === "Sym" && !expr.name.startsWith(":")) return valueExprToCoreJson(sourceId, expr);
       if (expr._tag !== "List" || symName(expr.items[0]) !== "fn" || expr.items[1]?._tag !== "Vector") {
         return report(context, expr, "artifact/effect-body", `${name} expects (fn [params...] effect) here.`);
       }
@@ -1686,9 +1688,19 @@ function typeExprToJson(sourceId: string, expr: SExpr): MechanicsJsonResult {
         if (!errors.ok) return errors;
         const requirements = symbolicSetToJson(sourceId, expr.items[3]!, "requirements");
         if (!requirements.ok) return requirements;
+        const errorSet = splitSetVariables(errors.value as string[]);
+        const requirementSet = splitSetVariables(requirements.value as string[]);
         return {
           ok: true,
-          value: { kind: "Stream", item: item.value, errors: errors.value, requirements: requirements.value, span: spanJson(sourceId, expr) },
+          value: {
+            kind: "Stream",
+            item: item.value,
+            errors: errorSet.names,
+            requirements: requirementSet.names,
+            ...(errorSet.variables.length > 0 ? { errorVariables: errorSet.variables } : {}),
+            ...(requirementSet.variables.length > 0 ? { requirementVariables: requirementSet.variables } : {}),
+            span: spanJson(sourceId, expr),
+          },
         };
       }
       case "Result": {
@@ -1822,7 +1834,9 @@ function effectTypeToJson(
   const requirements = symbolicSetToJson(sourceId, expr.items[3]!, "requirements");
   if (!requirements.ok) return requirements;
 
-  const requirementNames = [...(requirements.value as string[])];
+  const errorSet = splitSetVariables(errors.value as string[]);
+  const requirementSet = splitSetVariables(requirements.value as string[]);
+  const requirementNames = [...requirementSet.names];
   if (operationRequirement && !requirementNames.includes(operationRequirement)) {
     requirementNames.push(operationRequirement);
   }
@@ -1832,11 +1846,28 @@ function effectTypeToJson(
     value: {
       kind: "Effect",
       success: success.value,
-      errors: errors.value,
+      errors: errorSet.names,
       requirements: requirementNames,
+      ...(errorSet.variables.length > 0 ? { errorVariables: errorSet.variables } : {}),
+      ...(requirementSet.variables.length > 0 ? { requirementVariables: requirementSet.variables } : {}),
       span: spanJson(sourceId, expr),
     },
   };
+}
+
+/**
+ * Lowercase symbols in an error or requirement vector are set variables
+ * (RFC 0023). Declared errors and services are capitalized, so the spelling
+ * is unambiguous.
+ */
+function splitSetVariables(entries: readonly string[]): { readonly names: string[]; readonly variables: JsonValue[] } {
+  const names: string[] = [];
+  const variables: JsonValue[] = [];
+  for (const entry of entries) {
+    if (/^[a-z][A-Za-z0-9_]*$/.test(entry)) variables.push({ kind: "Var", name: entry });
+    else names.push(entry);
+  }
+  return { names, variables };
 }
 
 function symbolicSetToJson(sourceId: string, expr: SExpr, label: string): MechanicsJsonResult {

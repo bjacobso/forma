@@ -113,7 +113,7 @@ applies to `String`, `:min-length` and `:max-length` to `String` and `List`, and
 | `(acquire-release acquire (fn [r] release))`, `(scoped eff)` | `Effect.acquireRelease`, `Effect.scoped` |
 | `(ensuring eff finalizer)`, `(add-finalizer eff)` | `Effect.ensuring`, `Effect.addFinalizer` |
 | `(all {:a e1 :b e2} :concurrency :unbounded)`, `(all [e1 e2])` | `Effect.all` over a record or tuple |
-| `(for-each xs (fn [x] eff) :concurrency 4)` | `Effect.forEach` |
+| `(for-each xs (fn [x] eff) :concurrency 4)`, `(for-each xs operation)` | `Effect.forEach` |
 | `(race a b)`, `(fork eff)`, `(join fiber)`, `(interrupt fiber)` | `Effect.race`, `Effect.forkChild`, `Fiber.join`, `Fiber.interrupt` |
 | `(sleep 10)`, `(timeout eff 50)` | `Effect.sleep`, `Effect.timeout` (fails with `TimeoutError`) |
 | `(retry eff :times 3 :schedule (exponential 10))`, `(repeat eff :schedule (spaced 100))` | `Effect.retry`, `Effect.repeat` with `Schedule.exponential`, `spaced`, `fixed`, `recurs`, `jittered` |
@@ -211,13 +211,16 @@ also reject the code generated with the checker bypassed.
 
 - Recursion through brands, classes, and errors, `Schema.TaggedClass`, and
   schema transformations.
-- Generic (type-parameterised) operations and functions.
+- Generic functions, and generic service members. Operations may be generic,
+  with type variables and error-set and requirement-set variables
+  (`(Effect a [e AuditDown] [r Audit.log])`), but a set variable cannot yet be
+  discharged with `without` ([RFC 0023](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-effect-polymorphism.md)).
 - A qualified constructor application such as `(Event.Placed {...})` has its
   tagged type only where that type is expected; bound with `let` or
   concatenated with other constructors, it widens to a record. An `(Option T)`
-  value can't be assigned to an optional record field, `for-each` requires a
-  literal `fn`, and literals are not checked against refinements at compile
-  time. [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes fixes.
+  value can't be assigned to an optional record field. Literals are checked
+  against refinements where they are written, but computed values are not.
+  [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes fixes.
 - Schedule composition beyond `jittered` (`both`, `either`, `while`/`until`
   predicates), `Queue`, `PubSub`, `Deferred`, `Semaphore`, and scoped forks.
 - JavaScript interop such as `Effect.promise`. Host code supplies that

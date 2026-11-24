@@ -143,3 +143,146 @@ test("report compares two generated result files side by side", async () => {
     assert.match(output, /sample\s+name -> \(no code\)\s+name -> \(no code\)/);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test("--mcp option parsing defaults to false and enables MCP mode", () => {
+  assert.equal(parseOptions(["--agent-cmd", "true"]).mcp, false);
+  assert.equal(parseOptions(["--agent-cmd", "true", "--mcp"]).mcp, true);
+  assert.equal(parseOptions(["--mcp", "--agent-cmd", "true", "--tier", "hard"]).mcp, true);
+});
+
+test("MCP tool calls participate in repair rounds, diagnostics, and separate transport counts", async () => {
+  const { failingCalls, mcpMetrics, summarizeDiagnostics } = await import("./harness.mjs");
+  const calls = [
+    { transport: "mcp", tool: "describe", args: { path: "lib.lisp" }, argv: ["mcp", "describe", "lib.lisp"], exitCode: 0, ok: true, diagnosticCodes: [], messages: [] },
+    { transport: "mcp", tool: "check", args: { path: "main.lisp" }, argv: ["mcp", "check", "main.lisp"], exitCode: 1, ok: false, diagnosticCodes: ["typecheck/hole"], messages: ["Hole ?todo needs Int"] },
+    { transport: "mcp", tool: "explain", args: { code: "typecheck/hole" }, argv: ["mcp", "explain", "typecheck/hole"], exitCode: 0, ok: true, diagnosticCodes: [], messages: [] },
+    { argv: ["check", "main.lisp"], exitCode: 1, diagnosticCodes: ["typecheck/unbound-symbol"], messages: ["Unknown name"] },
+    { transport: "mcp", tool: "run", args: { path: "main.lisp" }, argv: ["mcp", "run", "main.lisp"], exitCode: 0, ok: true, diagnosticCodes: [], messages: [] },
+  ];
+  assert.deepEqual(metrics(calls, "/tmp/task", "main.lisp"), { repairRounds: 2, cliCallCount: 1, firstPassingCall: 5 });
+  assert.deepEqual(mcpMetrics(calls), { mcpCallCount: 4, mcpTools: { check: 1, describe: 1, explain: 1, run: 1 } });
+  assert.deepEqual(failingCalls(calls), [
+    { argv: ["mcp", "check", "main.lisp"], codes: ["typecheck/hole"], messages: ["Hole ?todo needs Int"], transport: "mcp", tool: "check" },
+    { argv: ["check", "main.lisp"], codes: ["typecheck/unbound-symbol"], messages: ["Unknown name"] },
+  ]);
+  assert.deepEqual(summarizeDiagnostics([{ calls, dir: "/tmp/task", entry: "main.lisp" }]), {
+    "typecheck/hole": { calls: 1, tasks: 1, repairRoundsAttributed: 1 },
+    "typecheck/unbound-symbol": { calls: 1, tasks: 1, repairRoundsAttributed: 1 },
+  });
+});
+
+test("--mcp mode exposes .mcp.json and records live MCP tool calls alongside CLI calls", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { mkdtemp, readFile, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { root } = await import("./harness.mjs");
+  const scratch = await mkdtemp(join(tmpdir(), "forma-mcp-run-test-"));
+  let report;
+  try {
+    const clientScript = join(scratch, "mcp-agent.mjs");
+    await writeFile(clientScript, `
+import assert from 'node:assert/strict';
+import { spawn, spawnSync } from 'node:child_process';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+const dir = process.env.FORMA_TASK_DIR;
+const config = JSON.parse(readFileSync(process.env.FORMA_MCP_CONFIG, 'utf8'));
+assert.equal(config.mcpServers.forma.command, process.env.FORMA_MCP_SERVER);
+writeFileSync(join(dir, 'main.lisp'), '(: answer Int)\\n(define answer ?todo)\\n');
+
+const server = spawn(config.mcpServers.forma.command, config.mcpServers.forma.args, { cwd: dir, stdio: ['pipe', 'pipe', 'pipe'] });
+let buf = '';
+const waiters = new Map();
+server.stdout.on('data', chunk => {
+  buf += chunk.toString('utf8');
+  let nl;
+  while ((nl = buf.indexOf('\\n')) !== -1) {
+    const line = buf.slice(0, nl).trim();
+    buf = buf.slice(nl + 1);
+    if (!line) continue;
+    const msg = JSON.parse(line);
+    if (msg.id !== undefined && waiters.has(msg.id)) {
+      waiters.get(msg.id)(msg);
+      waiters.delete(msg.id);
+    }
+  }
+});
+let nextId = 1;
+const rpc = (method, params) => new Promise(resolve => {
+  const id = nextId++;
+  waiters.set(id, resolve);
+  server.stdin.write(JSON.stringify({ jsonrpc: '2.0', id, method, params }) + '\\n');
+});
+await rpc('initialize', { protocolVersion: '2024-11-05', capabilities: {}, clientInfo: { name: 'test', version: '1.0.0' } });
+server.stdin.write(JSON.stringify({ jsonrpc: '2.0', method: 'notifications/initialized' }) + '\\n');
+const described = await rpc('tools/call', { name: 'describe', arguments: { path: 'bench/agent/fixtures/described-domain/quota-lib.lisp' } });
+assert.equal(described.result.structuredContent.ok, true);
+const holeCheck = await rpc('tools/call', { name: 'check', arguments: { path: 'main.lisp' } });
+assert.equal(holeCheck.result.structuredContent.ok, false);
+writeFileSync(join(dir, 'main.lisp'), '(: answer Int)\\n(define answer 42)\\n');
+const passed = await rpc('tools/call', { name: 'check', arguments: { path: 'main.lisp' } });
+assert.equal(passed.result.structuredContent.ok, true);
+server.stdin.end();
+await new Promise(resolve => server.on('close', resolve));
+const cliRes = spawnSync('forma', ['check', 'main.lisp'], { cwd: dir, encoding: 'utf8' });
+assert.equal(cliRes.status, 0);
+`);
+    const output = join(scratch, "mcp-results.json");
+    const cmd = `'${process.execPath.replaceAll("'", "'\\''")}' '${clientScript.replaceAll("'", "'\\''")}'`;
+    execFileSync(process.execPath, [join(root, "bench/agent/run.mjs"), "--mcp", "--tasks", "described-domain", "--agent-cmd", cmd, "--out", output], { stdio: "pipe", timeout: 60_000 });
+    report = JSON.parse(await readFile(output, "utf8"));
+    assert.equal(report.mode, "mcp");
+    assert.equal(report.mcp.calls, 3);
+    assert.deepEqual(report.mcp.tools, { check: 2, describe: 1 });
+    const [task] = report.results;
+    assert.equal(task.agent.exitCode, 0);
+    assert.equal(task.cliCallCount, 1);
+    assert.equal(task.mcpCallCount, 3);
+    assert.deepEqual(task.mcpTools, { check: 2, describe: 1 });
+    assert.equal(task.repairRounds, 1);
+    assert.equal(task.firstPassingCall, 3);
+    assert.deepEqual(task.failingCalls.map(c => c.codes), [["typecheck/hole"]]);
+    assert.equal(report.diagnostics["typecheck/hole"].repairRoundsAttributed, 1);
+  } finally {
+    for (const result of report?.results ?? []) await rm(result.taskDir, { recursive: true, force: true });
+    await rm(scratch, { recursive: true, force: true });
+  }
+});
+
+test("report compares CLI and MCP runs side by side", async () => {
+  const { execFileSync } = await import("node:child_process");
+  const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const { root } = await import("./harness.mjs");
+  const dir = await mkdtemp(join(tmpdir(), "forma-report-mcp-test-"));
+  try {
+    const cliFile = join(dir, "cli.json");
+    const mcpFile = join(dir, "mcp.json");
+    await writeFile(cliFile, JSON.stringify({
+      mode: "cli",
+      results: [{ id: "typed-hole-repair", tier: "hard", pass: true, repairRounds: 3, cliCallCount: 6,
+        failingCalls: [{ argv: ["check", "main.lisp"], codes: ["typecheck/hole"], messages: ["Hole ?net needs Int"] }] }],
+      diagnostics: { "typecheck/hole": { calls: 2, tasks: 1, repairRoundsAttributed: 2 } },
+    }));
+    await writeFile(mcpFile, JSON.stringify({
+      mode: "mcp",
+      mcp: { calls: 4, tools: { check: 2, describe: 1, run: 1 } },
+      results: [{ id: "typed-hole-repair", tier: "hard", pass: true, repairRounds: 1, cliCallCount: 0, mcpCallCount: 4,
+        mcpTools: { check: 2, describe: 1, run: 1 },
+        failingCalls: [{ argv: ["mcp", "check", "main.lisp"], codes: ["typecheck/hole"], messages: ["Hole ?net needs Int"], transport: "mcp", tool: "check" }] }],
+      diagnostics: { "typecheck/hole": { calls: 1, tasks: 1, repairRoundsAttributed: 1 } },
+    }));
+    const output = execFileSync(process.execPath, [join(root, "bench/agent/report.mjs"), cliFile, mcpFile], { encoding: "utf8" });
+    assert.match(output, /mode\s+cli\s+mcp/);
+    assert.match(output, /hard pass rate\s+100% \(1\/1\)\s+100% \(1\/1\)/);
+    assert.match(output, /hard median repair rounds\s+3\s+1/);
+    assert.match(output, /CLI calls \(total\)\s+6\s+0/);
+    assert.match(output, /MCP calls \(total\)\s+0\s+4/);
+    assert.match(output, /mcp:check\s+—\s+2/);
+    assert.match(output, /mcp:describe\s+—\s+1/);
+    assert.match(output, /mcp:run\s+—\s+1/);
+  } finally { await rm(dir, { recursive: true, force: true }); }
+});

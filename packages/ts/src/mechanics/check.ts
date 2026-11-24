@@ -27,10 +27,14 @@ import {
   emptySet,
   isAssignable,
   isRecord,
+  isSetVariable,
   join,
+  refinementViolation,
   requirementService,
   resolve,
   setOf,
+  setVariableName,
+  showRefinement,
   showType,
   stringItems,
   tBool,
@@ -43,6 +47,7 @@ import {
   typeFromJson,
   union,
   unionSets,
+  hasSetVariable,
   widenDeep,
   widenLiteral,
   containsLiterals,
@@ -361,12 +366,15 @@ class Checker {
           this.services.set(name, methods);
           break;
         }
-        case "EffectDef":
+        case "EffectDef": {
+          // Lowercase names in an operation signature are type variables, quantified over the whole signature.
+          const operationEnv: TypeEnvironment = { ...this.env, variables: new Map() };
           this.operations.set(name, {
-            params: this.paramsFromJson(payload["params"]),
-            result: this.effectTypeFromJson(payload["effect"]),
+            params: this.paramsFromJson(payload["params"], operationEnv),
+            result: this.effectTypeFromJson(payload["effect"], operationEnv),
           });
           break;
+        }
         case "FunctionDef":
           this.functions.set(name, {
             params: this.paramsFromJson(payload["params"],this.functionEnv),
@@ -591,15 +599,15 @@ class Checker {
     );
   }
 
-  private effectTypeFromJson(value: JsonValue | undefined): EffectType {
-    const type = typeFromJson(value, this.env);
+  private effectTypeFromJson(value: JsonValue | undefined, env: TypeEnvironment = this.env): EffectType {
+    const type = typeFromJson(value, env);
     return type.kind === "effect" ? type : effectOf(tUnknown);
   }
 
   /** Every name used in a type must be a schema, an error, or a built-in. */
-  private checkTypeReferences(value: JsonValue | undefined, span: JsonValue | undefined, variables = false): void {
+  private checkTypeReferences(value: JsonValue | undefined, span: JsonValue | undefined, variables = false, setVariables = false): void {
     if (Array.isArray(value)) {
-      for (const item of value) this.checkTypeReferences(item, span, variables);
+      for (const item of value) this.checkTypeReferences(item, span, variables, setVariables);
       return;
     }
     if (!isRecord(value)) return;
@@ -616,6 +624,14 @@ class Checker {
         this.error(location, "mechanics/unknown-type", `Unknown type ${name}. Declare it with type or error.`);
       }
     }
+    if ((value["kind"] === "Effect" || value["kind"] === "Stream") && !setVariables) {
+      for (const name of setVariableNames(value["errorVariables"])) {
+        this.error(location, "mechanics/unknown-error", `Unknown error type ${name} in an Effect type. Declare it with error.`);
+      }
+      for (const name of setVariableNames(value["requirementVariables"])) {
+        this.error(location, "mechanics/unknown-requirement", `Unknown requirement ${name}. Requirements name a service, a Service.method capability, or Scope.`);
+      }
+    }
     if (value["kind"] === "Effect") {
       for (const error of stringItems(value["errors"])) {
         if (!this.errorNames.has(error)) {
@@ -627,7 +643,63 @@ class Checker {
       }
     }
     for (const [key, item] of Object.entries(value)) {
-      if (key !== "span") this.checkTypeReferences(item, location, variables);
+      if (key !== "span") this.checkTypeReferences(item, location, variables, setVariables);
+    }
+  }
+
+  /** RFC 0023 section 2: a set variable has one kind, and its result must be solvable from a parameter. */
+  private checkSetVariables(payload: JsonRecord, span: JsonValue | undefined): void {
+    const kinds = new Map<string, "error" | "requirement">();
+    const typeVariables = new Set<string>();
+    const inParameters = new Set<string>();
+    const inResult: { readonly name: string; readonly span: JsonValue | undefined }[] = [];
+    const reportedKinds = new Set<string>();
+    const visit = (node: JsonValue | undefined, region: "parameter" | "result", callbackParameters: boolean): void => {
+      if (Array.isArray(node)) {
+        node.forEach((item) => visit(item, region, callbackParameters));
+        return;
+      }
+      if (!isRecord(node)) return;
+      const location = node["span"] ?? span;
+      const name = node["name"];
+      if (node["kind"] === "Ref" && typeof name === "string" && /^[a-z][A-Za-z0-9_]*$/.test(name) && !this.schemas.has(name) && !this.errorNames.has(name) && !this.classes.has(name)) {
+        typeVariables.add(name);
+        if (kinds.has(name)) this.error(location, "mechanics/set-variable-kind", `${name} is used both as a set variable and as a type variable.`);
+      }
+      if (node["kind"] === "Effect" || node["kind"] === "Stream") {
+        for (const [list, kind] of [[node["errorVariables"], "error"], [node["requirementVariables"], "requirement"]] as const) {
+          for (const variable of setVariableNames(list)) {
+            const known = kinds.get(variable);
+            if (typeVariables.has(variable)) {
+              this.error(location, "mechanics/set-variable-kind", `${variable} is used as both a set variable and a type variable.`);
+            } else if (known !== undefined && known !== kind) {
+              if (!reportedKinds.has(variable)) this.error(location, "mechanics/set-variable-kind", `${variable} is used as both an error set and a requirement set.`);
+              reportedKinds.add(variable);
+            } else kinds.set(variable, kind);
+            if (region === "parameter") {
+              inParameters.add(variable);
+              if (callbackParameters) this.error(location, "mechanics/set-variable-position", `Set variable ${variable} cannot appear in the parameters of a callback; that would make the callback higher-rank.`);
+            } else inResult.push({ name: variable, span: location });
+          }
+        }
+      }
+      if (node["kind"] === "Function") {
+        visit(node["params"], region, true);
+        visit(node["result"], region, callbackParameters);
+        return;
+      }
+      for (const [key, item] of Object.entries(node)) if (key !== "span") visit(item, region, callbackParameters);
+    };
+    visit(payload["params"], "parameter", false);
+    visit(payload["effect"], "result", false);
+    const reported = new Set<string>();
+    for (const variable of inResult) {
+      if (inParameters.has(variable.name) || reported.has(variable.name)) continue;
+      reported.add(variable.name);
+      const error = [...this.errorNames].find((candidate) => candidate.toLowerCase() === variable.name.toLowerCase());
+      const service = [...this.services.keys()].find((candidate) => candidate.toLowerCase() === variable.name.toLowerCase());
+      const hint = error ? ` Did you mean the error ${error}?` : service ? ` Did you mean the service ${service}?` : "";
+      this.error(variable.span, "mechanics/unbound-set-variable", `Set variable ${variable.name} appears in the result but in no parameter, so nothing can solve it.${hint}`);
     }
   }
 
@@ -664,8 +736,9 @@ class Checker {
 
   private checkOperation(payload: JsonRecord, span: JsonValue | undefined): void {
     const name = String(payload["name"]);
-    this.checkTypeReferences(payload["params"], span);
-    this.checkTypeReferences(payload["effect"], span);
+    this.checkTypeReferences(payload["params"], span, true, true);
+    this.checkTypeReferences(payload["effect"], span, true, true);
+    this.checkSetVariables(payload, span);
     const signature = this.operations.get(name);
     if (!signature) return;
     const scope: Scope = new Map(signature.params.map((param) => [param.name, param.type]));
@@ -682,22 +755,23 @@ class Checker {
     body: JsonValue | undefined,
     fallbackSpan: JsonValue | undefined,
   ): void {
+    const show = (key: string): string => (isSetVariable(key) ? setVariableName(key) : key);
     for (const [error, span] of actual.errors) {
-      if (declared.errors.has(error) || !this.errorNames.has(error)) continue;
-      const declaredErrors = [...declared.errors.keys()];
+      if (declared.errors.has(error) || (!isSetVariable(error) && !this.errorNames.has(error))) continue;
+      const declaredErrors = [...declared.errors.keys()].map(show);
       this.error(
         span ?? spanOf(body) ?? fallbackSpan,
         "mechanics/undeclared-error",
-        `${capitalize(owner)} can fail with ${error}, but its signature declares ${declaredErrors.length === 0 ? "no errors" : `only [${declaredErrors.join(" ")}]`}.`,
+        `${capitalize(owner)} can fail with ${isSetVariable(error) ? `the errors of ${show(error)}` : error}, but its signature declares ${declaredErrors.length === 0 ? "no errors" : `only [${declaredErrors.join(" ")}]`}.`,
       );
     }
     for (const [requirement, span] of actual.requirements) {
       if (coversRequirement(declared.requirements, requirement)) continue;
-      const declaredRequirements = [...declared.requirements.keys()];
+      const declaredRequirements = [...declared.requirements.keys()].map(show);
       this.error(
         span ?? spanOf(body) ?? fallbackSpan,
         "mechanics/undeclared-requirement",
-        `${capitalize(owner)} requires ${requirement}, but its signature declares ${declaredRequirements.length === 0 ? "no requirements" : `only [${declaredRequirements.join(" ")}]`}.`,
+        `${capitalize(owner)} requires ${isSetVariable(requirement) ? `the requirements of ${show(requirement)}` : requirement}, but its signature declares ${declaredRequirements.length === 0 ? "no requirements" : `only [${declaredRequirements.join(" ")}]`}.`,
       );
     }
   }
@@ -988,7 +1062,7 @@ class Checker {
         return type;
       }
       case "OperationCall": {
-        const type = this.operationCall(String(node["operation"]), arrayItems(node["args"]), scope, span);
+        const type = this.operationCall(String(node["operation"]), arrayItems(node["args"]), scope, span, expected);
         if (this.layerContext && type.requirements.size > 0) this.layerContext.contextCalls.add(node);
         this.expectSuccess(type, expected, node);
         return type;
@@ -1195,18 +1269,69 @@ class Checker {
     );
   }
 
-  private operationCall(name: string, args: readonly JsonValue[], scope: Scope, span: JsonValue | undefined): EffectType {
+  private operationCall(name: string, args: readonly JsonValue[], scope: Scope, span: JsonValue | undefined, expected?: MType): EffectType {
     const signature = this.operations.get(name);
     if (!signature) {
       this.error(span, "mechanics/unknown-operation", `Unknown operation ${name}.`);
       return effectOf(tUnknown);
     }
+    if (isGenericSignature(signature)) return this.genericOperationCall(name, signature, args, scope, span, expected);
     this.arguments(name, signature.params, args, scope, span);
     return effectOf(
       signature.result.success,
       reprovenance(signature.result.errors, span),
       reprovenance(signature.result.requirements, span),
     );
+  }
+
+  /**
+   * A call to an operation with type or set variables (RFC 0023, section 3).
+   * Every variable is renamed fresh, arguments solve them, and the result is
+   * closed again: a set variable becomes the union of what flowed into it.
+   */
+  private genericOperationCall(
+    name: string,
+    signature: CallableSignature & { readonly result: EffectType },
+    args: readonly JsonValue[],
+    scope: Scope,
+    span: JsonValue | undefined,
+    expected: MType | undefined,
+  ): EffectType {
+    const fresh = new Map<number, MType>();
+    const rename = (type: MType): MType => mapVariables(type, (variable) => freshVariable(variable, fresh));
+    const params = signature.params.map((param) => rename(param.type));
+    const result = rename(signature.result) as EffectType;
+    if (params.length !== args.length) {
+      this.error(span, "mechanics/arity", `${name} expects ${params.length} argument(s), received ${args.length}.`);
+    }
+    const subst: Substitution = new Map();
+    const solver = new CallSolver(subst);
+    const isLambda = (arg: JsonValue): boolean => isRecord(arg) && arg["kind"] === "List" && calleeName(arrayItems(arg["items"])[0]) === "fn";
+    const rank = (arg: JsonValue, index: number): number =>
+      isLambda(arg) ? 2 : params[index] && hasVariables(params[index]!) && isRecord(arg) && (arg["kind"] === "Vector" || arg["kind"] === "Literal") ? 1 : 0;
+    const ordered = args.map((arg, index) => ({ arg, index })).sort((a, b) => rank(a.arg, a.index) - rank(b.arg, b.index));
+    for (const { arg, index } of ordered) {
+      const param = params[index];
+      if (!param) {
+        this.value(arg, scope);
+        continue;
+      }
+      const wanted = applySubstitution(param, subst);
+      if (!hasVariables(wanted) && !containsSetVariables(wanted)) {
+        this.value(arg, scope, wanted);
+        continue;
+      }
+      const lambda = isLambda(arg);
+      // A lambda takes its parameter types from the arguments solved so far; what is still open stays unknown.
+      const actual = retargetEffects(this.value(arg, scope, lambda ? mapVariables(wanted, () => tUnknown) : undefined), isRecord(arg) && arg["kind"] === "Var" ? spanOf(arg) : undefined);
+      if (!isAssignable(actual, wanted, this.env, subst) && !lambda) {
+        this.error(spanOf(arg) ?? span, "mechanics/type-mismatch", `${name} expects ${showType(applySubstitution(wanted, subst))}, received ${showType(actual)}.`);
+      }
+      solver.match(applySubstitution(wanted, subst), actual);
+    }
+    const success = applySubstitution(result.success, subst);
+    if (expected && hasVariables(success)) isAssignable(success, expected, this.env, subst);
+    return solver.apply(result, span, tNever, subst);
   }
 
   private arguments(
@@ -1508,12 +1633,22 @@ class Checker {
         }
         const expectedArray = expected ? resolve(expected, this.env) : undefined;
         const body = this.lambda(args[1], [item ?? tUnknown], scope, expectedArray?.kind === "array" ? expectedArray.item : undefined);
-        return effectOf({ kind: "array", item: body?.success ?? tUnknown }, body?.errors, body?.requirements);
+        const signature = combinatorSignatures.get("for-each")!;
+        const solver = new CallSolver(new Map());
+        solver.match(signature.params[0]!, { kind: "array", item: item ?? tUnknown });
+        solver.match(signature.params[1]!, { kind: "function", params: [item ?? tUnknown], result: body ?? effectOf(tUnknown) });
+        return solver.apply(signature.result, span, tUnknown);
       }
       case "race": {
         const left = this.effect(args[0], scope, expected);
         const right = this.effect(args[1], scope, expected);
-        return this.joinEffects([left, right]);
+        // The two sides may succeed differently; the winner's type is their join.
+        const joined = this.joinEffects([left, right]).success;
+        const signature = combinatorSignatures.get("race")!;
+        const solver = new CallSolver(new Map());
+        solver.match(signature.params[0]!, { ...left, success: joined });
+        solver.match(signature.params[1]!, { ...right, success: joined });
+        return solver.apply(signature.result, span, tUnknown);
       }
       case "fork": {
         const expectedFiber = expected ? resolve(expected, this.env) : undefined;
@@ -1539,7 +1674,10 @@ class Checker {
       case "timeout": {
         const body = this.effect(args[0], scope, expected);
         this.duration(args[1], scope);
-        return effectOf(body.success, unionSets(body.errors, setOf(["TimeoutError"], span)), body.requirements);
+        const signature = combinatorSignatures.get("timeout")!;
+        const solver = new CallSolver(new Map());
+        solver.match(signature.params[0]!, body);
+        return solver.apply(signature.result, span, tUnknown);
       }
       case "retry":
       case "repeat": {
@@ -1551,7 +1689,10 @@ class Checker {
         }
         if (times !== undefined) this.value(times, scope, tInt);
         if (schedule !== undefined) this.value(schedule, scope, { kind: "prim", name: "Schedule" });
-        return body;
+        const signature = combinatorSignatures.get(name)!;
+        const solver = new CallSolver(new Map());
+        solver.match(signature.params[0]!, body);
+        return solver.apply(signature.result, span, tUnknown);
       }
       case "map-error": {
         const body = this.effect(args[0], scope, expected);
@@ -1669,7 +1810,31 @@ class Checker {
     return typeFromJson(node["type"], this.env);
   }
 
+  /**
+   * A declared operation or signed function passed where an effect lambda is
+   * expected (RFC 0019, section 10): its arity and parameter types must fit,
+   * and its effect carries its errors and requirements to the use.
+   */
+  private namedCallback(node: JsonRecord, params: readonly MType[], scope: Scope): EffectType | undefined {
+    const span = node["span"];
+    const type = this.value(node, scope);
+    if (type.kind === "unknown") return undefined;
+    const callback = resolve(type, this.env);
+    const expected = `(-> ${[...params.map(showType), "(Effect ...)"].join(" ")})`;
+    const result = callback.kind === "function" ? resolve(callback.result, this.env) : undefined;
+    if (callback.kind !== "function" || result?.kind !== "effect") {
+      this.error(span, "mechanics/type-mismatch", `Expected a function ${expected}, but this is ${showType(type)}.`);
+      return undefined;
+    }
+    if (callback.params.length !== params.length || !callback.params.every((param, index) => isAssignable(params[index]!, param, this.env))) {
+      this.error(span, "mechanics/type-mismatch", `Expected a function ${expected}, but this is ${showType(type)}.`);
+      return undefined;
+    }
+    return effectOf(result.success, reprovenance(result.errors, span), reprovenance(result.requirements, span));
+  }
+
   private lambda(node: JsonValue | undefined, params: readonly MType[], scope: Scope, expected?: MType): EffectType | undefined {
+    if (isRecord(node) && node["kind"] === "Var") return this.namedCallback(node, params, scope);
     if (!isRecord(node) || node["kind"] !== "Lambda") return undefined;
     const names = stringItems(node["params"]);
     this.checkParamNames(node["params"], "This fn", node["span"]);
@@ -1724,6 +1889,7 @@ class Checker {
     if (expected && isRecord(node) && isLiteralSyntax(node) && containsLiterals(expected, this.env)) {
       this.info.literalTargets.set(node, expected);
     }
+    if (expected && isRecord(node) && node["kind"] === "Literal") this.checkRefinedLiteral(node, expected);
     const optional = options.allowOption ? resolve(type, this.env) : undefined;
     const checked = optional?.kind === "option" && expected && !isAssignable(type, expected, this.env) ? optional.item : type;
     if (expected && !(options.allowEffect && type.kind === "effect") && !isAssignable(checked, expected, this.env)) {
@@ -1742,6 +1908,19 @@ class Checker {
       return tUnknown;
     }
     return type;
+  }
+
+  /** A literal checked against a refined type is held to its refinements where the author wrote it (RFC 0019, section 11). */
+  private checkRefinedLiteral(node: JsonRecord, expected: MType): void {
+    const value = node["value"];
+    if (typeof value !== "number" && typeof value !== "string") return;
+    let target = resolve(expected, this.env);
+    while (target.kind === "brand") target = resolve(target.base, this.env);
+    if (target.kind !== "prim" || !target.refine) return;
+    const problem = refinementViolation(target.refine, value);
+    if (problem) {
+      this.error(node["span"], "mechanics/refinement", `${JSON.stringify(value)} ${problem}, as ${showRefinement(target)} requires.`);
+    }
   }
 
   private valueInner(node: JsonValue | undefined, scope: Scope, expected: MType | undefined): MType {
@@ -1836,7 +2015,10 @@ class Checker {
     const operation = this.operations.get(name);
     if (operation) {
       const value = this.declarations.some(d => isRecord(d.payload) && d.payload["kind"] === "EffectDef" && d.payload["name"] === name && d.payload["value"] === true);
-      return value ? operation.result : { kind: "function", params: operation.params.map((param) => param.type), result: operation.result };
+      // A generic operation named as a value gets fresh variables, as at a call.
+      const fresh = new Map<number, MType>();
+      const rename = (type: MType): MType => (isGenericSignature(operation) ? mapVariables(type, (variable) => freshVariable(variable, fresh)) : type);
+      return value ? operation.result : { kind: "function", params: operation.params.map((param) => rename(param.type)), result: rename(operation.result) };
     }
     if (this.layerPayloads.has(name)) {
       const layer = this.layerInfo(name, span);
@@ -2403,7 +2585,8 @@ class Checker {
     names.forEach((name, index) => {
       lambdaScope = extend(lambdaScope, name, target.params[index] ?? tUnknown);
     });
-    const resultExpected = target.result.kind === "var" || target.result.kind === "unknown" ? undefined : target.result;
+    const openEffect = (target.result.kind === "effect" || target.result.kind === "stream") && (hasVariables(target.result) || containsSetVariables(target.result));
+    const resultExpected = target.result.kind === "var" || target.result.kind === "unknown" || openEffect ? undefined : target.result;
     const result = this.value(body, lambdaScope, resultExpected, { allowEffect: resultExpected === undefined });
     // A body that missed its expected result was reported above; don't report the fn too.
     return { kind: "function", params: target.params, result: resultExpected ?? result };
@@ -2949,10 +3132,190 @@ function overlaps(left: MType, right: MType, env: TypeEnvironment): boolean {
   return isAssignable(l, r, env) || isAssignable(r, l, env) || isAssignable(widenLiteral(l), widenLiteral(r), env);
 }
 
+function setVariableNames(variables: JsonValue | undefined): readonly string[] {
+  return arrayItems(variables).flatMap((item) => (isRecord(item) && typeof item["name"] === "string" ? [item["name"]] : []));
+}
+
+/** Whether a type mentions an error-set or requirement-set variable, in an effect or a callback's result. */
+function containsSetVariables(type: MType): boolean {
+  switch (type.kind) {
+    case "effect":
+    case "stream":
+      return hasSetVariable(type.errors) || hasSetVariable(type.requirements) || containsSetVariables(type.kind === "effect" ? type.success : type.item);
+    case "function":
+      return type.params.some(containsSetVariables) || containsSetVariables(type.result);
+    case "array":
+    case "option":
+    case "ref":
+      return containsSetVariables(type.item);
+    case "tuple":
+      return type.items.some(containsSetVariables);
+    case "union":
+      return type.members.some(containsSetVariables);
+    default:
+      return false;
+  }
+}
+
+function isGenericSignature(signature: CallableSignature & { readonly result: EffectType }): boolean {
+  return signature.params.some((param) => hasVariables(param.type) || containsSetVariables(param.type)) || hasVariables(signature.result) || containsSetVariables(signature.result);
+}
+
+/** Rewrites every type variable of a type, descending through effects, structs and callbacks. */
+function mapVariables(type: MType, f: (variable: MType & { readonly kind: "var" }) => MType): MType {
+  const go = (item: MType): MType => {
+    switch (item.kind) {
+      case "var":
+        return f(item);
+      case "array":
+        return { kind: "array", item: go(item.item) };
+      case "option":
+        return { kind: "option", item: go(item.item) };
+      case "ref":
+        return { kind: "ref", item: go(item.item) };
+      case "map":
+        return { ...item, value: go(item.value), ...(item.key ? { key: go(item.key) } : {}) };
+      case "tuple":
+        return { kind: "tuple", items: item.items.map(go) };
+      case "union":
+        return union(item.members.map(go));
+      case "result":
+        return { kind: "result", success: go(item.success), failure: go(item.failure) };
+      case "function":
+        return { kind: "function", params: item.params.map(go), result: go(item.result) };
+      case "effect":
+        return { ...item, success: go(item.success) };
+      case "fiber":
+        return { ...item, success: go(item.success) };
+      case "stream":
+        return { ...item, item: go(item.item) };
+      case "struct":
+        return { kind: "struct", fields: item.fields.map((field) => ({ ...field, type: go(field.type) })) };
+      default:
+        return item;
+    }
+  };
+  return go(type);
+}
+
+function freshVariable(variable: MType & { readonly kind: "var" }, fresh: Map<number, MType>): MType {
+  if (variable.numeric) return variable;
+  let next = fresh.get(variable.id);
+  if (!next) {
+    next = { kind: "var", id: variableCounter++ };
+    fresh.set(variable.id, next);
+  }
+  return next;
+}
+
+/** Points the errors and requirements of a callback at the place that named it. */
+function retargetEffects(type: MType, span: JsonValue | undefined): MType {
+  if (span === undefined) return type;
+  if (type.kind === "effect") return { ...type, errors: reprovenance(type.errors, span), requirements: reprovenance(type.requirements, span) };
+  if (type.kind === "function") return { ...type, result: retargetEffects(type.result, span) };
+  return type;
+}
+
+/**
+ * Solves error-set and requirement-set variables from the arguments of a call
+ * (RFC 0023, section 3): each variable is the union of the entries that flow
+ * into it, minus the names its own set already lists.
+ */
+class CallSolver {
+  private readonly errorBounds = new Map<string, Map<string, JsonValue | undefined>>();
+  private readonly requirementBounds = new Map<string, Map<string, JsonValue | undefined>>();
+
+  constructor(private readonly subst: Substitution) {}
+
+  /** Matches a parameter type against an argument's type, binding type variables and collecting set bounds. */
+  match(param: MType, actual: MType): void {
+    switch (param.kind) {
+      case "var":
+        if (!param.numeric && !this.subst.has(param.id)) this.subst.set(param.id, actual);
+        return;
+      case "array":
+      case "option":
+      case "ref":
+        if (actual.kind === param.kind) this.match(param.item, actual.item);
+        return;
+      case "effect":
+        if (actual.kind !== "effect") return;
+        this.match(param.success, actual.success);
+        this.collect(param.errors, actual.errors, this.errorBounds, false);
+        this.collect(param.requirements, actual.requirements, this.requirementBounds, true);
+        return;
+      case "stream":
+        if (actual.kind !== "stream") return;
+        this.match(param.item, actual.item);
+        this.collect(param.errors, actual.errors, this.errorBounds, false);
+        this.collect(param.requirements, actual.requirements, this.requirementBounds, true);
+        return;
+      case "function":
+        if (actual.kind === "function") this.match(param.result, actual.result);
+        return;
+      default:
+        return;
+    }
+  }
+
+  private collect(declared: Provenance, actual: Provenance, bounds: Map<string, Map<string, JsonValue | undefined>>, requirements: boolean): void {
+    for (const key of declared.keys()) {
+      if (!isSetVariable(key)) continue;
+      const bound = bounds.get(key) ?? new Map<string, JsonValue | undefined>();
+      for (const [entry, span] of actual) {
+        // A name the parameter lists itself is not the variable's to carry.
+        if (!isSetVariable(entry) && (requirements ? coversRequirement(declared, entry) : declared.has(entry))) continue;
+        if (!bound.has(entry)) bound.set(entry, span);
+      }
+      bounds.set(key, bound);
+    }
+  }
+
+  private close(set: Provenance, bounds: Map<string, Map<string, JsonValue | undefined>>, span: JsonValue | undefined): Provenance {
+    const closed = new Map<string, JsonValue | undefined>();
+    for (const [key, original] of set) {
+      if (isSetVariable(key)) {
+        for (const [entry, entrySpan] of bounds.get(key) ?? []) if (!closed.has(entry)) closed.set(entry, entrySpan);
+      } else if (!closed.has(key)) closed.set(key, span ?? original);
+    }
+    return closed;
+  }
+
+  /** The result with every variable replaced by its solution; unsolved type variables become `fallback`. */
+  apply(result: MType, span: JsonValue | undefined, fallback: MType, subst: Substitution = this.subst): EffectType {
+    if (result.kind !== "effect") return effectOf(tUnknown);
+    return effectOf(
+      mapVariables(applySubstitution(result.success, subst), () => fallback),
+      this.close(result.errors, this.errorBounds, span),
+      this.close(result.requirements, this.requirementBounds, span),
+    );
+  }
+}
+
+const combinatorSignatures: ReadonlyMap<string, { readonly params: readonly MType[]; readonly result: MType }> = (() => {
+  const a: MType = { kind: "var", id: -101 };
+  const b: MType = { kind: "var", id: -102 };
+  const set = (...keys: readonly string[]): Provenance => new Map(keys.map((key) => [key, undefined]));
+  const e = "$e";
+  const r = "$r";
+  const passThrough = { params: [effectOf(a, set(e), set(r))], result: effectOf(a, set(e), set(r)) };
+  return new Map<string, { readonly params: readonly MType[]; readonly result: MType }>([
+    ["for-each", { params: [{ kind: "array", item: a }, { kind: "function", params: [a], result: effectOf(b, set(e), set(r)) }], result: effectOf({ kind: "array", item: b }, set(e), set(r)) }],
+    ["timeout", { params: [effectOf(a, set(e), set(r))], result: effectOf(a, set(e, "TimeoutError"), set(r)) }],
+    ["retry", passThrough],
+    ["repeat", passThrough],
+    ["race", { params: [effectOf(a, set("$e1"), set("$r1")), effectOf(a, set("$e2"), set("$r2"))], result: effectOf(a, set("$e1", "$e2"), set("$r1", "$r2")) }],
+  ]);
+})();
+
 function hasVariables(type: MType): boolean {
   switch (type.kind) {
     case "var":
       return true;
+    case "effect":
+      return hasVariables(type.success);
+    case "stream":
+      return hasVariables(type.item);
     case "array":
     case "option":
     case "ref":

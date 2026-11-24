@@ -6,7 +6,13 @@ export async function openLanguage(notify = console.log) {
   const source = await readFile(new URL("prelude.lisp", import.meta.url), "utf8");
   return createLanguage({
     preludes: [{ id: "prelude.lisp", source }],
-    capabilities: { notify: { arity: 1, handler: value => { notify(value); return { ok: true, value }; } } },
+    capabilities: {
+      notify: {
+        arity: 1,
+        typeScheme: { kind: "function", params: [{ kind: "type", name: "String" }], result: { kind: "type", name: "String" } },
+        handler: value => { notify(value); return { ok: true, value }; },
+      },
+    },
   });
 }
 

@@ -10,5 +10,5 @@ export const semanticTokensLegend: SemanticTokensLegend = {
 };
 
 export function getSemanticTokens(workspace: FormaWorkspace, document: TextDocument): SemanticTokens {
-  return { data: [...workspace.analysis.semanticTokens(document.uri).data] };
+  return { data: [...workspace.semanticTokens(document.uri).data] };
 }

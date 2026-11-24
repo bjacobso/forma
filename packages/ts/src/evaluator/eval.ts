@@ -20,7 +20,6 @@ import type { EvaluatorRuntime } from "./eval-types.js";
 import { evalExpr, applyKFn, toKernelError } from "./eval-core.js";
 import { evalInstance } from "./instances.js";
 import {
-  requiresEvaluatorRuntime,
   buildVMGlobals,
   buildRuntimeEnvFromGlobals,
   checkCanonicalPublicSyntax,
@@ -57,12 +56,10 @@ export function makePreludeLayer(
 }
 
 /**
- * Evaluate a source string through the VM-first runtime facade.
+ * Evaluate a source string through the VM runtime facade.
  *
  * The source is parsed, expanded through the shared frontend, then executed by
- * the VM when the expanded program is inside the VM runtime subset. The
- * evaluator remains the fallback only for evaluator-executable runtime forms
- * that the VM still intentionally rejects.
+ * the VM.
  *
  * Requires the `PreludeEnv` service (prelude macros are loaded as the base
  * environment). Use `makePreludeLayer` to create the layer.
@@ -157,15 +154,6 @@ function evaluateExpandedRuntimeExprs(
   options: KernelOptions,
 ): Effect.Effect<KernelResult, KernelError> {
   return Effect.gen(function* () {
-    if (requiresEvaluatorRuntime(exprs)) {
-      // Fallback means "execute an evaluator-only runtime form", not
-      // "accept any unsupported surface syntax as a VM program".
-      return yield* evaluateCompileTimeExprs(exprs, {
-        ...options,
-        env: runtimeEnv,
-      });
-    }
-
     const builtins = options.builtins ?? {};
     const compiled = yield* Effect.try({
       try: () =>
@@ -203,10 +191,10 @@ function evaluateExpandedRuntimeExprs(
 /**
  * Low-level compile-time evaluator.
  *
- * This is the evaluator used for compile-time macro execution and for the
- * small evaluator-only runtime subset (`unquote`, `unquote-splicing`).
+ * Used strictly for compile-time macro and hook evaluation. Ordinary runtime
+ * execution runs exclusively on the VM.
  *
- * Unlike the VM-first runtime facade, this API preserves `__macro` bindings
+ * Unlike the VM runtime facade, this API preserves `__macro` bindings
  * in the returned environment and can execute expressions that still contain
  * macro calls.
  */
