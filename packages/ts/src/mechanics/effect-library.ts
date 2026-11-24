@@ -119,7 +119,9 @@ export function expandEffectLibrary(authored: readonly SExpr[], sourceId: string
 /**
  * Gives the nodes a library template built the location of the authored
  * syntax they stand for, so diagnostics never point into the library: a
- * member list takes its `(: name Type)` form's, everything else the call's.
+ * member list takes its `(: name Type)` or `(define name ...)` form's, a
+ * keyword section spans `:kw val`, a catch-all `(_ err)` takes `err`'s, and
+ * everything else takes the call's.
  */
 function atAuthoredSyntax(expanded: SExpr, call: SExpr): SExpr {
   const members = call._tag === "List" ? call.items.slice(2) : [];
@@ -127,36 +129,84 @@ function atAuthoredSyntax(expanded: SExpr, call: SExpr): SExpr {
     const own = node.loc.sourceId === EFFECT_LIBRARY;
     if (node._tag === "List" || node._tag === "Vector") {
       const items = node.items.map(relocate);
-      const member = node._tag === "List" ? members.find((m) => m._tag === "List" && m.items[1] !== undefined && m.items[1].loc.start === items[0]?.loc.start && m.items[1].loc.sourceId === items[0]?.loc.sourceId) : undefined;
-      return copySourceTrace(node, { ...node, items, loc: member?.loc ?? (own ? call.loc : node.loc) } as SExpr);
+      if (node._tag === "List") {
+        const member = members.find((m) => m._tag === "List" && m.items[1] !== undefined && m.items[1].loc.start === items[0]?.loc.start && m.items[1].loc.sourceId === items[0]?.loc.sourceId);
+        if (member) return copySourceTrace(node, { ...node, items, loc: member.loc } as SExpr);
+        // Keyword section `(:provides S)` or `(:setup [...])` constructed from sibling tokens.
+        if (own && items.length >= 2 && items[0]?._tag === "Sym" && items[0].name.startsWith(":") && node.items[0]?.loc.sourceId !== EFFECT_LIBRARY) {
+          const first = items[0]!.loc;
+          const last = items[items.length - 1]!.loc;
+          return copySourceTrace(node, { ...node, items, loc: { ...first, end: last.end } } as SExpr);
+        }
+        // Catch-all shorthand `(_ err)` constructed from a bare binding symbol `err`.
+        if (own && items.length === 2 && name(items[0]) === "_" && node.items[0]?.loc.sourceId === EFFECT_LIBRARY && node.items[1]?.loc.sourceId !== EFFECT_LIBRARY) {
+          const patLoc = items[1]!.loc;
+          return copySourceTrace(node, { ...node, items: [copySourceTrace(items[0]!, { ...items[0]!, loc: patLoc } as SExpr), items[1]!], loc: patLoc } as SExpr);
+        }
+      }
+      return copySourceTrace(node, { ...node, items, loc: own ? call.loc : node.loc } as SExpr);
     }
     return own ? copySourceTrace(node, { ...node, loc: call.loc } as SExpr) : node;
   };
   return relocate(expanded);
 }
 
-/** Declarations `forma:effect` lowers in every Effect program, imported or not (RFC 0029, stage 2). */
-const declarations = new Set(["service", "error"]);
+/** Declarations `forma:effect` lowers in every Effect program, imported or not (RFC 0029, stages 2-3). */
+const declarations = new Set(["service", "error", "class", "layer"]);
+
+/** Body forms `forma:effect` lowers in every Effect program, imported or not (RFC 0029, stage 3). */
+const bodyForms = new Set(["catch"]);
+
+function rethrowLibraryError(error: unknown, fallbackLoc: SExpr["loc"]): never {
+  const failure = error as { readonly message?: string; readonly loc?: SExpr["loc"]; readonly details?: { readonly code?: unknown } };
+  throw Object.assign(new Error(authorNames(String(failure.message ?? error))), {
+    loc: failure.loc ?? fallbackLoc,
+    details: { code: typeof failure.details?.code === "string" ? failure.details.code : "surface/invalid-form" },
+  });
+}
 
 /**
- * Lowers each top-level `service` and `error` with the library's macros, to
- * the engine's `__service` and `__error`. A malformed declaration throws an
+ * Lowers top-level `service`, `error`, `class`, and `layer` declarations and
+ * nested `catch` forms with the library's macros. A malformed form throws an
  * error carrying the `loc` and `details.code` of the form the macro names.
  */
 export function expandEffectDeclarations(exprs: readonly SExpr[]): readonly SExpr[] {
-  if (!exprs.some((e) => declarations.has(head(e) ?? ""))) return exprs;
-  const { env } = effectLibrary();
-  return exprs.map((e) => {
-    if (!declarations.has(head(e) ?? "")) return e;
-    try {
-      const expanded = expandMacroOnce(e, env, { normalize: false })?.expr;
-      return expanded ? atAuthoredSyntax(expanded, e) : e;
-    } catch (error) {
-      const failure = error as { readonly message?: string; readonly loc?: SExpr["loc"]; readonly details?: { readonly code?: unknown } };
-      throw Object.assign(new Error(authorNames(String(failure.message ?? error))), {
-        loc: failure.loc ?? e.loc,
-        details: { code: typeof failure.details?.code === "string" ? failure.details.code : "surface/invalid-form" },
-      });
+  let cachedEnv: Env | undefined;
+  const getEnv = (): Env => (cachedEnv ??= effectLibrary().env);
+
+  const expandBodyForms = (node: SExpr): SExpr => {
+    if (node._tag === "Vector") {
+      const items = node.items.map(expandBodyForms);
+      return items.every((item, i) => item === node.items[i]) ? node : copySourceTrace(node, { ...node, items });
     }
+    if (node._tag === "Map") {
+      const pairs = node.pairs.map(([k, v]) => [k, expandBodyForms(v)] as const);
+      return pairs.every(([k, v], i) => k === node.pairs[i]![0] && v === node.pairs[i]![1]) ? node : copySourceTrace(node, { ...node, pairs });
+    }
+    if (node._tag !== "List" || node.items.length === 0) return node;
+    const h = head(node);
+    if (h === "quote" || h === "quasiquote") return node;
+    const items = node.items.map(expandBodyForms);
+    const updated: SExpr = items.every((item, i) => item === node.items[i]) ? node : copySourceTrace(node, { ...node, items });
+    if (!h || !bodyForms.has(h)) return updated;
+    try {
+      const expanded = expandMacroOnce(updated, getEnv(), { normalize: false })?.expr;
+      return expanded ? atAuthoredSyntax(expanded, updated) : updated;
+    } catch (error) {
+      rethrowLibraryError(error, updated.loc);
+    }
+  };
+
+  return exprs.map((e) => {
+    let lowered = e;
+    if (declarations.has(head(e) ?? "")) {
+      try {
+        const expanded = expandMacroOnce(e, getEnv(), { normalize: false })?.expr;
+        lowered = expanded ? atAuthoredSyntax(expanded, e) : e;
+      } catch (error) {
+        rethrowLibraryError(error, e.loc);
+      }
+    }
+    return expandBodyForms(lowered);
   });
 }
