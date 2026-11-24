@@ -119,7 +119,8 @@ function open(files: readonly SourceFile[], file: string): { readonly ws: Analys
   if (setup.before && earlier.get(ws) !== setup.before) { ws.setPrelude(EARLIER_FILE, setup.before); earlier.set(ws, setup.before); }
   if (isPrelude(file)) return { ws, text: preludeText(file) };
   const byId = new Map(files.filter(f => !isPrelude(f.id)).map(f => [f.id, f] as const));
-  const deps = dependencies(byId, file);
+  const imported = dependencies(byId, file);
+  const deps = [...(setup.implicit ?? []).filter(id => id !== file && byId.has(id) && !imported.includes(id)), ...imported];
   const current = ws.preludeIds.filter(id => !isPrelude(id));
   if (current.join("\0") !== deps.join("\0")) for (const id of current) ws.removePrelude(id);
   for (const id of deps) ws.setPrelude(id, withoutModuleForms(byId.get(id)!.source));

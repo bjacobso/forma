@@ -39,10 +39,10 @@ export function ReaderTabs() {
           {id}
           {counts?.errors ? <span className="rd-file-count bad">{counts.errors}</span> : counts ? <span className="rd-file-ok" title="Types check" /> : null}
         </button>
-        {reader.fileIds.length > 1 ? <button aria-label={`Close ${id}`} className="rd-file-close" onClick={() => reader.closeFile(id)} type="button"><X size={12} /></button> : null}
+        {reader.fileIds.length > 1 && !(reader.fixedFiles && !prelude) ? <button aria-label={`Close ${id}`} className="rd-file-close" onClick={() => reader.closeFile(id)} type="button"><X size={12} /></button> : null}
       </div>;
     })}
-    <button aria-label="New file" className="rd-add-file" onClick={reader.addFile} title="New file" type="button"><Plus size={14} /></button>
+    {reader.fixedFiles ? null : <button aria-label="New file" className="rd-add-file" onClick={reader.addFile} title="New file" type="button"><Plus size={14} /></button>}
     </div>
     <button aria-label="Quick open" className="rd-back" onClick={() => reader.setQuickOpen(true)} title={`Go to a file or definition (${MOD}P)`} type="button"><Search size={14} /></button>
     <button aria-label="Toggle the bottom panel" aria-pressed={Boolean(reader.panel)} className="rd-back" onClick={() => reader.setPanel(reader.panel ? null : "output")} title="References and generated code (Ctrl-`)" type="button"><PanelBottom size={14} /></button>
@@ -173,7 +173,7 @@ export function ReaderSidebar() {
   const mine = reader.symbols.filter(symbol => symbol.file === reader.active);
   return <aside aria-label="Files and outline" className="rd-sidebar">
     <section>
-      <header><h3>Files</h3><button aria-label="New file" className="rd-icon" onClick={reader.addFile} title="New file" type="button"><Plus size={13} /></button></header>
+      <header><h3>Files</h3>{reader.fixedFiles ? null : <button aria-label="New file" className="rd-icon" onClick={reader.addFile} title="New file" type="button"><Plus size={13} /></button>}</header>
       <ul className="rd-tree">
         {project.map(id => <li key={id}>
           <button aria-current={id === reader.active} onClick={() => reader.show(id)} type="button">
