@@ -224,9 +224,9 @@ pageClass: forma-index
 <li><span><strong>Live playground</strong>The browser compiler runs prelude vocabularies such as email rules and Elm commands.</span><em>@forma-language/forma</em></li>
 <li><span><strong>Refined contracts</strong><code>:pattern</code>, <code>:min-length</code>, <code>:min</code>, and <code>:max</code> on IR fields, checked where the author wrote them and generated as Schema filters.</span><em>engine</em></li>
 <li><span><strong>Modules and packages</strong>Explicit imports and exports, <code>forma.json</code>, a verified <code>forma.lock</code>, and committed vendor sources. <a href="/modules">File modules</a></span><em>engine</em></li>
-<li><span><strong>Editor support</strong>Diagnostics, hover, and workspace search by name, documentation, or IR type.</span><em>language server</em></li>
-<li class="is-planned"><span><strong>Diagnostic catalog</strong>Stable codes with an explanation page for each.</span><em>RFC 0017</em></li>
-<li class="is-planned"><span><strong>Tests in Forma</strong>Example programs that assert their own results.</span><em>RFC 0015</em></li>
+<li><span><strong>Editor support</strong>Multi-file diagnostics, hover, go-to-definition, quick fixes, SCC memoization, and workspace search by name, documentation, or IR type.</span><em>language server</em></li>
+<li><span><strong>Diagnostic catalog</strong>380+ coded diagnostics with source spans, repair advice, and <code>forma explain &lt;code&gt;</code>.</span><em>engine · CLI</em></li>
+<li><span><strong>Tests in Forma</strong>Named tests in <code>forma:test</code> run by <code>forma test</code>.</span><em>CLI · preludes</em></li>
 <li class="is-planned"><span><strong>Consumer-prelude SDK</strong>Packaging, checking, and documenting a prelude outside this repository.</span><em>roadmap</em></li>
 </ul>
 </div>
@@ -275,8 +275,8 @@ pageClass: forma-index
 </div>
 <div class="fh-facts">
 <article><h3>One package</h3><p><code>@forma-language/forma</code> contains the TypeScript engine, host, editor adapters, and language server. The engine runs in Node and in the browser.</p></article>
-<article><h3>CLI and embedding</h3><p><code>forma check</code>, <code>run</code>, <code>test</code>, <code>fmt</code>, <code>repl</code>, and <code>describe</code> serve the human workflow. <code>forma mcp</code> serves agents; <code>createLanguage</code> embeds the same language services.</p></article>
-<article><h3>Conformance</h3><p>Fixtures and reviewed goldens pin parsing, typing, evaluation, and IR output, and CI checks the engine against them.</p></article>
+<article><h3>CLI and embedding</h3><p><code>forma check</code>, <code>run</code>, <code>test</code>, <code>fmt</code>, <code>repl</code>, <code>describe</code>, <code>explain</code>, and <code>lsp</code> serve the human workflow. <code>forma mcp</code> serves agents; <code>createLanguage</code> embeds the same language services.</p></article>
+<article><h3>Checked runs &amp; replay</h3><p><code>checkedRun</code> returns a SHA-256 capability manifest before running, enforces step, time, expansion, host-call, and result-size budgets, pauses every capability call at its author span, and records deterministic <code>forma-journal/v1</code> replays. See <a href="/embedding">Embedding</a> and <a href="https://github.com/bjacobso/forma/tree/main/examples/flagship">the flagship example</a>.</p></article>
 <article><h3>Repair loop</h3><p>Typed holes such as <code>?name</code> expose expected types. Diagnostics carry source spans, explanations, and repair information for editors and agents.</p></article>
 </div>
 <p class="fh-proof"><a href="https://worldvm.com">WorldVM's world language is a Forma prelude.</a></p>
@@ -323,26 +323,25 @@ npm install /absolute/path/to/forma/.context/tarballs/forma-language-forma-*.tgz
 <div><dt>One Lisp surface.</dt><dd>Forma's own syntax is the only surface; Clojure spellings are macros over it. The trusted kernel, elaborator API, and dialect adapters are proposals in <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md">RFC 0021</a> and <a href="https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md">RFC 0022</a>.</dd></div>
 </dl>
 
-<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, refined contracts, canonical IR with contract identities, file modules and offline packages, Effect TypeScript and Schema generation, the browser playground and language server, and conformance goldens. Not yet: npm publication, a stable host ABI, a trusted kernel and elaborator API, Lisp dialect adapters, emitters for Clojure, Racket, Scheme, and Common Lisp, Go and Rust Effect hosts, and effect-polymorphic signatures.">working today
+<pre class="fh-ascii fh-ascii--card" v-pre aria-label="Working today: lossless reader and formatter, macros, Hindley–Milner and effect inference, effect-polymorphic signatures, refined contracts, canonical IR with contract identities, file modules and offline packages, output-neutral linker, Effect TypeScript and Schema generation, checkedRun with capability manifests and host-call journals, the browser playground and multi-file language server with SCC memoization, human CLI and MCP, typed holes and repair diagnostics, and conformance goldens. Not yet: stable 1.0 host ABI, a trusted kernel and elaborator API, Lisp dialect adapters, emitters for Clojure, Racket, Scheme, and Common Lisp, and Go and Rust Effect hosts.">working today
 <span class="tone-ok">✓</span> reader · formatter · macros
-<span class="tone-ok">✓</span> HM inference · effect inference
-<span class="tone-ok">✓</span> refined contracts
-<span class="tone-ok">✓</span> canonical IR · contract identity
+<span class="tone-ok">✓</span> HM inference · effect polymorphism
+<span class="tone-ok">✓</span> refined contracts · literal checks
+<span class="tone-ok">✓</span> canonical IR · output-neutral linker
 <span class="tone-ok">✓</span> file modules · offline packages
 <span class="tone-ok">✓</span> Effect TypeScript + Schema
-<span class="tone-ok">✓</span> playground · language server
-<span class="tone-ok">✓</span> conformance goldens
+<span class="tone-ok">✓</span> checkedRun · manifests · journals
+<span class="tone-ok">✓</span> multi-file LSP · SCC memoization
 <span class="tone-ok">✓</span> human CLI · MCP · createLanguage
 <span class="tone-ok">✓</span> typed holes · repair diagnostics
+<span class="tone-ok">✓</span> conformance goldens · npm package
 
 not yet
-<span class="tone-muted">○</span> npm publication
-<span class="tone-muted">○</span> stable host ABI
+<span class="tone-muted">○</span> stable 1.0 host ABI
 <span class="tone-muted">○</span> trusted kernel · elaborators
 <span class="tone-muted">○</span> Lisp dialect adapters
 <span class="tone-muted">○</span> Clojure / Racket / Scheme / CL emitters
-<span class="tone-muted">○</span> Go / Rust Effect hosts
-<span class="tone-muted">○</span> effect-polymorphic signatures</pre>
+<span class="tone-muted">○</span> Go / Rust Effect hosts</pre>
 
 </div>
 <div class="fh-columns">
