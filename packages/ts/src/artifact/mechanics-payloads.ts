@@ -481,6 +481,19 @@ function validateEffectTypeNode(
     index,
     diagnostics,
   );
+  for (const key of ["errorVariables", "requirementVariables"] as const) {
+    if (node[key] === undefined) continue;
+    const variables = expectArray(node[key], `${path}.${key}`, contractName, declaration, index, diagnostics);
+    variables?.forEach((variable, variableIndex) => {
+      const variablePath = `${path}.${key}[${variableIndex}]`;
+      const record = expectRecord(variable, variablePath, contractName, declaration, index, diagnostics);
+      if (!record) return;
+      if (record["kind"] !== "Var") {
+        diagnostics.push(contractDiagnostic(contractName, `${variablePath}.kind`, "Var", record["kind"], index, declaration));
+      }
+      expectString(record["name"], `${variablePath}.name`, contractName, declaration, index, diagnostics);
+    });
+  }
 }
 
 function validateBodyNode(
