@@ -12,9 +12,9 @@ async function reference(id) {
   try {
     const { accept } = await import(pathToFileURL(join(tasksRoot, id, "accept.mjs")));
     assert.equal((await accept(dir)).pass, false, `${id} must reject an empty submission`);
-    if (id === "repair-dispatch") {
-      await cp(join(root, "bench/agent/fixtures/repair-dispatch"), dir, {recursive: true});
-      assert.equal((await accept(dir)).pass, false, "repair-dispatch must reject the seeded project");
+    if (id === "repair-dispatch" || id === "typed-hole-repair") {
+      await cp(join(root, "bench/agent/fixtures", id), dir, {recursive: true});
+      assert.equal((await accept(dir)).pass, false, `${id} must reject the seeded project`);
     }
     await cp(join(tasksRoot, id, "reference"), dir, { recursive: true });
     const result = await accept(dir);
@@ -27,7 +27,7 @@ if (process.argv[2] === "--reference") {
   process.exit(0);
 }
 const ids = await taskIds();
-assert.equal(ids.length, 20);
+assert.equal(ids.length, 22);
 const kinds = {};
 const tiers = {};
 for (const id of ids) {
@@ -36,8 +36,8 @@ for (const id of ids) {
   tiers[context.tier] = (tiers[context.tier] ?? 0) + 1;
   kinds[context.kind] = (kinds[context.kind] ?? 0) + 1;
 }
-assert.deepEqual(kinds, { form: 6, prelude: 6, kernel: 8 });
-assert.deepEqual(tiers, { hard: 8, core: 12 });
+assert.deepEqual(kinds, { form: 7, prelude: 7, kernel: 8 });
+assert.deepEqual(tiers, { hard: 10, core: 12 });
 // Bound process concurrency: acceptance uses synchronous CLI calls internally,
 // so Promise.all around accept() alone would not parallelize those calls.
 const queue = [...ids];
@@ -65,13 +65,13 @@ try {
   assert.equal(result.status, 0, result.error?.message);
   const report = JSON.parse(await readFile(output, "utf8"));
   try {
-    assert.equal(report.totals.passed, 20);
+    assert.equal(report.totals.passed, 22);
     assert.equal(report.tiers.core.tasks, 12);
-    assert.equal(report.tiers.hard.tasks, 8);
+    assert.equal(report.tiers.hard.tasks, 10);
     assert.equal(report.tiers.core.passed, 12);
-    assert.equal(report.tiers.hard.passed, 8);
-    assert.equal(Object.values(report.diagnostics).reduce((sum, counts) => sum + counts.calls, 0), 20);
-    assert.equal(Object.values(report.diagnostics).reduce((sum, counts) => sum + counts.repairRoundsAttributed, 0), 20);
+    assert.equal(report.tiers.hard.passed, 10);
+    assert.equal(Object.values(report.diagnostics).reduce((sum, counts) => sum + counts.calls, 0), 22);
+    assert.equal(Object.values(report.diagnostics).reduce((sum, counts) => sum + counts.repairRoundsAttributed, 0), 22);
     for (const result of report.results) {
       assert.equal(result.agent.exitCode, 0, result.id);
       assert.equal(result.repairRounds, 1, result.id);
@@ -86,4 +86,4 @@ try {
     for (const result of report.results) await rm(result.taskDir, { recursive: true, force: true });
   }
 } finally { await rm(scratch, { recursive: true, force: true }); }
-console.log(`Agent benchmark validation: 20/20 references and 20/20 simulated agents passed in ${((performance.now() - started) / 1000).toFixed(1)}s.`);
+console.log(`Agent benchmark validation: 22/22 references and 22/22 simulated agents passed in ${((performance.now() - started) / 1000).toFixed(1)}s.`);
