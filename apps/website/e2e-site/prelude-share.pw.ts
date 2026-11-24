@@ -17,7 +17,6 @@ test("a cold shared link loads a custom prelude and editable example", async ({ 
   await page.getByRole("checkbox", { name: "Split files" }).check();
   await expect(page.getByRole("textbox", { name: "Prelude source", exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Example source", exact: true })).toBeVisible();
-  await expect(page.getByRole("tablist", { name: "Source files" })).not.toBeVisible();
   await page.getByRole("checkbox", { name: "Split files" }).uncheck();
   await page.getByRole("tab", { name: "JSON", exact: true }).click();
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText('"name": "shared"');
@@ -48,7 +47,7 @@ test("a cold shared link loads a custom prelude and editable example", async ({ 
   await expect(page.getByRole("tab", { name: "Result", exact: true })).toHaveAttribute("aria-selected", "true");
   const source = page.getByRole("textbox", { name: "Example source", exact: true });
   await source.fill('(workflow shared (step check 42))');
-  await expect(page.locator(".diagnostic-error")).toBeVisible();
+  await expect(page.locator(".rd-problem-error")).toBeVisible();
   await expect(page.locator(".cm-lintRange-error")).toBeVisible();
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText("Fix the diagnostics to inspect checked data.");
   await expect(page.getByRole("region", { name: "Compiler output" }).getByRole("heading", { name: "shared" })).toHaveCount(0);

@@ -54,7 +54,7 @@ test("validation retains the previous output and scroll position, then updates i
   await expect(page.locator(".studio-output-snapshot")).toHaveCSS("transition-duration", "0s");
 });
 
-test("the playground uses homepage charcoal surfaces and readable syntax in both appearances", async ({ page }, testInfo) => {
+test("the playground uses the reader's panel surfaces and readable syntax in both appearances", async ({ page }, testInfo) => {
   await page.goto(`/playground/custom${encodePreludeDemo({ ...defaultPreludeDemo, source: defaultPreludeDemo.source + '\n;; Numbers and booleans: 42 true' })}`);
   await page.getByRole("tab", { name: "JSON", exact: true }).click();
   const main = page.getByRole("main");
@@ -79,7 +79,7 @@ test("the playground uses homepage charcoal surfaces and readable syntax in both
           return (Math.max(light, backgroundLight) + .05) / (Math.min(light, backgroundLight) + .05);
         })) };
       });
-      expect(report.background).toBe(theme === "dark" ? "rgb(17, 22, 19)" : "rgb(255, 253, 248)");
+      expect(report.background).toBe(theme === "dark" ? "rgb(24, 29, 25)" : "rgb(255, 255, 255)");
       expect(report.colors.length).toBeGreaterThanOrEqual(3);
       expect(report.minContrast).toBeGreaterThanOrEqual(4.5);
       reports.push({ theme, selector, ...report });
