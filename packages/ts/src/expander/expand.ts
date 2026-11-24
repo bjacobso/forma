@@ -1,4 +1,5 @@
 import { normalizeCoreProgram, retiredSpellingError } from "../surface/core.js";
+import { coerceNumericBranches } from "../surface/coerce.js";
 import { Effect } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
 import { parseManyToSExpr } from "../reader/index.js";
@@ -109,7 +110,7 @@ export function expandProgramSync(
     );
   }
 
-  return { exprs: expanded, env: macroEnv };
+  return { exprs: coerceNumericBranches(expanded, options.contextTypes), env: macroEnv };
 }
 
 function makeMacroEnv(options: ExpandProgramOptions): Env {

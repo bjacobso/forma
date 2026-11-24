@@ -35,9 +35,11 @@ the mechanics checker instantiates them at use sites. Generated TypeScript
 projects constrained numeric variables to `number` at its interop boundary.
 
 Assignment permits Int where Float is expected;
-that assignment does not retag the runtime value. Mixed branches and collections
-join to Float without retagging selected or contained Int values. Branch-join
-coercion remains planned (numeric specification Stage 3). Equality compares numeric values, so `(= 2 2.0)` is true, including
+that assignment does not retag the runtime value. Mixed numeric branch joins
+(`if`, `cond`, and `match`) join to Float and coerce Int branch results to Float
+at the join, preserving overflow, `NaN`, infinities, signed zero, and integer-only
+paths. Mixed collection literals join to `List<Float>` without retagging contained
+Int values. Equality compares numeric values, so `(= 2 2.0)` is true, including
 inside collections. Numeric literal patterns remain kind-sensitive:
 `(match 2.0 2 true _ false)` is false. NaN does not equal itself.
 

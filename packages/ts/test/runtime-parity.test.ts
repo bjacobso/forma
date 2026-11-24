@@ -79,3 +79,15 @@ test("nullary constructor syntax resolves a rebound function at execution time",
   const source = "(__sum-type (Color) (Red) (Blue)) (define Red (fn [] 7)) (Red)";
   for (const vm of [false, true]) expect(outcome(source, vm, false)).toEqual({ printed: "7" });
 });
+
+test("bare unquote forms fail directly in the VM without tree fallback", () => {
+  for (const [source, message] of [
+    ["(unquote 1)", "unquote outside of quasiquote"],
+    ["(unquote-splicing [1])", "unquote-splicing outside of quasiquote"],
+  ] as const) {
+    for (const vm of [false, true]) expect(outcome(source, vm, false)).toMatchObject({ error: "KernelTypeError", message });
+    expect(() => Effect.runSync(Evaluator.evaluateExprs(Reader.toSExprMany(Reader.parse(source).redTree), { builtins, stepLimit: 100 }))).toThrow(message);
+  }
+  expect(outcome("'(unquote x)", true)).toEqual({ printed: "[unquote x]" });
+  expect(outcome("`[~(+ 1 2)]", true)).toEqual({ printed: "[3]" });
+});

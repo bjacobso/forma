@@ -1,4 +1,4 @@
-import { numericDatum } from "./types.js";
+import { numericDatum, isKFloat, KFloat } from "./types.js";
 import { KKeyword, mapKey, quotedDatum } from "./types.js";
 import { Effect, Ref } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
@@ -259,6 +259,23 @@ export function evalList(
           // instance inside nested scope — should not happen normally,
           // but handle gracefully by delegating to evalInstance
           return (yield* evalInstance(items, loc, env, runtime, evalExpr)).result;
+        case "__float": {
+          if (items.length !== 2) {
+            return yield* new ArityError({ name: "__float", expected: 1, got: items.length - 1, loc });
+          }
+          const prevTail = getTcoTail();
+          setTcoTail(false);
+          const val = yield* evalExpr(items[1]!, env, runtime);
+          setTcoTail(prevTail);
+          if (isKFloat(val)) return val;
+          if (typeof val === "number") return new KFloat(val);
+          return yield* new KernelTypeError({
+            message: `__float: expected Int or Float, got ${describeType(val)}`,
+            expected: "Int or Float",
+            got: describeType(val),
+            loc,
+          });
+        }
       }
 
       if (items.length === 1 && /^[A-Z]/.test(head.name) && env.has(head.name)) {

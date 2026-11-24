@@ -207,6 +207,15 @@ function assertRuntimeCompilable(exprs: readonly SExpr[]): void {
   const head = rejected.items[0];
   const formName = head?._tag === "Sym" ? head.name : "list";
   const trace = traceOf(rejected);
+  if (formName === "unquote" || formName === "unquote-splicing") {
+    throw new KernelTypeError({
+      message: `${formName} outside of quasiquote`,
+      expected: "quasiquote context",
+      got: `bare ${formName}`,
+      loc: rejected.loc,
+      ...(trace.macroOrigins ? { macroOrigins: trace.macroOrigins } : {}),
+    });
+  }
   throw new KernelTypeError({
     message: `VM compiler cannot execute compile-time-only form '${formName}'`,
     expected: "normalized runtime program",
@@ -243,6 +252,9 @@ function findRejectedRuntimeNode(expr: SExpr, inQuasiquote: boolean = false): SE
       return null;
     case "List": {
       const head = expr.items[0];
+      if (head?._tag === "Sym" && head.name === "quote") {
+        return null;
+      }
       if (head?._tag === "Sym" && head.name === "quasiquote") {
         for (let i = 1; i < expr.items.length; i++) {
           const rejected = findRejectedRuntimeNode(expr.items[i]!, true);
