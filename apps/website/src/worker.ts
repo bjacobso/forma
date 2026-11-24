@@ -17,7 +17,6 @@ import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { galleryDescription, plainText, playgroundDescription } from "./lib/siteCopy";
 import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
-import { getPipeline } from "./pipelines";
 import {
   loadPlayground,
   playgroundApi,
@@ -27,10 +26,9 @@ import {
 import {
   McpRateLimit,
   ReplSessionClient,
-  handleMcp,
+  ReplSessionError,
   isMcpRequest,
-} from "./mcp";
-import { ReplSessionError } from "./mcpSchema";
+} from "./mcpSchema";
 import { ReplSession, ReplSessionLive } from "./replSession";
 
 // ---------------------------------------------------------------------------
@@ -114,6 +112,7 @@ export const websiteFetch: Effect.Effect<
     (requestUrl.pathname === "/mcp" || requestUrl.pathname === "/mcp/") &&
     isMcpRequest(request)
   ) {
+    const { handleMcp } = yield* Effect.promise(() => import("./mcp"));
     return yield* handleMcp;
   }
 
@@ -178,7 +177,7 @@ export const websiteFetch: Effect.Effect<
       : url.pathname.startsWith("/playground/")
         ? url.pathname.slice("/playground".length)
         : null;
-  let meta = pathname === null ? null : metaForPath(pathname);
+  let meta = pathname === null ? null : yield* metaForPath(pathname);
   const sharedId = pathname?.match(/^\/p\/([a-f0-9]{32})$/)?.[1];
 
   if (pathname?.startsWith("/p/")) {
@@ -402,64 +401,68 @@ export default Website;
 // HTML social metadata helpers
 // ---------------------------------------------------------------------------
 
-function metaForPath(pathname: string): RouteMeta | null {
+function metaForPath(pathname: string): Effect.Effect<RouteMeta | null> {
   if (pathname === "/read") {
-    return {
+    return Effect.succeed({
       title: "Reading Forma",
       description: "Read Forma code with its types, effects, and prelude forms.",
       path: pathname,
-    };
+    });
   }
   if (pathname === "/read/snippets" || pathname === "/embed/read") {
-    return {
+    return Effect.succeed({
       title: "Forma reader snippets",
       description: "Inline, checked Forma snippets with types on hover, for posts, docs, and demos.",
       path: pathname,
-    };
+    });
   }
   if (pathname === "/custom") {
-    return {
+    return Effect.succeed({
       title: "Build and share a Forma DSL",
       description: "Define a prelude, try an example, and share your language in a live playground.",
       path: pathname,
-    };
+    });
   }
   if (pathname === "/") {
-    return {
+    return Effect.succeed({
       title: "Forma Playground",
       description: playgroundDescription,
       path: "/",
-    };
+    });
   }
 
   if (pathname === "/demo") {
-    return {
+    return Effect.succeed({
       title: "Forma Examples",
       description: galleryDescription,
       path: "/demo",
-    };
+    });
   }
 
   const liveExample = pathname.match(/^\/(?:embed|live)\/([^/]+)$/)?.[1];
   if (liveExample) {
-    return {
+    return Effect.succeed({
       title: "Live Forma workbench",
       description: playgroundDescription,
       path: pathname,
-    };
+    });
   }
 
   const pipelineId = pathname.match(/^\/demo\/([^/]+)$/)?.[1];
   if (pipelineId) {
-    const pipeline = getPipeline(pipelineId);
-    return {
-      title: `${pipeline.title} - Forma`,
-      description: plainText(pipeline.tagline),
-      path: `/demo/${pipeline.id}`,
-    };
+    return Effect.promise(() => import("./pipelines")).pipe(
+      Effect.map(({ getPipeline }) => {
+        const pipeline = getPipeline(pipelineId);
+        return {
+          title: `${pipeline.title} - Forma`,
+          description: plainText(pipeline.tagline),
+          path: `/demo/${pipeline.id}`,
+        };
+      }),
+    );
   }
 
-  return null;
+  return Effect.succeed(null);
 }
 
 function injectMeta(html: string, meta: RouteMeta, origin: string): string {

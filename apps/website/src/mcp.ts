@@ -6,13 +6,12 @@
  * typed errors mapped cleanly at the HTTP boundary — with no dependency on
  * `@modelcontextprotocol/sdk`.
  */
-import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
-import { replTool, type ReplReply } from "@formalang/host/repl";
+import { replTool } from "@formalang/host/repl";
 import { engineVersion } from "@formalang/ts/engine";
 import {
   CallToolParamsSchema,
@@ -22,13 +21,16 @@ import {
   MAX_SESSION_NAME,
   MCP_INSTRUCTIONS,
   McpMethodNotAllowed,
+  McpRateLimit,
   McpRateLimited,
   McpRpcError,
   McpSchema,
   McpSessionUnavailable,
   ReplCallArgsSchema,
+  ReplSessionClient,
   ReplSessionError,
   SERVER_ERROR_CODE,
+  isMcpRequest,
   negotiateProtocolVersion,
   type ReplCallArgs,
 } from "./mcpSchema";
@@ -39,33 +41,11 @@ import {
   type ReplSessionRuntime,
 } from "./replSession";
 
-// ---------------------------------------------------------------------------
-// Effect services
-// ---------------------------------------------------------------------------
+export { McpRateLimit, ReplSessionClient, isMcpRequest };
 
-/** Per-client rate limiter for `/mcp` requests. */
-export class McpRateLimit extends Context.Service<
-  McpRateLimit,
-  {
-    readonly allow: (key: string) => Effect.Effect<boolean>;
-  }
->()("forma/McpRateLimit") {
-  static readonly Unlimited = Layer.succeed(McpRateLimit, {
-    allow: () => Effect.succeed(true),
-  });
-}
-
-/** Client for routing MCP session calls to a `ReplSession` Durable Object. */
-export class ReplSessionClient extends Context.Service<
-  ReplSessionClient,
-  {
-    readonly call: (
-      sessionId: string,
-      args: ReplCallArgs,
-    ) => Effect.Effect<ReplReply, ReplSessionError | McpSessionUnavailable>;
-    readonly clear: (sessionId: string) => Effect.Effect<void, McpSessionUnavailable>;
-  }
->()("forma/ReplSessionClient") {}
+// ---------------------------------------------------------------------------
+// In-memory test harness
+// ---------------------------------------------------------------------------
 
 export interface MemoryReplSessionsHarness {
   readonly layer: Layer.Layer<ReplSessionClient>;
@@ -169,24 +149,6 @@ function rpcErrorResponse(
     status,
     extraHeaders,
   );
-}
-
-/**
- * True when a request to `/mcp` targets the MCP Streamable HTTP server rather
- * than the VitePress browser documentation page.
- */
-export function isMcpRequest(request: {
-  readonly method: string;
-  readonly headers: Readonly<Record<string, string | undefined>> | Headers;
-}): boolean {
-  if (request.method === "GET" || request.method === "HEAD") {
-    const accept =
-      request.headers instanceof Headers
-        ? request.headers.get("accept")
-        : request.headers["accept"];
-    return accept?.includes("text/event-stream") === true;
-  }
-  return true;
 }
 
 function invalidToolResult(message: string) {

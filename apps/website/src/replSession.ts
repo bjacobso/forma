@@ -14,8 +14,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Schema from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
-import { JsonAbi } from "@formalang/host/json-abi";
-import { createRepl, type ReplReply } from "@formalang/host/repl";
+import type { ReplReply, createRepl } from "@formalang/host/repl";
 import {
   IDLE_MS,
   MAX_SNAPSHOT,
@@ -136,7 +135,18 @@ export function makeReplSessionRuntime<R>(
     const ensureLoaded: Effect.Effect<ReturnType<typeof createRepl>, ReplSessionError, R> =
       Effect.gen(function* () {
         if (repl !== undefined) return repl;
-        const instance = createRepl(new JsonAbi(), {
+        const [{ JsonAbi }, { createRepl: makeRepl }] = yield* Effect.tryPromise({
+          try: () =>
+            Promise.all([
+              import("@formalang/host/json-abi"),
+              import("@formalang/host/repl"),
+            ]),
+          catch: (cause) =>
+            new ReplSessionError({
+              message: cause instanceof Error ? cause.message : String(cause),
+            }),
+        });
+        const instance = makeRepl(new JsonAbi(), {
           runUnavailable: RUN_UNAVAILABLE,
           runNote: RUN_UNAVAILABLE,
         });

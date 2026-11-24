@@ -2,10 +2,13 @@
  * Effect Schemas and typed errors for the hosted Forma MCP endpoint and its
  * ReplSession Durable Object storage.
  */
+import * as Context from "effect/Context";
 import * as Data from "effect/Data";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import * as Schema from "effect/Schema";
 import * as McpSchema from "effect/ai/McpSchema";
-import type { ReplSnapshot } from "@formalang/host/repl";
+import type { ReplReply, ReplSnapshot } from "@formalang/host/repl";
 
 export const MAX_INPUT = 20_000;
 export const MAX_SESSION_NAME = 64;
@@ -147,5 +150,48 @@ export class McpRpcError extends Data.TaggedError("McpRpcError")<{
   readonly message: string;
   readonly id: McpSchema.RequestId | null;
 }> {}
+
+// ---------------------------------------------------------------------------
+// Effect services & request classification (zero compiler imports so
+// `alchemy.run.ts` can load `worker.ts` before workspace packages are built)
+// ---------------------------------------------------------------------------
+
+/** Per-client rate limiter for `/mcp` requests. */
+export class McpRateLimit extends Context.Service<
+  McpRateLimit,
+  {
+    readonly allow: (key: string) => Effect.Effect<boolean>;
+  }
+>()("forma/McpRateLimit") {
+  static readonly Unlimited = Layer.succeed(McpRateLimit, {
+    allow: () => Effect.succeed(true),
+  });
+}
+
+/** Client for routing MCP session calls to a `ReplSession` Durable Object. */
+export class ReplSessionClient extends Context.Service<
+  ReplSessionClient,
+  {
+    readonly call: (
+      sessionId: string,
+      args: ReplCallArgs,
+    ) => Effect.Effect<ReplReply, ReplSessionError | McpSessionUnavailable>;
+    readonly clear: (sessionId: string) => Effect.Effect<void, McpSessionUnavailable>;
+  }
+>()("forma/ReplSessionClient") {}
+
+export function isMcpRequest(request: {
+  readonly method: string;
+  readonly headers: Readonly<Record<string, string | undefined>> | Headers;
+}): boolean {
+  if (request.method === "GET" || request.method === "HEAD") {
+    const accept =
+      request.headers instanceof Headers
+        ? request.headers.get("accept")
+        : request.headers["accept"];
+    return accept?.includes("text/event-stream") === true;
+  }
+  return true;
+}
 
 export { McpSchema };
