@@ -29,7 +29,7 @@ try {
     }
   };
   trees.forEach(collect);
-  for (const example of ["embed-node", "project", "worker-isolation"]) {
+  for (const example of ["embed-node", "project", "worker-isolation", "flagship"]) {
     const cwd = join(temporary, example);
     await cp(join(root, "examples", example), cwd, { recursive: true, filter: path => !path.split(/[\\/]/).includes("node_modules") });
     const manifest = JSON.parse(await readFile(join(cwd, "package.json"), "utf8"));
@@ -38,8 +38,10 @@ try {
     await writeFile(join(cwd, "package.json"), JSON.stringify(manifest));
     run("pnpm", ["install", "--store-dir", store, "--prefer-offline", "--ignore-scripts", "--config.auto-install-peers=false"], cwd);
     console.log(run("pnpm", ["test"], cwd).trim());
-    if (example === "embed-node") {
+    if (example === "embed-node" || example === "flagship") {
       console.log(run("pnpm", ["start"], cwd).trim());
+    }
+    if (example === "embed-node") {
       // Exercise the public generator subpaths with the same installed tarball.
       const http = join(cwd, "http-rpc");
       await cp(join(root, "examples/http-rpc"), http, { recursive: true, filter: path => !path.split(/[\\/]/).includes("node_modules") });

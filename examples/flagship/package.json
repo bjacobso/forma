@@ -1,0 +1,16 @@
+{
+  "name": "forma-flagship-example",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.19"
+  },
+  "scripts": {
+    "start": "node index.mjs",
+    "test": "node --test test.mjs"
+  },
+  "dependencies": {
+    "@forma-language/forma": "^0.7.0",
+    "effect": "4.1.1"
+  }
+}

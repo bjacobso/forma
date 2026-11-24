@@ -9,22 +9,38 @@
 - A human CLI: `check`, `run`, `test`, `fmt`, `repl`, `explain`, and `describe`;
   `forma mcp` exposes language tools to agents. JSON commands and the daemon
   remain available for automation.
-- `createLanguage` is the embedding facade, with typed holes and diagnostics
-  that carry source spans, help, and repair information.
-- Operational Effect inference, portable artifacts, editor services, a language
-  server, and the browser playground. Conformance fixtures pin observable behavior.
+- `createLanguage` is the embedding facade, with typed capabilities, `onHostCall`
+  approval hooks with author spans, typed holes, and diagnostics that carry
+  source spans, help, and repair information.
+- `checkedRun` and `CapabilityManifest` inspect reachable typed capabilities and
+  source/prelude SHA-256 digests before execution, paired with cooperative
+  resource budgets (`steps`, `timeoutMs`, `hostCalls`, `maxExpansionSteps`,
+  `maxResultBytes`) and `node:worker_threads` isolation recipes
+  (`examples/worker-isolation/`, `examples/flagship/`).
+- Host-call journals (`forma-journal/v1`, RFC 0016 stages 2–3) record live host
+  calls to JSONL and deterministically replay them with zero live host calls,
+  detecting program mismatches and call divergence.
+- Operational Effect inference, Effect signature polymorphism (RFC 0023 stages
+  1–3), `forma:effect` lowering (`class`, `layer`, `catch`), portable artifacts,
+  editor services, a multi-file language server (resolving local imports,
+  `forma:*` libraries, and `forma.json` packages), closed-SCC HM memoization per
+  workspace document, and the browser playground. Conformance fixtures pin
+  observable behavior.
 - Native unary RPC/group generation through the [RPC prelude](./effect/rpc.md).
 - Prototype Effect Cluster entities with in-memory state and checked delivery
   rules through the [cluster prelude](./effect/cluster.md).
-- One linker for the RPC, HTTP API, and Cluster preludes, emitting one module
-  and a [system graph](./effect/system.md) from a mixed program.
+- An output-neutral linker for the RPC, HTTP API, Cluster, and file-module form
+  families, emitting one module and a [system graph](./effect/system.md) from a
+  mixed program.
 
 ## Trust work in progress
 
-Numeric semantics, runtime parity, checker convergence, and the remaining raw
-throw boundaries are active work. They are not claims of a verified language.
+Shared data-type relations, numeric branch-join coercion, and VM fallback
+retirement have landed, while remaining raw throw boundaries and full checker
+convergence are active work. They are not claims of a verified language.
 The independent trusted kernel and elaborator protocol remain proposed.
-Memoization is design work only; a VS Code extension is on hold.
+Cross-file persistent caching remains future work beyond per-document SCC
+memoization; a VS Code extension is on hold.
 
 Gate 3 targets agent repair on the hard tier: **at least 7 of 8 tasks**, with a
 **median of at most 2 repair rounds**. These are acceptance targets, not reported
@@ -142,13 +158,11 @@ implemented or scheduled, and a Rust host still needs a concrete consumer.
 ## Effect polymorphism
 
 [RFC 0023](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-effect-polymorphism.md)
-proposes error-set and requirement-set variables in Effect signatures, so
-that user-written higher-order operations, such as wrappers and reusable test
-doubles, pass their callbacks' effects through without over-approximating
-them. Built-in combinators would become signatures with the same notation.
-It does not add continuations. The proposal is not implemented; its third
-stage depends on the named-callback fix in
-[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md).
+adds error-set and requirement-set variables in Effect signatures, so that
+user-written higher-order operations, such as wrappers and reusable test
+doubles, pass their callbacks' effects through without over-approximating them.
+Stages 1–3 (polymorphic Effect signatures, named callbacks, and refined literal
+checks) are implemented. It does not add continuations.
 
 ## Proposed next-level capabilities and ordering
 

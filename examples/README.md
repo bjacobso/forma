@@ -5,13 +5,23 @@
 - [embed-node](./embed-node/README.md): a Node ESM application using the
   experimental `createLanguage` facade, a checked form prelude, and one granted
   capability. No Effect imports are needed in the embedding code.
+- [flagship](./flagship/README.md): an end-to-end incident-response policy
+  automation host using only `@forma-language/forma` — domain prelude and helper
+  module discovery (`describe()`), `CapabilityManifest` inspection, ungranted
+  capability rejection, `node:worker_threads` isolation with explicit budgets
+  and `onHostCall` span approval, and `forma-journal/v1` record/replay with
+  divergence checks.
+- [worker-isolation](./worker-isolation/README.md): a `node:worker_threads`
+  embedding recipe pairing cooperative Forma budgets (`steps`, `timeoutMs`,
+  `maxResultBytes`, `maxExpansionSteps`) with a hard parent termination backstop.
 - [project](./project/README.md): a standalone `.lisp` module graph with a form
   library, data, and CLI checking, evaluation, and formatting checks.
 - [http-rpc](./http-rpc/README.md): a repository-based Effect HTTP/RPC exploration
   with generated contracts and explicit native handlers.
 
 `pnpm check:examples` installs the packed `@forma-language/forma` tarball offline
-into temporary copies of `embed-node` and `project`, then runs their tests.
+into temporary copies of `embed-node`, `project`, `worker-isolation`, and
+`flagship`, then runs their tests.
 CI runs this after `pnpm pack:check`. Each example also shows a local tarball
 installation for trying unreleased changes.
 
