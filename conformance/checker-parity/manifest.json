@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "constructors-accept",
+      "category": "constructors",
+      "file": "cases/constructors-accept.lisp",
+      "expected": "accept",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Tagged union constructors retain union identity through bindings, joins, and lists"
+    },
+    {
+      "id": "constructors-reject-payload",
+      "category": "constructors",
+      "file": "cases/constructors-reject-payload.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Tagged constructor rejects a payload field with the wrong primitive type"
+    },
+    {
+      "id": "constructors-reject-wrong-union",
+      "category": "constructors",
+      "file": "cases/constructors-reject-wrong-union.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Constructor from a different tagged union is rejected in a list of another union"
+    },
+    {
+      "id": "option-fields-accept",
+      "category": "option-fields",
+      "file": "cases/option-fields-accept.lisp",
+      "expected": "accept",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Option fields accept Some, None, plain values, propagation, and covariant Option<Int> -> Option<Float>"
+    },
+    {
+      "id": "option-fields-reject-item-mismatch",
+      "category": "option-fields",
+      "file": "cases/option-fields-reject-item-mismatch.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Option field rejects Some with an incompatible item type"
+    },
+    {
+      "id": "option-fields-reject-float-to-int",
+      "category": "option-fields",
+      "file": "cases/option-fields-reject-float-to-int.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Covariant Option rejects Option<Float> where Option<Int> is expected"
+    },
+    {
+      "id": "option-fields-reject-required-none",
+      "category": "option-fields",
+      "file": "cases/option-fields-reject-required-none.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Required non-Option record field rejects None"
+    },
+    {
+      "id": "numeric-literals-and-joins-accept",
+      "category": "numeric",
+      "file": "cases/numeric-literals-and-joins-accept.lisp",
+      "expected": "accept",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Int widens to Float in assignments and mixed branch joins while Int arithmetic stays Int"
+    },
+    {
+      "id": "numeric-reject-float-to-int",
+      "category": "numeric",
+      "file": "cases/numeric-reject-float-to-int.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Float literal cannot narrow to Int"
+    },
+    {
+      "id": "numeric-reject-mixed-join-to-int",
+      "category": "numeric",
+      "file": "cases/numeric-reject-mixed-join-to-int.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Mixed Int/Float branch join produces Float and cannot narrow to Int"
+    },
+    {
+      "id": "brands-accept",
+      "category": "brands",
+      "file": "cases/brands-accept.lisp",
+      "expected": "accept",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Branded values match their own brand, assign to their base type and supertypes, and work inside Option"
+    },
+    {
+      "id": "brands-reject-raw-base",
+      "category": "brands",
+      "file": "cases/brands-reject-raw-base.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Raw base value is rejected where a nominal Brand is expected"
+    },
+    {
+      "id": "brands-reject-distinct-brands",
+      "category": "brands",
+      "file": "cases/brands-reject-distinct-brands.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Two distinct brands over the same base type are not assignable to each other"
+    },
+    {
+      "id": "shadowed-effect-names-accept",
+      "category": "shadowed-effect",
+      "file": "cases/shadowed-effect-names-accept.lisp",
+      "expected": "accept",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Local parameter and let bindings shadowing outer or Effect names use the inner binding type"
+    },
+    {
+      "id": "shadowed-effect-names-reject",
+      "category": "shadowed-effect",
+      "file": "cases/shadowed-effect-names-reject.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Shadowed inner binding of incompatible type is rejected rather than leaking the outer type"
+    },
+    {
+      "id": "literal-constraints-accept",
+      "category": "literal-constraints",
+      "file": "cases/literal-constraints-accept.lisp",
+      "expected": "accept",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Literal union constraints accept matching literals, branch joins of literals, and widen to base primitives"
+    },
+    {
+      "id": "literal-constraints-reject-invalid-member",
+      "category": "literal-constraints",
+      "file": "cases/literal-constraints-reject-invalid-member.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Literal outside a literal union is rejected"
+    },
+    {
+      "id": "literal-constraints-reject-widened-primitive",
+      "category": "literal-constraints",
+      "file": "cases/literal-constraints-reject-widened-primitive.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Wide primitive String is rejected where a literal union is expected"
+    }
+  ]
+}

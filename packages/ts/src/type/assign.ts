@@ -7,6 +7,34 @@ import { typeMismatch } from "./diagnostic-types.js";
 import { unify } from "./unify.js";
 import { InferenceError, type Origin } from "./errors.js";
 import { requireNumeric, numericResult } from "./numeric.js";
+import {
+  decideDataRelation,
+  isPrimitiveName,
+  joinNumericPrimitives,
+  literalBaseName,
+  parseLiteralTypeName,
+  type DataNode,
+} from "./data-relation.js";
+
+function toHmDataNode(type: Type): DataNode<Type> {
+  if (type._tag === "TCon") {
+    if (type.name === "Unknown") return { kind: "unknown", raw: type };
+    if (type.name === "Never") return { kind: "never", raw: type };
+    if (isPrimitiveName(type.name)) return { kind: "prim", name: type.name, raw: type };
+    const literal = parseLiteralTypeName(type.name);
+    if (literal) return { kind: "literal", literal, raw: type };
+    return { kind: "other", raw: type };
+  }
+  if (type._tag === "TApp" && type.con._tag === "TCon") {
+    if (type.con.name === "Brand" && type.args.length === 2 && type.args[0]?._tag === "TCon") {
+      return { kind: "brand", name: type.args[0].name, base: type.args[1]!, raw: type };
+    }
+    if (type.con.name === "Option" && type.args.length === 1) {
+      return { kind: "option", item: type.args[0]!, raw: type };
+    }
+  }
+  return { kind: "other", raw: type };
+}
 
 /** Assignment is directional: every Int is a Float; arbitrary Floats are not Ints. */
 export const assignType = (actual: Type, expected: Type, origin: Origin): Effect.Effect<void,InferenceError,InferContext> => Effect.gen(function* () {
@@ -47,11 +75,15 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
     const covered = a.args.every(actual => actual._tag === "TCon" && b.args.some(expected => expected._tag === "TCon" && (actual.name === expected.name || requirements && actual.name.startsWith(`${expected.name}.`))));
     if (covered) return;
   }
-  if (a._tag === "TCon") {
-    const primitive=literalBase(a.name);
-    if (primitive && b._tag === "TCon" && (primitive===b.name || primitive==="Int" && b.name==="Float")) return;
+  const isHktApp = (t: Type) => t._tag === "TApp" && t.con._tag !== "TCon";
+  if (!isHktApp(a) && !isHktApp(b)) {
+    const decision = decideDataRelation(toHmDataNode(a), toHmDataNode(b));
+    if (decision.verdict === "accept") return;
+    if (decision.verdict === "check") return yield* assignType(decision.actual, decision.expected, origin);
+    if (decision.verdict === "reject") {
+      return yield* ctx.fail(origin, { ...typeMismatch(b, a), code: "typecheck/type-mismatch" });
+    }
   }
-  if (a._tag === "TCon" && a.name === "Int" && b._tag === "TCon" && b.name === "Float") return;
   if (a._tag === "TFun" && b._tag === "TFun") {
     yield* assignType(b.arg,a.arg,origin);
     yield* assignType(a.res,b.res,origin);
@@ -118,7 +150,10 @@ export const joinType = (left: Type, right: Type, origin: Origin): Effect.Effect
       return TRow(row);
     }
   }
-  if (a._tag === 'TCon' && b._tag === 'TCon' && ['Int','Float'].includes(a.name) && ['Int','Float'].includes(b.name)) return a.name === b.name ? a : {_tag:'TCon',name:'Float'};
+  if (a._tag === "TCon" && b._tag === "TCon") {
+    const joined = joinNumericPrimitives(a.name, b.name);
+    if (joined) return TCon(joined);
+  }
   if (a._tag === 'TApp' && b._tag === 'TApp' && a.con._tag === 'TCon' && b.con._tag === 'TCon' && a.con.name === b.con.name && a.args.length === b.args.length) {
     const args: Type[]=[];
     for (let i=0;i<a.args.length;i++) args.push(yield* joinType(a.args[i]!,b.args[i]!,origin));
@@ -130,6 +165,5 @@ export const joinType = (left: Type, right: Type, origin: Origin): Effect.Effect
 
 /** The primitive a literal type name belongs to, if it is a literal. */
 export function literalBase(name: string): string | undefined {
-  if (name.startsWith(":")) return "Keyword";
-  try { const value=JSON.parse(name); return typeof value==="string" ? "String" : typeof value==="boolean" ? "Bool" : typeof value==="number" ? /[.eE]/.test(name) ? "Float" : "Int" : undefined; } catch { return; }
+  return literalBaseName(name);
 }

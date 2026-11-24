@@ -13,6 +13,12 @@
  * @module
  */
 import type { JsonValue } from "../artifact/artifact.js";
+import {
+  decideDataRelation,
+  literalBasePrimitive,
+  type DataLiteral,
+  type DataNode,
+} from "../type/data-relation.js";
 
 export type PrimitiveName =
   | "String"
@@ -297,12 +303,38 @@ export function join(left: MType, right: MType, env: TypeEnvironment): MType {
   return union([left, right]);
 }
 
+function toMechanicsLiteral(type: MType & { readonly kind: "literal" }): DataLiteral {
+  if (typeof type.value === "string") return { kind: "string", value: type.value };
+  if (typeof type.value === "boolean") return { kind: "boolean", value: type.value };
+  return type.numericKind === "float" || !Number.isInteger(type.value)
+    ? { kind: "float", value: type.value }
+    : { kind: "int", value: type.value };
+}
+
+function toMechanicsDataNode(type: MType): DataNode<MType> {
+  switch (type.kind) {
+    case "unknown":
+      return { kind: "unknown", raw: type };
+    case "never":
+      return { kind: "never", raw: type };
+    case "prim":
+      return { kind: "prim", name: type.name, raw: type };
+    case "literal":
+      return { kind: "literal", literal: toMechanicsLiteral(type), raw: type };
+    case "brand":
+      return { kind: "brand", name: type.name, base: type.base, raw: type };
+    case "option":
+      return { kind: "option", item: type.item, raw: type };
+    default:
+      return { kind: "other", raw: type };
+  }
+}
+
 /** Widens a literal produced by inference to its primitive (`"a"` → String). */
 export function widenLiteral(type: MType): MType {
   if (type.kind !== "literal") return type;
-  if (typeof type.value === "string") return tString;
-  if (typeof type.value === "boolean") return tBool;
-  return type.numericKind === "float" || !Number.isInteger(type.value) ? tFloat : tInt;
+  const base = literalBasePrimitive(toMechanicsLiteral(type));
+  return base === "Keyword" ? tString : prim(base);
 }
 
 /**
@@ -448,23 +480,12 @@ export function isAssignable(
     return t.members.some((member) => isAssignable(s, member, env, subst));
   }
 
-  // A branded value is still a value of its base type (`UserId` is a `String`).
-  if (s.kind === "brand" && t.kind !== "brand") return isAssignable(s.base, t, env, subst);
+  const dataDecision = decideDataRelation(toMechanicsDataNode(s), toMechanicsDataNode(t));
+  if (dataDecision.verdict === "accept") return true;
+  if (dataDecision.verdict === "reject") return false;
+  if (dataDecision.verdict === "check") return isAssignable(dataDecision.actual, dataDecision.expected, env, subst);
 
   switch (t.kind) {
-    case "prim":
-      if (s.kind === "prim") return s.name === t.name || (s.name === "Int" && t.name === "Float");
-      if (s.kind === "literal") {
-        if (typeof s.value === "string") return t.name === "String";
-        if (typeof s.value === "boolean") return t.name === "Bool";
-        return t.name === "Float" || (t.name === "Int" && s.numericKind !== "float" && Number.isSafeInteger(s.value));
-      }
-      if (s.kind === "brand") return false;
-      return false;
-    case "literal":
-      return s.kind === "literal" && s.value === t.value;
-    case "brand":
-      return s.kind === "brand" && s.name === t.name;
     case "struct": {
       if (s.kind !== "struct") return false;
       return t.fields.every((field) => {
@@ -486,8 +507,6 @@ export function isAssignable(
         s.items.length === t.items.length &&
         s.items.every((item, index) => isAssignable(item, t.items[index]!, env, subst))
       );
-    case "option":
-      return s.kind === "option" && isAssignable(s.item, t.item, env, subst);
     case "result":
       return (
         s.kind === "result" &&
