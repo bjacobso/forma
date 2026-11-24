@@ -1,9 +1,11 @@
 {
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    "allowImportingTsExtensions": true,
     "declaration": false,
     "declarationMap": false,
     "noEmit": true,
+    "noPropertyAccessFromIndexSignature": false,
     "types": ["node"],
     "lib": ["ESNext", "DOM"]
   },

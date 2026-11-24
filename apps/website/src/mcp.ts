@@ -1,149 +1,400 @@
 /**
- * The hosted MCP server at forma-lang.com/mcp: the `repl` tool of `forma mcp`,
- * over Streamable HTTP. Each MCP session's REPL lives in a Durable Object, which
- * saves what the session accepted and rebuilds it after eviction.
+ * Effect-native hosted MCP Streamable HTTP handler for forma-lang.com/mcp.
+ *
+ * Uses Effect `Context.Service` for rate limiting and Durable Object session
+ * access, Effect `Schema` + `effect/ai/McpSchema` for wire validation, and
+ * typed errors mapped cleanly at the HTTP boundary — with no dependency on
+ * `@modelcontextprotocol/sdk`.
  */
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { WebStandardStreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js";
-import { CallToolRequestSchema, ListToolsRequestSchema, type Tool } from "@modelcontextprotocol/sdk/types.js";
-import { JsonAbi } from "@formalang/host/json-abi";
-import { createRepl, replTool, type ReplReply, type ReplSnapshot } from "@formalang/host/repl";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Schema from "effect/Schema";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import { replTool } from "@formalang/host/repl";
 import { engineVersion } from "@formalang/ts/engine";
+import {
+  CallToolParamsSchema,
+  InitializeParamsSchema,
+  JsonRpcInboundSchema,
+  MAX_INPUT,
+  MAX_SESSION_NAME,
+  MCP_INSTRUCTIONS,
+  McpMethodNotAllowed,
+  McpRateLimit,
+  McpRateLimited,
+  McpRpcError,
+  McpSchema,
+  McpSessionUnavailable,
+  ReplCallArgsSchema,
+  ReplSessionClient,
+  ReplSessionError,
+  SERVER_ERROR_CODE,
+  isMcpRequest,
+  negotiateProtocolVersion,
+  type ReplCallArgs,
+} from "./mcpSchema";
+import {
+  makeMemorySessionStorage,
+  makeReplSessionRuntime,
+  type MemorySessionStore,
+  type ReplSessionRuntime,
+} from "./replSession";
 
-const MAX_INPUT = 20_000;
-const MAX_SNAPSHOT = 1_000_000;
-const IDLE_MS = 24 * 60 * 60 * 1000;
-const RUN_UNAVAILABLE = "The hosted server at forma-lang.com/mcp checks, infers, expands and generates Effect programs but does not run them. Run `forma mcp` locally to use :run; see https://forma-lang.com/mcp.";
+export { McpRateLimit, ReplSessionClient, isMcpRequest };
 
-interface DurableObjectStub { fetch(input: string, init?: RequestInit): Promise<Response> }
-interface DurableObjectNamespace { idFromName(name: string): unknown; get(id: unknown): DurableObjectStub }
-interface DurableObjectStorage {
-  get<T>(key: string): Promise<T | undefined>;
-  put(key: string, value: unknown): Promise<void>;
-  delete(key: string): Promise<boolean>;
-  deleteAll(): Promise<void>;
-  list<T>(options: { prefix: string }): Promise<Map<string, T>>;
-  setAlarm(time: number): Promise<void>;
+// ---------------------------------------------------------------------------
+// In-memory test harness
+// ---------------------------------------------------------------------------
+
+export interface MemoryReplSessionsHarness {
+  readonly layer: Layer.Layer<ReplSessionClient>;
+  readonly stores: Map<string, MemorySessionStore>;
+  readonly evictAll: () => void;
+  readonly fireAlarm: (sessionId: string) => Effect.Effect<void>;
 }
-interface RateLimit { limit(options: { key: string }): Promise<{ success: boolean }> }
 
-export interface McpEnv {
-  readonly REPL_SESSIONS?: DurableObjectNamespace;
-  readonly MCP_CALLS?: RateLimit;
+/**
+ * In-memory `ReplSessionClient` harness backed by `makeReplSessionRuntime` and
+ * `makeMemorySessionStorage`. Calling `evictAll()` drops live REPL instances
+ * while preserving stored snapshots, simulating Durable Object eviction.
+ */
+export function makeMemoryReplSessions(): MemoryReplSessionsHarness {
+  const stores = new Map<string, MemorySessionStore>();
+  const instances = new Map<string, ReplSessionRuntime>();
+
+  const getInstance = (sessionId: string): Effect.Effect<ReplSessionRuntime> =>
+    Effect.gen(function* () {
+      const existing = instances.get(sessionId);
+      if (existing !== undefined) return existing;
+      let store = stores.get(sessionId);
+      if (store === undefined) {
+        store = makeMemorySessionStorage();
+        stores.set(sessionId, store);
+      }
+      const runtime = yield* makeReplSessionRuntime(store.storage);
+      instances.set(sessionId, runtime);
+      return runtime;
+    });
+
+  const layer = Layer.succeed(ReplSessionClient, {
+    call: (sessionId, args) =>
+      getInstance(sessionId).pipe(Effect.flatMap((runtime) => runtime.call(args))),
+    clear: (sessionId) =>
+      getInstance(sessionId).pipe(Effect.flatMap((runtime) => runtime.clear())),
+  });
+
+  return {
+    layer,
+    stores,
+    evictAll: () => {
+      instances.clear();
+    },
+    fireAlarm: (sessionId) =>
+      getInstance(sessionId).pipe(Effect.flatMap((runtime) => runtime.alarm())),
+  };
 }
 
-const corsHeaders = {
+// ---------------------------------------------------------------------------
+// HTTP & JSON-RPC helpers
+// ---------------------------------------------------------------------------
+
+export const mcpCorsHeaders = {
   "access-control-allow-origin": "*",
   "access-control-allow-methods": "POST, DELETE, OPTIONS",
-  "access-control-allow-headers": "content-type, accept, mcp-session-id, mcp-protocol-version, authorization",
+  "access-control-allow-headers":
+    "content-type, accept, mcp-session-id, mcp-protocol-version, authorization",
   "access-control-expose-headers": "mcp-session-id",
-};
-const withHeaders = (response: Response, extra: Record<string, string>) => {
-  const headers = new Headers(response.headers);
-  for (const [name, value] of Object.entries(extra)) headers.set(name, value);
-  return new Response(response.body, { status: response.status, statusText: response.statusText, headers });
-};
-const rpcError = (status: number, message: string) =>
-  Response.json({ jsonrpc: "2.0", error: { code: -32000, message }, id: null }, { status, headers: corsHeaders });
+} as const;
 
-/** True when a request to /mcp is for the MCP server rather than the docs page. */
-export function isMcpRequest(request: Request): boolean {
-  if (request.method === "GET" || request.method === "HEAD") return request.headers.get("accept")?.includes("text/event-stream") === true;
-  return true;
+const decodeInbound = Schema.decodeUnknownEffect(JsonRpcInboundSchema);
+const decodeInitParams = Schema.decodeUnknownEffect(InitializeParamsSchema);
+const decodeCallToolParams = Schema.decodeUnknownEffect(CallToolParamsSchema);
+const decodeReplArgs = Schema.decodeUnknownEffect(ReplCallArgsSchema, {
+  onExcessProperty: "error",
+});
+
+function jsonResponse(
+  body: unknown,
+  status = 200,
+  extraHeaders?: Record<string, string>,
+): HttpServerResponse.HttpServerResponse {
+  return HttpServerResponse.jsonUnsafe(body, {
+    status,
+    headers: { ...mcpCorsHeaders, ...extraHeaders },
+  });
 }
 
-export async function handleMcp(request: Request, env: McpEnv): Promise<Response> {
-  if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders });
-  // The server answers each POST with JSON; it does not offer a server-to-client stream.
-  if (request.method === "GET" || request.method === "HEAD") return new Response(null, { status: 405, headers: { ...corsHeaders, allow: "POST, DELETE, OPTIONS" } });
-  if (env.MCP_CALLS && !(await env.MCP_CALLS.limit({ key: request.headers.get("cf-connecting-ip") ?? "anonymous" })).success)
-    return rpcError(429, "Too many requests to forma-lang.com/mcp; wait a minute and try again.");
-  // Sessions are named by the server and kept in a Durable Object, so the MCP
-  // transport itself is stateless and any Worker instance can answer.
-  if (!env.REPL_SESSIONS) return rpcError(503, "MCP sessions are not configured on this deployment.");
-  const sessionId = request.headers.get("mcp-session-id") ?? crypto.randomUUID();
-  const session = env.REPL_SESSIONS.get(env.REPL_SESSIONS.idFromName(sessionId));
+function rpcSuccess(
+  id: McpSchema.RequestId,
+  result: unknown,
+  sessionId: string,
+): HttpServerResponse.HttpServerResponse {
+  return jsonResponse(
+    { jsonrpc: "2.0", id, result },
+    200,
+    { "mcp-session-id": sessionId },
+  );
+}
+
+function rpcErrorResponse(
+  status: number,
+  code: number,
+  message: string,
+  id: McpSchema.RequestId | null = null,
+  extraHeaders?: Record<string, string>,
+): HttpServerResponse.HttpServerResponse {
+  return jsonResponse(
+    { jsonrpc: "2.0", error: { code, message }, id },
+    status,
+    extraHeaders,
+  );
+}
+
+function invalidToolResult(message: string) {
+  const result = {
+    ok: false,
+    diagnostics: [{ code: "abi/invalid-request", severity: "error", message }],
+  };
+  return {
+    content: [{ type: "text" as const, text: message }],
+    structuredContent: result,
+    isError: true,
+  };
+}
+
+/**
+ * Validates `tools/call` arguments through `ReplCallArgsSchema` and produces
+ * concise, actionable diagnostics when validation fails.
+ */
+const validateReplArguments = (
+  toolName: string,
+  rawArgs: Record<string, unknown>,
+): Effect.Effect<ReplCallArgs, string> =>
+  Effect.gen(function* () {
+    if (toolName !== "repl") {
+      return yield* Effect.fail(`Unknown tool ${toolName}.`);
+    }
+    const decoded = yield* Effect.result(decodeReplArgs(rawArgs));
+    if (decoded._tag === "Success") return decoded.success;
+
+    if (typeof rawArgs["input"] !== "string") {
+      return yield* Effect.fail("repl needs a string input.");
+    }
+    if (rawArgs["input"].length > MAX_INPUT) {
+      return yield* Effect.fail(`Input is limited to ${MAX_INPUT} characters.`);
+    }
+    if (
+      rawArgs["session"] !== undefined &&
+      (typeof rawArgs["session"] !== "string" || rawArgs["session"].length > MAX_SESSION_NAME)
+    ) {
+      return yield* Effect.fail(
+        `session must be a name of at most ${MAX_SESSION_NAME} characters.`,
+      );
+    }
+    if (Object.keys(rawArgs).some((key) => key !== "input" && key !== "session")) {
+      return yield* Effect.fail("repl accepts only input and session.");
+    }
+    return yield* Effect.fail(decoded.failure.message);
+  });
+
+// ---------------------------------------------------------------------------
+// Core Effect handler
+// ---------------------------------------------------------------------------
+
+const handleMcpCore: Effect.Effect<
+  HttpServerResponse.HttpServerResponse,
+  McpRateLimited | McpMethodNotAllowed | McpRpcError | McpSessionUnavailable | ReplSessionError,
+  HttpServerRequest.HttpServerRequest | McpRateLimit | ReplSessionClient
+> = Effect.gen(function* () {
+  const request = yield* HttpServerRequest.HttpServerRequest;
+
+  if (request.method === "OPTIONS") {
+    return HttpServerResponse.empty({ status: 204, headers: mcpCorsHeaders });
+  }
+
+  // The server answers each POST with JSON; it does not offer a server-to-client SSE stream.
+  if (request.method === "GET" || request.method === "HEAD") {
+    return yield* new McpMethodNotAllowed({
+      method: request.method,
+      allow: "POST, DELETE, OPTIONS",
+      jsonRpc: false,
+    });
+  }
+
+  const rateLimit = yield* McpRateLimit;
+  const clientKey = request.headers["cf-connecting-ip"] ?? "anonymous";
+  const allowed = yield* rateLimit.allow(clientKey);
+  if (!allowed) {
+    return yield* new McpRateLimited({ key: clientKey });
+  }
+
+  const sessions = yield* ReplSessionClient;
+  const sessionId = request.headers["mcp-session-id"] ?? crypto.randomUUID();
+
   if (request.method === "DELETE") {
-    await session.fetch("https://repl/delete", { method: "POST" });
-    return new Response(null, { status: 204, headers: corsHeaders });
+    yield* sessions.clear(sessionId);
+    return HttpServerResponse.empty({ status: 204, headers: mcpCorsHeaders });
   }
-  if (request.method !== "POST") return rpcError(405, "Use POST.");
 
-  const server = new Server({ name: "forma", version: engineVersion }, {
-    capabilities: { tools: {} },
-    instructions: "Explore the Forma language with the repl tool: send :help first, then :outline and :doc <name>. Sessions keep definitions between calls. This server checks, infers and generates Effect programs but cannot run them (:run is unavailable).",
+  if (request.method !== "POST") {
+    return yield* new McpMethodNotAllowed({
+      method: request.method,
+      allow: "POST, DELETE, OPTIONS",
+      jsonRpc: true,
+    });
+  }
+
+  const bodyText = yield* request.text.pipe(
+    Effect.mapError(
+      () =>
+        new McpRpcError({
+          status: 400,
+          code: McpSchema.PARSE_ERROR_CODE,
+          message: "Could not read request body.",
+          id: null,
+        }),
+    ),
+  );
+
+  const parsedJson = yield* Effect.try({
+    try: () => JSON.parse(bodyText) as unknown,
+    catch: () =>
+      new McpRpcError({
+        status: 400,
+        code: McpSchema.PARSE_ERROR_CODE,
+        message: "Parse error: invalid JSON.",
+        id: null,
+      }),
   });
-  server.setRequestHandler(ListToolsRequestSchema, async () => ({ tools: [replTool as unknown as Tool] }));
-  server.setRequestHandler(CallToolRequestSchema, async ({ params }) => {
-    const args = (params.arguments ?? {}) as Record<string, unknown>;
-    const invalid = params.name !== "repl" ? `Unknown tool ${params.name}.`
-      : typeof args.input !== "string" ? "repl needs a string input."
-      : args.input.length > MAX_INPUT ? `Input is limited to ${MAX_INPUT} characters.`
-      : args.session !== undefined && (typeof args.session !== "string" || args.session.length > 64) ? "session must be a name of at most 64 characters."
-      : Object.keys(args).some(key => key !== "input" && key !== "session") ? "repl accepts only input and session." : undefined;
-    if (invalid) {
-      const result = { ok: false, diagnostics: [{ code: "abi/invalid-request", severity: "error", message: invalid }] };
-      return { content: [{ type: "text" as const, text: invalid }], structuredContent: result, isError: true };
+
+  const message = yield* decodeInbound(parsedJson).pipe(
+    Effect.mapError(
+      () =>
+        new McpRpcError({
+          status: 400,
+          code: McpSchema.INVALID_REQUEST_ERROR_CODE,
+          message: "Invalid JSON-RPC 2.0 request.",
+          id: null,
+        }),
+    ),
+  );
+
+  // Notifications have no `id` and are acknowledged with 202 Accepted.
+  if (!("id" in message)) {
+    return HttpServerResponse.empty({
+      status: 202,
+      headers: { ...mcpCorsHeaders, "mcp-session-id": sessionId },
+    });
+  }
+
+  const { id, method, params } = message;
+
+  switch (method) {
+    case "initialize": {
+      const init = yield* decodeInitParams(params ?? {}).pipe(
+        Effect.mapError(
+          () =>
+            new McpRpcError({
+              status: 400,
+              code: McpSchema.INVALID_PARAMS_ERROR_CODE,
+              message: "initialize requires a string protocolVersion.",
+              id,
+            }),
+        ),
+      );
+      return rpcSuccess(
+        id,
+        {
+          protocolVersion: negotiateProtocolVersion(init.protocolVersion),
+          capabilities: { tools: {} },
+          serverInfo: { name: "forma", version: engineVersion },
+          instructions: MCP_INSTRUCTIONS,
+        },
+        sessionId,
+      );
     }
-    const response = await session.fetch("https://repl/call", { method: "POST", body: JSON.stringify(args) });
-    const reply = await response.json() as ReplReply;
-    return { content: [{ type: "text" as const, text: reply.text }], structuredContent: reply.result, ...(reply.result.ok ? {} : { isError: true }) };
-  });
-  const transport = new WebStandardStreamableHTTPServerTransport({ enableJsonResponse: true });
-  await server.connect(transport);
-  const response = await transport.handleRequest(request);
-  return withHeaders(response, { ...corsHeaders, "mcp-session-id": sessionId });
-}
 
-/** One MCP session's REPL. It saves each named REPL session after every call and forgets them after a day idle. */
-export class ReplSession {
-  readonly #storage: DurableObjectStorage;
-  #repl: ReturnType<typeof createRepl> | undefined;
-  #ready: Promise<void> | undefined;
-  #queue: Promise<unknown> = Promise.resolve();
+    case "ping":
+      return rpcSuccess(id, {}, sessionId);
 
-  constructor(state: { readonly storage: DurableObjectStorage }) {
-    this.#storage = state.storage;
-  }
+    case "tools/list":
+      return rpcSuccess(id, { tools: [replTool] }, sessionId);
 
-  async #load(): Promise<void> {
-    this.#repl = createRepl(new JsonAbi(), { runUnavailable: RUN_UNAVAILABLE, runNote: RUN_UNAVAILABLE });
-    for (const [key, saved] of await this.#storage.list<ReplSnapshot>({ prefix: "session:" })) {
-      await this.#repl.restore(key.slice("session:".length), saved);
+    case "tools/call": {
+      const callParams = yield* decodeCallToolParams(params ?? {}).pipe(
+        Effect.mapError(
+          () =>
+            new McpRpcError({
+              status: 400,
+              code: McpSchema.INVALID_PARAMS_ERROR_CODE,
+              message: "tools/call requires a tool name.",
+              id,
+            }),
+        ),
+      );
+      const validated = yield* Effect.result(
+        validateReplArguments(callParams.name, callParams.arguments ?? {}),
+      );
+      if (validated._tag === "Failure") {
+        return rpcSuccess(id, invalidToolResult(validated.failure), sessionId);
+      }
+      const reply = yield* sessions.call(sessionId, validated.success);
+      return rpcSuccess(
+        id,
+        {
+          content: [{ type: "text" as const, text: reply.text }],
+          structuredContent: reply.result,
+          ...(reply.result.ok ? {} : { isError: true }),
+        },
+        sessionId,
+      );
     }
-  }
 
-  fetch(request: Request): Promise<Response> {
-    // Calls for one session run one at a time; the REPL awaits between steps.
-    const next = this.#queue.then(() => this.#handle(request));
-    this.#queue = next.catch(() => undefined);
-    return next;
+    default:
+      return yield* new McpRpcError({
+        status: 200,
+        code: McpSchema.METHOD_NOT_FOUND_ERROR_CODE,
+        message: `Method not found: ${method}`,
+        id,
+      });
   }
+});
 
-  async #handle(request: Request): Promise<Response> {
-    if (new URL(request.url).pathname === "/delete") {
-      await this.#storage.deleteAll();
-      this.#repl = undefined;
-      this.#ready = undefined;
-      return new Response(null, { status: 204 });
-    }
-    this.#ready ??= this.#load();
-    await this.#ready;
-    const args = await request.json() as { input: string; session?: string };
-    const name = args.session ?? "default";
-    const reply = await this.#repl!.call(args);
-    const saved = this.#repl!.snapshot(name);
-    let text = reply.text;
-    if (!saved) await this.#storage.delete(`session:${name}`);
-    else if (JSON.stringify(saved).length > MAX_SNAPSHOT) text += "\n(This session is too large to save; it lasts only while the server keeps it in memory. :reset starts over.)";
-    else await this.#storage.put(`session:${name}`, saved);
-    await this.#storage.setAlarm(Date.now() + IDLE_MS);
-    return Response.json({ ...reply, text });
-  }
-
-  async alarm(): Promise<void> {
-    await this.#storage.deleteAll();
-    this.#repl = undefined;
-    this.#ready = undefined;
-  }
-}
+/**
+ * Effect-native MCP HTTP handler. Maps every typed error to the appropriate
+ * HTTP status and JSON-RPC error payload with CORS headers.
+ */
+export const handleMcp: Effect.Effect<
+  HttpServerResponse.HttpServerResponse,
+  never,
+  HttpServerRequest.HttpServerRequest | McpRateLimit | ReplSessionClient
+> = handleMcpCore.pipe(
+  Effect.catchTags({
+    McpRateLimited: () =>
+      Effect.succeed(
+        rpcErrorResponse(
+          429,
+          SERVER_ERROR_CODE,
+          "Too many requests to forma-lang.com/mcp; wait a minute and try again.",
+        ),
+      ),
+    McpMethodNotAllowed: (err) =>
+      Effect.succeed(
+        err.jsonRpc
+          ? rpcErrorResponse(405, SERVER_ERROR_CODE, "Use POST.")
+          : HttpServerResponse.empty({
+              status: 405,
+              headers: { ...mcpCorsHeaders, allow: err.allow },
+            }),
+      ),
+    McpRpcError: (err) =>
+      Effect.succeed(rpcErrorResponse(err.status, err.code, err.message, err.id)),
+    McpSessionUnavailable: (err) =>
+      Effect.succeed(rpcErrorResponse(503, SERVER_ERROR_CODE, err.reason)),
+    ReplSessionError: (err) =>
+      Effect.succeed(
+        rpcErrorResponse(500, McpSchema.INTERNAL_ERROR_CODE, `REPL session failed: ${err.message}`),
+      ),
+  }),
+);

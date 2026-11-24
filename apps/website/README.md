@@ -16,12 +16,14 @@ pnpm --dir apps/website test
 pnpm --dir apps/website build
 pnpm --dir apps/website test:visual
 pnpm test:site
-pnpm website:dry-run
+pnpm website:dev
 ```
 
-The checked-in Cloudflare configuration supports static assets and route-aware
-metadata. CI validates it with a dry run and browser tests of the assembled
-site. The Deploy workflow publishes validated pushes to `main`.
+The Alchemy stack (`alchemy.run.ts` and `apps/website/src/worker.ts`) configures
+the Effect-native Cloudflare Worker, static assets, R2 bucket, rate limiters,
+and `ReplSession` Durable Object. CI validates it with `pnpm check:alchemy` and
+browser tests of the assembled site through `alchemy dev`. The Deploy workflow
+publishes validated pushes to `main`.
 
 Open `/playground/custom` to build a DSL with separate prelude and example
 editors in a full-window workspace. Drag the divider (or use its arrow keys)
@@ -57,12 +59,14 @@ are create-only, and bodies are limited to 128 KiB. Saves are rate limited to
 10 per minute per IP. Snapshots have no expiry, editing, listing, or deletion
 endpoint; operators can remove an object directly from R2 when necessary.
 
-For local storage and sharing, run `pnpm website:build` followed by
-`pnpm --dir apps/website exec wrangler dev --local` and open its
-`/playground/custom` route. Wrangler simulates R2 locally; no cloud credentials
-are needed. The Vite-only `pnpm dev` server supports editing and compilation,
-but does not serve the storage API. `pnpm test:site` tests the full Worker and
-local R2 flow. Compressed fragment snapshots can also be opened locally.
+For local storage, sharing, and the hosted `/mcp` Durable Object REPL, run
+`pnpm website:build` followed by `pnpm website:dev` (`alchemy dev`) and open
+`http://127.0.0.1:5182/playground/custom`. Alchemy simulates R2, Rate Limits,
+and Durable Objects locally in `workerd`; no cloud credentials are needed. The
+Vite-only `pnpm dev` server supports editing and compilation, but does not serve
+the storage API or `/mcp`. `pnpm test:site` tests the full Worker and local R2
+flow through `alchemy dev`. Compressed fragment snapshots can also be opened
+locally.
 
 The starter workflow demonstrates a prelude-defined plan format; it does not
 execute agents or provide a durable workflow runtime.

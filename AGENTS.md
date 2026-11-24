@@ -26,7 +26,8 @@ match nearby formatting. Turbo builds dependent JavaScript packages as needed.
 For site changes, also run `pnpm website:build` and `pnpm test:site` (install
 Playwright Chromium first with
 `pnpm --filter @formalang/website exec playwright install chromium`). CI covers
-visual tests, assembled-site browser tests, and the Wrangler deployment dry run.
+visual tests, offline Alchemy stack checks, and assembled-site browser tests
+served through `alchemy dev`.
 
 ## Layout and conventions
 

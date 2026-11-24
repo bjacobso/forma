@@ -1,45 +1,26 @@
 import * as Alchemy from "alchemy";
+import { AlchemyContext } from "alchemy/AlchemyContext";
+import { renamedFrom } from "alchemy/Rename";
+import { localState } from "alchemy/State";
 import * as Cloudflare from "@alchemy.run/cloudflare";
 import * as Effect from "effect/Effect";
-import * as RemovalPolicy from "alchemy/RemovalPolicy";
+import * as Layer from "effect/Layer";
+import Website, { PlaygroundsBucket, WebsiteBuild } from "./apps/website/src/worker.ts";
+
+// `alchemy dev` runs entirely locally with zero Cloudflare credentials; real
+// plan/deploy/destroy stages use the shared Cloudflare state store.
+const state = Layer.unwrap(
+  Effect.map(AlchemyContext, (ctx) => (ctx.dev ? localState() : Cloudflare.state())),
+);
 
 export default Alchemy.Stack(
   "forma-lang",
-  { providers: Cloudflare.providers(), state: Cloudflare.state() },
+  { providers: Cloudflare.providers(), state },
   Effect.gen(function* () {
-    const stage = yield* Alchemy.Stage;
-    const playgrounds = yield* Cloudflare.R2.Bucket("Playgrounds", {
-      name: stage === "prod" ? "forma-playgrounds" : `forma-playgrounds-${stage}`,
-      forceDestroy: stage !== "prod",
-    }).pipe(RemovalPolicy.retain(stage === "prod"));
-    const website = yield* Cloudflare.Website.StaticSite("Website", {
-      name: stage === "prod" ? "forma-website" : `forma-website-${stage}`,
-      ...(stage === "prod" ? { domain: "forma-lang.com" } : {}),
-      command: "pnpm website:build",
-      outdir: "dist-site",
-      main: "apps/website/src/worker.ts",
-      compatibility: { date: "2026-06-10" },
-      workersDev: true,
-      env: {
-        PLAYGROUNDS: playgrounds,
-        PLAYGROUND_WRITES: Cloudflare.Workers.RateLimit("PlaygroundWrites", {
-          namespaceId: 1001,
-          simple: { limit: 10, period: 60 },
-        }),
-        // forma-lang.com/mcp: one Durable Object per MCP session holds its REPL.
-        REPL_SESSIONS: Cloudflare.Workers.DurableObject("ReplSessions", { className: "ReplSession" }),
-        MCP_CALLS: Cloudflare.Workers.RateLimit("McpCalls", {
-          namespaceId: 1002,
-          simple: { limit: 120, period: 60 },
-        }),
-      },
-      assets: {
-        htmlHandling: "auto-trailing-slash",
-        notFoundHandling: "404-page",
-        runWorkerFirst: ["/feed.xml", "/sitemap.xml", "/robots.txt", "/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/", "/mcp", "/mcp/"],
-      },
-      dev: { command: "pnpm dev" },
-    });
+    const ctx = yield* AlchemyContext;
+    yield* PlaygroundsBucket;
+    if (!ctx.dev) yield* WebsiteBuild;
+    const website = yield* Website.pipe(renamedFrom("Website/Worker"));
     return { url: website.url };
   }),
 );

@@ -53,16 +53,15 @@ jobs:
       - run: pnpm --filter @formalang/website exec playwright install --with-deps chromium
       - run: pnpm test:visual
       - run: pnpm website:build
-      - run: pnpm website:dry-run
       - run: pnpm test:site
-      - name: Preserve browser traces and Wrangler diagnostics
+      - name: Preserve browser traces and Alchemy dev diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: website-failure-diagnostics
           path: |
             apps/website/test-results/
-            ~/.config/.wrangler/logs/
+            .alchemy/log/
           include-hidden-files: true
           retention-days: 7
 

@@ -29,9 +29,11 @@ test("the deploy command, Cloudflare provider, and Forma stack imports resolve",
   assert(Effect.isEffect(stack.default));
 });
 
-test("production and PR stages preserve routes and isolate Workers and domains offline", async t => {
+test("production and PR stages preserve routes, Effect-native bindings, and isolate Workers and domains offline", async t => {
   const fetch = t.mock.method(globalThis, "fetch", () => { throw new Error("Unexpected network request"); });
   const { default: definition } = await import("../alchemy.run.ts");
+  const expectedRunWorkerFirst = ["/feed.xml", "/sitemap.xml", "/robots.txt", "/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/", "/mcp", "/mcp/"];
+
   for (const stage of ["prod", "pr-123", "pr-456"]) {
     await Effect.runPromise(evalStack(definition, stack => Effect.sync(() => {
       assert.equal(stack.name, "forma-lang");
@@ -42,23 +44,53 @@ test("production and PR stages preserve routes and isolate Workers and domains o
       assert.equal(worker.Props.domain, stage === "prod" ? "forma-lang.com" : undefined);
       assert.equal(worker.Props.workersDev, true);
       assert.equal(worker.Props.main, "apps/website/src/worker.ts");
+      assert.equal(worker.Props.isExternal, undefined);
       assert.equal(worker.Props.assets.notFoundHandling, "404-page");
-      assert.deepEqual(worker.Props.assets.runWorkerFirst, ["/feed.xml", "/sitemap.xml", "/robots.txt", "/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/", "/mcp", "/mcp/"]);
+      assert.deepEqual(worker.Props.assets.runWorkerFirst, expectedRunWorkerFirst);
       assert.equal(worker.RemovalPolicy, "destroy");
+      assert.deepEqual(worker.FormerFqns, ["Website/Worker"]);
+
+      const build = stack.resources["Website/Build"];
+      assert.equal(build.Type, "Command.Build");
+      assert.equal(build.Props.command, "pnpm website:build");
+      assert.equal(build.Props.outdir, "dist-site");
+      assert.equal(build.FormerFqns, undefined);
+
       const playgrounds = stack.resources.Playgrounds;
       assert.equal(playgrounds.Type, "Cloudflare.R2.Bucket");
       assert.equal(playgrounds.Props.name, stage === "prod" ? "forma-playgrounds" : `forma-playgrounds-${stage}`);
       assert.equal(playgrounds.Props.forceDestroy, stage !== "prod");
       assert.equal(playgrounds.RemovalPolicy, stage === "prod" ? "retain" : "destroy");
-      assert.equal(worker.Props.env.PLAYGROUNDS, playgrounds);
-      assert.equal(worker.Props.env.PLAYGROUND_WRITES.simple.limit, 10);
-      assert.equal(worker.Props.env.REPL_SESSIONS.className, "ReplSession");
-      assert.equal(worker.Props.env.MCP_CALLS.simple.limit, 120);
+      assert.equal(playgrounds.FormerFqns, undefined);
+
+      const bindings = Object.fromEntries(
+        (stack.bindings.Website ?? []).map(entry => [entry.sid, entry.data.bindings[0]]),
+      );
+      assert.equal(bindings.Playgrounds.type, "r2_bucket");
+      assert.equal(bindings.Playgrounds.name, "Playgrounds");
+      assert.equal(bindings.PLAYGROUND_WRITES.type, "ratelimit");
+      assert.equal(bindings.PLAYGROUND_WRITES.simple.limit, 10);
+      assert.equal(bindings.MCP_CALLS.type, "ratelimit");
+      assert.equal(bindings.MCP_CALLS.simple.limit, 120);
+      assert.equal(bindings.ReplSession.type, "durable_object_namespace");
+      assert.equal(bindings.ReplSession.className, "ReplSession");
+      assert.equal(worker.Props.exports.ReplSession.kind, "durableObject");
     }), { stage }).pipe(
       Effect.provideService(AlchemyContext, { dotAlchemy: ".alchemy", dev: false, adopt: false }),
       Effect.provide(PlatformServices),
     ));
   }
+
+  // In dev mode, Website serves prebuilt dist-site directly without Command.Build.
+  await Effect.runPromise(evalStack(definition, stack => Effect.sync(() => {
+    assert.equal(stack.resources["Website/Build"], undefined);
+    assert.equal(stack.resources.Website.Props.assets.directory, "dist-site");
+    assert.deepEqual(stack.resources.Website.Props.assets.runWorkerFirst, expectedRunWorkerFirst);
+  }), { stage: "dev_local", dev: true }).pipe(
+    Effect.provideService(AlchemyContext, { dotAlchemy: ".alchemy", dev: true, adopt: false }),
+    Effect.provide(PlatformServices),
+  ));
+
   assert.equal(fetch.mock.callCount(), 0);
 });
 

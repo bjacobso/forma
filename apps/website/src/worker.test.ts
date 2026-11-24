@@ -1,10 +1,13 @@
 import { describe, expect, test, vi } from "vitest";
 import { resolve } from "node:path";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
 import ts from "typescript";
 import { typecheck } from "@formalang/ts/engine";
 import { serializablePassResult, timeoutRunResult } from "./engine/protocol";
 import { getPipeline, pipelines } from "./pipelines";
-import worker from "./worker";
+import { McpRateLimit, makeMemoryReplSessions } from "./mcp";
+import { PlaygroundService, StaticAssets, runWebsiteRequest } from "./worker";
 import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
 
 const indexHtml = `<!doctype html>
@@ -24,7 +27,7 @@ describe("forma website worker metadata", () => {
   test.each(["GET", "HEAD"])("redirects the old workbench with %s without fetching assets", async (method) => {
     for (const path of ["/workbench/demo", "/workbench/demo/"]) {
       const env = mockEnv();
-      const response = await worker.fetch(new Request(`https://forma-lang.com${path}?example=pricing`, { method }), env);
+      const response = await env.fetch(new Request(`https://forma-lang.com${path}?example=pricing`, { method }));
       expect(response.status).toBe(302);
       expect(response.headers.get("location")).toBe(`${FORMA_WORKBENCH_URL}?example=pricing`);
       expect(env.ASSETS.fetch).not.toHaveBeenCalled();
@@ -33,17 +36,17 @@ describe("forma website worker metadata", () => {
   test.each(["/", "/vision", "/language", "/playground/assets/app.js", "/missing"])("passes %s through to assets", async (path) => {
     const env = mockEnv(new Response("docs or asset"));
     const request = new Request(`https://forma-lang.com${path}`);
-    expect(await (await worker.fetch(request, env)).text()).toBe("docs or asset");
+    expect(await (await env.fetch(request)).text()).toBe("docs or asset");
     expect(env.ASSETS.fetch).toHaveBeenCalledWith(request);
   });
 
   test.each(["/playground", "/playground/"])("serves the playground at %s", async (path) => {
-    const response = await worker.fetch(new Request(`https://forma-lang.com${path}`), mockEnv());
+    const response = await mockEnv().fetch(new Request(`https://forma-lang.com${path}`));
     expect(await response.text()).toContain("<title>Forma Playground</title>");
   });
 
   test("redirects old shared demo URLs without losing editor state", async () => {
-    const response = await worker.fetch(new Request("https://forma-lang.com/demo/types?source=abc"), mockEnv());
+    const response = await mockEnv().fetch(new Request("https://forma-lang.com/demo/types?source=abc"));
     expect(response.status).toBe(301);
     expect(response.headers.get("location")).toBe("https://forma-lang.com/playground/demo/types?source=abc");
   });
@@ -51,7 +54,7 @@ describe("forma website worker metadata", () => {
   test("injects pipeline metadata into cold shared demo routes", async () => {
     const env = mockEnv();
 
-    const response = await worker.fetch(new Request("https://forma-lang.com/playground/demo/types"), env);
+    const response = await env.fetch(new Request("https://forma-lang.com/playground/demo/types"));
     const html = await response.text();
 
     expect(response.status).toBe(200);
@@ -71,7 +74,7 @@ describe("forma website worker metadata", () => {
 
   test.each(["/about", "/playground/about"])("redirects retired %s to the language guide", async (path) => {
     const env = mockEnv();
-    const response = await worker.fetch(new Request(`https://forma-lang.com${path}`), env);
+    const response = await env.fetch(new Request(`https://forma-lang.com${path}`));
     expect(response.status).toBe(301);
     expect(response.headers.get("location")).toBe("https://forma-lang.com/language");
     expect(env.ASSETS.fetch).not.toHaveBeenCalled();
@@ -82,14 +85,14 @@ describe("forma website worker metadata", () => {
     ["/sitemap.xml", "application/xml", "<urlset>routes</urlset>"],
     ["/robots.txt", "text/plain", "User-agent: *"],
   ])("serves %s with its discovery content type", async (path, type, body) => {
-    const response = await worker.fetch(new Request(`https://forma-lang.com${path}`), mockEnv(new Response(body)));
+    const response = await mockEnv(new Response(body)).fetch(new Request(`https://forma-lang.com${path}`));
     expect(response.headers.get("content-type")).toBe(`${type}; charset=utf-8`);
     expect(await response.text()).toBe(body);
   });
 
   test("serves a cold custom playground with social metadata", async () => {
     const env = mockEnv();
-    const response = await worker.fetch(new Request("https://forma-lang.com/playground/custom"), env);
+    const response = await env.fetch(new Request("https://forma-lang.com/playground/custom"));
     const html = await response.text();
     expect(response.status).toBe(200);
     expect(html).toContain('<meta property="og:title" content="Build and share a Forma DSL" />');
@@ -98,12 +101,12 @@ describe("forma website worker metadata", () => {
 
   test("serves the cold reading editor route", async () => {
     const env = mockEnv();
-    const response = await worker.fetch(new Request("https://forma-lang.com/playground/read?example=effect"), env);
+    const response = await env.fetch(new Request("https://forma-lang.com/playground/read?example=effect"));
     expect(response.status).toBe(200);
     expect(await response.text()).toContain("<title>Reading Forma</title>");
     expect(env.ASSETS.fetch).toHaveBeenCalledWith(expect.objectContaining({ url: "https://forma-lang.com/playground/" }));
     for (const path of ["/playground/read/snippets", "/playground/embed/read?example=cluster"]) {
-      const page = await worker.fetch(new Request(`https://forma-lang.com${path}`), mockEnv());
+      const page = await mockEnv().fetch(new Request(`https://forma-lang.com${path}`));
       expect(await page.text()).toContain("<title>Forma reader snippets</title>");
     }
   });
@@ -111,7 +114,7 @@ describe("forma website worker metadata", () => {
   test("passes non-document routes through to assets", async () => {
     const env = mockEnv(new Response("asset"));
 
-    const response = await worker.fetch(new Request("https://forma-lang.com/assets/app.js"), env);
+    const response = await env.fetch(new Request("https://forma-lang.com/assets/app.js"));
 
     expect(await response.text()).toBe("asset");
     expect(env.ASSETS.fetch).toHaveBeenCalledWith(expect.objectContaining({ url: "https://forma-lang.com/assets/app.js" }));
@@ -297,7 +300,7 @@ describe("pipeline registry", () => {
   });
 
   test("strips inline code from pipeline metadata", async () => {
-    const response = await worker.fetch(new Request("https://forma-lang.com/playground/demo/pipes"), mockEnv());
+    const response = await mockEnv().fetch(new Request("https://forma-lang.com/playground/demo/pipes"));
     const html = await response.text();
 
     expect(html).toContain(
@@ -313,9 +316,15 @@ describe("pipeline registry", () => {
 function mockEnv(response = new Response(indexHtml, {
   headers: { "content-type": "text/html" },
 })) {
+  const assetsFetch = vi.fn(async (_request: Request) => response.clone());
+  const layer = Layer.mergeAll(
+    Layer.succeed(StaticAssets, { fetch: (req) => Effect.promise(() => assetsFetch(req)) }),
+    PlaygroundService.Empty,
+    McpRateLimit.Unlimited,
+    makeMemoryReplSessions().layer,
+  );
   return {
-    ASSETS: {
-      fetch: vi.fn(async () => response.clone()),
-    },
+    ASSETS: { fetch: assetsFetch },
+    fetch: (request: Request) => runWebsiteRequest(request, layer),
   };
 }

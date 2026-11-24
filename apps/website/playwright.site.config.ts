@@ -14,12 +14,11 @@ export default defineConfig({
     trace: "retain-on-failure",
   },
   webServer: {
-    // Exercise the assembled assets through the same worker used in production.
-    command: `pnpm -w website:build && pnpm exec wrangler dev --local --ip 127.0.0.1 --port ${port}`,
+    // Exercise the assembled assets through the same Effect-native Alchemy Worker used in production.
+    command: `pnpm -w website:build && pnpm -w exec alchemy dev --no-input --stage e2e_site`,
     url: `http://127.0.0.1:${port}`,
     reuseExistingServer: false,
     timeout: 120_000,
-    env: { WRANGLER_SEND_METRICS: "false" },
   },
   projects: [
     {
