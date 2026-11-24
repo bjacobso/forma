@@ -124,7 +124,10 @@ describe("AnalysisWorkspace", () => {
 
   test("checks declarations a document macro produces, and reports what the macro wrote at the call", () => {
     const spans = (source: string) => workspace(source).diagnostics("doc.lisp").map(d => `${d.code} ${source.slice(d.span!.startOffset, d.span!.endOffset)}`);
-    expect(spans("(macro (nightly n) `(workflow ~n :trigger \"cron\"))\n(nightly sync)")).toEqual([]);
+    const nightly = "(macro (nightly n) `(workflow ~n :trigger \"cron\"))\n(nightly sync)";
+    expect(spans(nightly)).toEqual([]);
+    // The analysis keeps what the declaration elaborates to.
+    expect(workspace(nightly).analysis("doc.lisp").declarations.map(d => d.payload)).toEqual([{ trigger: "cron" }]);
     expect(spans("(macro (nightly n) `(workflow ~n))\n(nightly sync)")).toEqual(["surface/invalid-form (nightly sync)"]);
     expect(spans("(macro (nightly n) `(workflow ~n :trigger 5))\n(nightly sync)")).toEqual(["typecheck/type-mismatch (nightly sync)"]);
     // What the author passed is reported where they wrote it.

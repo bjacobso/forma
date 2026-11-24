@@ -2,6 +2,8 @@ import { expect, test, type Page } from "@playwright/test";
 import { encodePreludeDemo } from "../src/lib/preludeShare";
 
 const source = (page: Page) => page.getByRole("textbox", { name: "Forma source", exact: true });
+const output = (page: Page) => page.getByRole("region", { name: "Compiler output" });
+const openFile = (page: Page, file: string) => page.getByRole("tablist", { name: "Files" }).locator(".rd-file", { hasText: file }).getByRole("button").first().click();
 
 /** A language whose program abbreviates its own declarations with a macro. */
 const research = {
@@ -73,4 +75,56 @@ test("a checker failure ends Checking… and says why", async ({ page }) => {
   await page.evaluate(() => { (window as unknown as { failChecks?: string }).failChecks = undefined; });
   await source(page).pressSequentially(" ");
   await expect(page.locator(".rd-check")).toHaveText(/Types check/);
+});
+
+/** Records the workers the page starts and the files the reader's worker is asked to analyze. */
+const countChecks = () => {
+  const Real = window.Worker;
+  const seen = { workers: [] as string[], analyzed: [] as string[] };
+  (window as unknown as { checks: typeof seen }).checks = seen;
+  window.Worker = class extends Real {
+    constructor(url: string | URL, options?: WorkerOptions) { super(url, options); seen.workers.push(String(url)); }
+    override postMessage(message: unknown, options?: unknown) {
+      const request = message as { kind?: string; file?: string };
+      if (request?.kind === "analyze") seen.analyzed.push(request.file!);
+      super.postMessage(message, options as StructuredSerializeOptions);
+    }
+  };
+};
+const checks = (page: Page) => page.evaluate(() => {
+  const seen = (window as unknown as { checks: { workers: string[]; analyzed: string[] } }).checks;
+  const counted = { workers: seen.workers.length, analyzed: [...seen.analyzed] };
+  seen.workers.length = 0; seen.analyzed.length = 0;
+  return counted;
+});
+
+test("each edit is analyzed once, and the status, Result and JSON all show that analysis", async ({ page }) => {
+  await page.addInitScript(countChecks);
+  await page.goto(`/playground/custom${encodePreludeDemo(research)}`);
+  await page.getByRole("tab", { name: "JSON", exact: true }).click();
+  await expect(output(page)).toContainText('"name": "foo"');
+  await expect(page.locator(".rd-check")).toHaveText(/Types check/);
+  await expect(page.locator(".rd-scope")).toHaveText("Everything prelude.lisp defines is in scope here, without an import.");
+  await page.waitForTimeout(600);
+  await checks(page);
+
+  // An edit to the program: one analysis of it, and no other checker.
+  await source(page).fill(research.source.replace("foo", "bar"));
+  await expect(output(page)).toContainText('"name": "bar"');
+  await expect(page.locator(".rd-check")).toHaveText(/Types check/);
+  await expect(page.getByRole("status").filter({ hasText: "Program checks" })).toBeVisible();
+  await page.waitForTimeout(600);
+  expect(await checks(page)).toEqual({ workers: 0, analyzed: ["example.lisp"] });
+
+  // An edit to the language definition: one analysis of it, then one of the program it changes.
+  await openFile(page, "prelude.lisp");
+  await expect(page.locator(".rd-scope")).toHaveCount(0);
+  await page.waitForTimeout(600);
+  await checks(page);
+  await source(page).fill(research.prelude.replaceAll('"Research"', '"Study"'));
+  await expect(output(page)).toContainText('"kind": "Study"');
+  await page.waitForTimeout(600);
+  expect(await checks(page)).toEqual({ workers: 0, analyzed: ["prelude.lisp", "example.lisp"] });
+  await page.getByRole("tab", { name: "Result", exact: true }).click();
+  await expect(output(page).getByRole("heading", { name: /bar/ })).toBeVisible();
 });
