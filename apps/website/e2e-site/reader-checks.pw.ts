@@ -36,6 +36,10 @@ const failableChecker = () => {
         setTimeout(() => this.onerror?.(new ErrorEvent("error", { message: "Forced worker crash" })));
         return;
       }
+      if (request?.kind === "analyze" && mode === "hang") {
+        // Simulate a wedged worker that never answers; ReadingClient must time out and respawn it.
+        return;
+      }
       super.postMessage(message, options as StructuredSerializeOptions);
     }
   };
@@ -63,7 +67,8 @@ test("a checker failure ends Checking… and says why", async ({ page }) => {
   await page.goto(`/playground/custom${encodePreludeDemo(research)}`);
   await expect(page.locator(".rd-check")).toHaveText(/Types check/);
 
-  for (const [mode, message] of [["answer", "Forced checker failure"], ["crash", "Forced worker crash"]]) {
+  await page.evaluate(() => { (window as unknown as { __formaReadingTimeoutMs?: number }).__formaReadingTimeoutMs = 150; });
+  for (const [mode, message] of [["answer", "Forced checker failure"], ["crash", "Forced worker crash"], ["hang", "timed out"]]) {
     await page.evaluate(next => { (window as unknown as { failChecks?: string }).failChecks = next; }, mode);
     await source(page).press("End");
     await source(page).pressSequentially(" ");
@@ -71,8 +76,11 @@ test("a checker failure ends Checking… and says why", async ({ page }) => {
     await expect(page.locator(".rd-check")).not.toHaveText(/Checking/);
   }
 
-  // The next edit after the failure checks again, with a new worker after the crash.
-  await page.evaluate(() => { (window as unknown as { failChecks?: string }).failChecks = undefined; });
+  // The next edit after the failure checks again, with a new worker after the crash or timeout.
+  await page.evaluate(() => {
+    (window as unknown as { failChecks?: string }).failChecks = undefined;
+    (window as unknown as { __formaReadingTimeoutMs?: number }).__formaReadingTimeoutMs = undefined;
+  });
   await source(page).pressSequentially(" ");
   await expect(page.locator(".rd-check")).toHaveText(/Types check/);
 });
@@ -127,4 +135,19 @@ test("each edit is analyzed once, and the status, Result and JSON all show that 
   expect(await checks(page)).toEqual({ workers: 0, analyzed: ["prelude.lisp", "example.lisp"] });
   await page.getByRole("tab", { name: "Result", exact: true }).click();
   await expect(output(page).getByRole("heading", { name: /bar/ })).toBeVisible();
+});
+
+test("prelude errors show their actual diagnostic in Result and jump into prelude.lisp", async ({ page }) => {
+  const brokenPrelude = {
+    ...research,
+    prelude: `${research.prelude}\n(+ 1 "nope")`,
+  };
+  await page.goto(`/playground/custom${encodePreludeDemo(brokenPrelude)}`);
+  await page.getByRole("tab", { name: "Result", exact: true }).click();
+  const problem = output(page).locator(".rd-problem").filter({ hasText: "prelude.lisp:" }).first();
+  await expect(problem).toBeVisible();
+  await expect(problem).toContainText(/String|Int|Float/);
+  await problem.getByRole("button").click();
+  await expect(page.locator(".rd-scope")).toHaveCount(0);
+  await expect(source(page)).toContainText('(+ 1 "nope")');
 });

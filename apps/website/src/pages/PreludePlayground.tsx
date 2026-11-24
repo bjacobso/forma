@@ -53,9 +53,9 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   const [original] = useState(() => initialDemo ?? decodePreludeDemo(initialHash) ?? defaultPreludeDemo);
   const [demo, setDemo] = useState(original);
   // Result, JSON, and the reader's status all show the reader's one analysis of the program.
-  const [check, setCheck] = useState<ProgramCheck>({ analysis: null, checking: true, failure: null, preludeErrors: 0 });
+  const [check, setCheck] = useState<ProgramCheck>({ analysis: null, checking: true, failure: null, preludeErrors: 0, preludeDiagnostics: [] });
   // The compiler internals come from the engine's own run, made only while one of them is shown.
-  const [internalRun, setInternalRun] = useState<RunResult | null>(null);
+  const [internalState, setInternalState] = useState<{ readonly run: RunResult | null; readonly loading: boolean; readonly error: string | null }>({ run: null, loading: false, error: null });
   const [shareStatus, setShareStatus] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
@@ -69,6 +69,7 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   // The reader reads its files when it mounts, so text it did not write (Reset, Introduce error) mounts a fresh one.
   const fromReader = useRef({ prelude: original.prelude, source: original.source });
   const [revision, setRevision] = useState(0);
+  const internalRun = internalState.run;
   const debug = internalRun?.preludeDebug;
   const result = check.analysis;
   const validating = check.checking;
@@ -102,10 +103,13 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
     // Each edit cancels the previous worker, including a nonterminating hook.
     const client = new EngineClient();
     let active = true;
+    setInternalState(current => ({ ...current, loading: true, error: null }));
     const timer = window.setTimeout(() => {
       void client.run(demo.source, ["typecheck"], PROGRAM_FILE, undefined, demo.prelude)
-        .then(value => { if (active) setInternalRun(value); })
-        .catch(() => { if (active) setInternalRun(null); });
+        .then(value => { if (active) setInternalState({ run: value, loading: false, error: null }); })
+        .catch((reason: unknown) => {
+          if (active) setInternalState({ run: null, loading: false, error: reason instanceof Error ? reason.message : String(reason) });
+        });
     }, 300);
     return () => { active = false; window.clearTimeout(timer); client.dispose(); };
   }, [demo.prelude, demo.source, internalTab]);
@@ -145,10 +149,15 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   const syntax = activeFile === PRELUDE_FILE ? debug?.preludeSyntax : passOf(internalRun?.passResults ?? [], "parse");
   const stale = validating || Boolean(error);
   const problemRows = <>
-    {check.preludeErrors ? <div className="rd-problem rd-problem-error">
-      <button className="rd-problem-message" disabled={stale} onClick={() => setReveal({ file: PRELUDE_FILE, span: [0, 0] })} title="Open the language definition" type="button">The language definition has {check.preludeErrors} {check.preludeErrors === 1 ? "problem" : "problems"}.</button>
-      <code className="rd-problem-code">{PRELUDE_FILE}</code>
-    </div> : null}
+    {check.preludeDiagnostics.length
+      ? check.preludeDiagnostics.map((diagnostic, index) => <div className={`rd-problem rd-problem-${diagnostic.severity}`} key={`prelude-${index}`}>
+          <button className="rd-problem-message" disabled={stale} onClick={() => setReveal({ file: PRELUDE_FILE, span: [diagnostic.from, diagnostic.to] })} title="Select it in the language definition" type="button">{diagnostic.message}</button>
+          <code className="rd-problem-code">{diagnostic.code} · {PRELUDE_FILE}:{diagnostic.from}</code>
+        </div>)
+      : check.preludeErrors ? <div className="rd-problem rd-problem-error">
+          <button className="rd-problem-message" disabled={stale} onClick={() => setReveal({ file: PRELUDE_FILE, span: [0, 0] })} title="Open the language definition" type="button">The language definition has {check.preludeErrors} {check.preludeErrors === 1 ? "problem" : "problems"}.</button>
+          <code className="rd-problem-code">{PRELUDE_FILE}</code>
+        </div> : null}
     {diagnostics.map((diagnostic, index) => <div className={`rd-problem rd-problem-${diagnostic.severity}`} key={index}>
       <button className="rd-problem-message" disabled={stale} onClick={() => setReveal({ file: PROGRAM_FILE, span: [diagnostic.from, diagnostic.to] })} title="Select it in the code" type="button">{diagnostic.message}</button>
       <code className="rd-problem-code">{diagnostic.code} · {PROGRAM_FILE}:{diagnostic.from}</code>
@@ -169,7 +178,8 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
     {error ? <p className="studio-validation-error" role="alert">{error}</p> : null}
     <div className="studio-output" id="studio-output" role="tabpanel" aria-busy={validating} aria-labelledby={`inspector-${tab}`}>
       <div className="studio-output-snapshot" data-stale={Boolean(result && stale)} inert={Boolean(result && stale)}>
-      {internalTab && !internalRun ? <p className="workbench-empty">Running the compiler…</p>
+      {internalTab && internalState.error ? <p className="studio-validation-error" role="alert">Could not load compiler internals: {internalState.error}</p>
+        : internalTab && (!internalRun || internalState.loading) ? <p className="workbench-empty">Running the compiler…</p>
         : !result && !internalTab ? <p className="workbench-empty">{error ? "No previous result is available." : "Checking prelude and example…"}</p>
         : tab === "result" ? errors ? <><p className="studio-output-note">Fix the diagnostics to inspect checked data. The JSON view keeps any partial compiler output available.</p><div className="studio-problems-list">{problemRows}</div></> : <>
           <p className="studio-output-note">Data checked against your prelude. Your application interprets it; nothing is executed here.</p>
@@ -249,6 +259,7 @@ interface ProgramCheck {
   readonly checking: boolean;
   readonly failure: string | null;
   readonly preludeErrors: number;
+  readonly preludeDiagnostics: readonly Analysis["diagnostics"][number][];
 }
 
 /**
@@ -259,7 +270,8 @@ interface ProgramCheck {
 function FollowProgram({ onCheck }: { readonly onCheck: (check: ProgramCheck) => void }) {
   const reader = useReader();
   const shown = reader.active === PROGRAM_FILE;
-  const [other, setOther] = useState<Omit<ProgramCheck, "preludeErrors">>({ analysis: null, checking: true, failure: null });
+  const [other, setOther] = useState<Omit<ProgramCheck, "preludeErrors" | "preludeDiagnostics">>({ analysis: null, checking: true, failure: null });
+  const [fetchedPreludeDiagnostics, setFetchedPreludeDiagnostics] = useState<readonly Analysis["diagnostics"][number][]>([]);
   const last = useRef<Analysis | null>(null);
   useEffect(() => {
     if (shown || reader.checking) { setOther(current => ({ ...current, checking: true })); return; }
@@ -270,12 +282,27 @@ function FollowProgram({ onCheck }: { readonly onCheck: (check: ProgramCheck) =>
     );
     return () => { live = false; };
   }, [shown, reader.checking, reader.analysis, reader.failure]);
-  const current = shown ? { analysis: reader.analysis, checking: reader.checking, failure: reader.failure } : other;
-  if (current.analysis) last.current = current.analysis;
   const preludeErrors = reader.problems[PRELUDE_FILE]?.errors ?? 0;
   useEffect(() => {
-    onCheck({ analysis: current.analysis ?? last.current, checking: current.checking, failure: current.failure, preludeErrors });
-  }, [current.analysis, current.checking, current.failure, preludeErrors]);
+    if (!shown || preludeErrors === 0 || reader.checking) {
+      if (preludeErrors === 0) setFetchedPreludeDiagnostics([]);
+      return;
+    }
+    let live = true;
+    reader.client.analyze(reader.files(), PRELUDE_FILE).then(
+      analysis => { if (live) setFetchedPreludeDiagnostics(analysis.diagnostics.filter(d => d.severity === "error")); },
+      () => { if (live) setFetchedPreludeDiagnostics([]); },
+    );
+    return () => { live = false; };
+  }, [shown, preludeErrors, reader.checking, reader.analysis]);
+  const current = shown ? { analysis: reader.analysis, checking: reader.checking, failure: reader.failure } : other;
+  if (current.analysis) last.current = current.analysis;
+  const preludeDiagnostics = shown
+    ? fetchedPreludeDiagnostics
+    : (reader.analysis?.diagnostics.filter(d => d.severity === "error") ?? []);
+  useEffect(() => {
+    onCheck({ analysis: current.analysis ?? last.current, checking: current.checking, failure: current.failure, preludeErrors, preludeDiagnostics });
+  }, [current.analysis, current.checking, current.failure, preludeErrors, preludeDiagnostics]);
   return null;
 }
 

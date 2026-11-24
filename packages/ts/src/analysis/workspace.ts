@@ -564,8 +564,18 @@ function describedForms(sourceId: string, text: string, scope: Scope): Pick<Docu
         (diagnostic) => diagnostic.span?.sourceId === sourceId && diagnostic.code !== "elaborate/no-construct-hook",
       ),
     };
-  } catch {
-    return { diagnostics: [], declarations: [] };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      diagnostics: [{
+        code: "internal/error",
+        severity: "error",
+        message: `Form elaboration failed: ${message}`,
+        phase: "elaborate",
+        span: { sourceId, startOffset: 0, endOffset: 0 },
+      }],
+      declarations: [],
+    };
   }
 }
 
