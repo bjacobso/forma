@@ -22,6 +22,13 @@ import { typeName } from "../mechanics/naming.js";
 import { parse, toSExprMany } from "../reader/index.js";
 import type { SExpr } from "../reader/types.js";
 import { resolveModuleGraph, ModuleError, type ModuleGraph } from "../modules/graph.js";
+import {
+  createSystemGraphBuilder,
+  type SystemEdge,
+  type SystemGraph,
+  type SystemGraphBuilder,
+  type SystemNode,
+} from "../modules/linker.js";
 import { linkEffectLibraryModules } from "./modules.js";
 import { checkModuleGraph } from "../modules/check.js";
 import { ordinaryEffectGraph } from "./modules.js";
@@ -31,35 +38,9 @@ import { mechanicsPackageableDeclarations } from "../mechanics/artifact.js";
 import { checkMechanicsProgram } from "../mechanics/checked.js";
 import { expandEffectLibrary } from "../mechanics/effect-library.js";
 
-/** A declaration, service, entity, or other part of the linked system. */
-export interface SystemNode {
-  /** `kind:name`; child names are qualified by their parents, as in `rpc:Accounts/GetAccount`. */
-  readonly id: string;
-  readonly kind: string;
-  readonly name: string;
-  readonly span?: Span;
-  readonly data?: Readonly<Record<string, JsonValue>>;
-}
-/** A typed relation between two nodes, such as `provides`, `requires`, `raises`, or `contains`. */
-export interface SystemEdge {
-  readonly from: string;
-  readonly to: string;
-  readonly kind: string;
-}
+export type { SystemEdge, SystemGraph, SystemGraphBuilder, SystemNode };
 /** The program's services, layers, operations, and library declarations as inspectable data. */
-export interface EffectSystemGraph {
-  readonly nodes: readonly SystemNode[];
-  readonly edges: readonly SystemEdge[];
-}
-
-export interface SystemGraphBuilder {
-  /** Adds a node and returns its id. */
-  readonly node: (kind: string, name: string, span?: Span, data?: Readonly<Record<string, JsonValue>>) => string;
-  /** Adds an edge; edges to nodes that do not exist are dropped. */
-  readonly edge: (from: string, to: string, kind: string) => void;
-  /** Adds an edge from `from` to each declared schema or error that a type refers to. */
-  readonly uses: (from: string, type: JsonValue | undefined, kind?: string) => void;
-}
+export type EffectSystemGraph = SystemGraph;
 
 export interface ExtensionContext {
   readonly source: string;
@@ -288,23 +269,7 @@ function systemGraph(
   owner: ReadonlyMap<ElaboratedDeclaration, number>,
   pendingModuleEdges = false,
 ): EffectSystemGraph {
-  const nodes = new Map<string, SystemNode>();
-  const edges = new Map<string, SystemEdge>();
-  const pending: [string, string, string][] = [];
-  const add: SystemGraphBuilder = {
-    node: (kind, name, span, data) => {
-      const id = `${kind}:${name}`;
-      nodes.set(id, { id, kind, name, ...(span ? { span } : {}), ...(data ? { data } : {}) });
-      return id;
-    },
-    edge: (from, to, kind) => { edges.set(`${from} ${kind} ${to}`, { from, to, kind }); },
-    uses: (from, type, kind = "uses") => {
-      if (type == null) return;
-      let names: readonly string[] = [];
-      try { names = schemaReferences(emissionSchema(emissionDatum(type))); } catch { /* unsupported types have no edges */ }
-      for (const n of names) pending.push([from, n, kind]);
-    },
-  };
+  const { add, build } = createSystemGraphBuilder(type => schemaReferences(emissionSchema(emissionDatum(type))));
   const keys = (set: ReadonlyMap<string, unknown>) => [...set.keys()].sort();
   for (const d of mechanics) {
     const n = d.summary.name;
@@ -337,9 +302,5 @@ function systemGraph(
     }
   }
   for (const [d, i] of owner) extensions[i]!.graph?.(d, contexts[i]!, add);
-  for (const [from, n, kind] of pending) add.edge(from, nodes.has(`error:${n}`) ? `error:${n}` : `schema:${n}`, kind);
-  return {
-    nodes: [...nodes.values()],
-    edges: [...edges.values()].filter(e => pendingModuleEdges || nodes.has(e.from) && nodes.has(e.to)),
-  };
+  return build(pendingModuleEdges);
 }

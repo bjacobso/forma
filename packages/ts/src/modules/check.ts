@@ -1,4 +1,6 @@
-import { hasEffectLibraries, ordinaryEffectGraph, linkEffectLibraryModules } from "../effect-system/modules.js";
+import { effectLibraryAdapter, hasEffectLibraries, ordinaryEffectGraph } from "../effect-system/modules.js";
+import { descriptorFormAdapter, linkModuleSystem, type LinkedSystemResult } from "./linker.js";
+import { head, name } from "../surface/effect.js";
 import { diagnosticLocator } from "../diagnostic/locations.js";
 import { Effect, Layer, Ref } from "effect";
 import { inferProgram } from "../type/infer-program.js";
@@ -41,7 +43,79 @@ export interface ModuleCheckResult {
   readonly mechanics?: CheckedMechanicsDeclarations;
   readonly resultDisplays?: ReadonlyMap<string, string>;
   readonly typedSpans: ReadonlyMap<string, readonly TypedSpan[]>;
+  /** Linked artifact and system graph output when a library adapter applies. */
+  readonly linked?: LinkedSystemResult;
 }
+const HOOK_OPTIONS = [":check", ":type", ":scope", ":emit", ":graph", ":infer-fn"] as const;
+const NON_RUNTIME_HEADS = new Set(["form", "type", "macro", "class", "error", "service", "layer", ":"]);
+
+/** Top-level `define`s reachable only from `form` hooks and never from runtime roots. */
+function hookOnlyDefines(module: ResolvedModule): ReadonlySet<string> {
+  const localDefines = new Map<string, SExpr>();
+  const forms: SExpr[] = [];
+  for (const e of module.expressions) {
+    const h = head(e);
+    if (h === "define" && e._tag === "List" && name(e.items[1])) localDefines.set(name(e.items[1])!, e);
+    else if (h === "form") forms.push(e);
+  }
+  if (!localDefines.size || !forms.length) return new Set();
+  const collectRefs = (e: SExpr, out: Set<string>): void => {
+    if (e._tag === "Sym") out.add(e.name.split(".")[0]!);
+    else if (e._tag === "Map") e.pairs.forEach(([k, v]) => { collectRefs(k, out); collectRefs(v, out); });
+    else if (e._tag === "List" && ["quote", "quasiquote"].includes(head(e) ?? "")) return;
+    else if (e._tag === "List" || e._tag === "Vector" || e._tag === "Set") e.items.forEach(item => collectRefs(item, out));
+  };
+  const defineRefs = (sym: string): Set<string> => {
+    const refs = new Set<string>();
+    const expr = localDefines.get(sym);
+    if (expr?._tag === "List") expr.items.slice(2).forEach(item => collectRefs(item, refs));
+    refs.delete(sym);
+    return refs;
+  };
+  const close = (roots: Iterable<string>): Set<string> => {
+    const visited = new Set<string>();
+    const queue = [...roots];
+    while (queue.length) {
+      const current = queue.pop()!;
+      if (visited.has(current) || !localDefines.has(current)) continue;
+      visited.add(current);
+      for (const next of defineRefs(current)) if (localDefines.has(next) && !visited.has(next)) queue.push(next);
+    }
+    return visited;
+  };
+  const hookRoots = new Set<string>();
+  for (const formExpr of forms) {
+    const formSym = formExpr._tag === "List" && formExpr.items[1]?._tag === "List" ? name(formExpr.items[1].items[0]) : undefined;
+    const spec = formSym ? module.compileTime?.forms.get(formSym)?.descriptor.surface : undefined;
+    if (!spec) continue;
+    const refs = new Set<string>();
+    collectRefs(spec.body, refs);
+    for (const key of HOOK_OPTIONS) {
+      const opt = spec.options.get(key);
+      if (opt) collectRefs(opt, refs);
+    }
+    for (const r of refs) if (!spec.holes.has(r) && localDefines.has(r)) hookRoots.add(r);
+  }
+  const hookReachable = close(hookRoots);
+  if (!hookReachable.size) return new Set();
+  const runtimeRoots = new Set<string>();
+  for (const exp of module.interface.exports) {
+    if (exp.identity.moduleId === module.id && exp.kind === "value" && localDefines.has(exp.symbol))
+      runtimeRoots.add(exp.symbol);
+  }
+  for (const sym of localDefines.keys()) if (!hookReachable.has(sym)) runtimeRoots.add(sym);
+  for (const e of module.expressions) {
+    const h = head(e);
+    if (!h || NON_RUNTIME_HEADS.has(h)) continue;
+    if (h === "define") continue;
+    const refs = new Set<string>();
+    collectRefs(e, refs);
+    for (const r of refs) if (localDefines.has(r)) runtimeRoots.add(r);
+  }
+  const runtimeReachable = close(runtimeRoots);
+  return new Set([...hookReachable].filter(sym => !runtimeReachable.has(sym)));
+}
+
 /** Check each lexical module separately, sharing only resolved dependency types. */
 export function checkModuleGraph(
   graph: ModuleGraph,
@@ -50,8 +124,8 @@ export function checkModuleGraph(
   if (hasEffectLibraries(graph)) {
     const ordinary = checkModuleGraph(ordinaryEffectGraph(graph), options);
     if (!ordinary.ok) return ordinary;
-    const linked = linkEffectLibraryModules(graph, ordinary.environments);
-    return { ...ordinary, ok: linked.ok, interfaces: graph.modules.map(m => m.interface), diagnostics: linked.diagnostics };
+    const linked = linkModuleSystem(graph, [effectLibraryAdapter], { environments: ordinary.environments })!;
+    return { ...ordinary, ok: linked.ok, interfaces: graph.modules.map(m => m.interface), diagnostics: linked.diagnostics, linked };
   }
   const environments = new Map<string, TypeEnv>(),
     results = new Map<string, Type>(),
@@ -122,7 +196,15 @@ export function checkModuleGraph(
               if (allowed.has(symbol)) initial.set(symbol, scheme);
             }
           const source = module.expressions.map(printSExpr).join("\n");
-          const expressions = module.expressions.filter(e => !routing?.owned.has(e));
+          const hookOnly = hookOnlyDefines(module);
+          const expressions = module.expressions.filter(e => {
+            if (routing?.owned.has(e)) return false;
+            if (!hookOnly.size) return true;
+            const h = head(e);
+            if ((h === "define" || h === ":") && e._tag === "List" && name(e.items[1]) && hookOnly.has(name(e.items[1])!))
+              return false;
+            return true;
+          });
           const referenced = new Set<string>();
           const references = (e: SExpr): void => {
             if (e._tag === "Sym") referenced.add(e.name.split(".")[0]!);
@@ -428,6 +510,11 @@ export function checkModuleGraph(
       };
     }),
   }));
+  let linked: LinkedSystemResult | undefined;
+  if (!diagnostics.some((d) => d.severity === "error")) {
+    linked = linkModuleSystem(graph, [descriptorFormAdapter], { environments });
+    if (linked) diagnostics.push(...linked.diagnostics);
+  }
   return {
     ok: !diagnostics.some((d) => d.severity === "error"),
     interfaces,
@@ -435,6 +522,7 @@ export function checkModuleGraph(
     environments,
     results,
     typedSpans,
+    ...(linked ? { linked } : {}),
     ...(mechanics ? { mechanics, resultDisplays: new Map(expandedModules.flatMap(m => {
       const last = m.expressions.at(-1);
       const display = last && routing?.owned.has(last) && last._tag === "List" && last.items[1]?._tag === "Sym"

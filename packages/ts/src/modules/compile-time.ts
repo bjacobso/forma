@@ -1,3 +1,4 @@
+import { resolveTypeAlias } from "../surface/type-alias.js";
 import { authorNames, failureLocation, type Diagnostic } from "../diagnostic/diagnostic.js";
 import { irContractId } from "../artifact/contract-identity.js";
 import { isKFloat } from "../evaluator/types.js";
@@ -12,6 +13,7 @@ import {
   isKMacro,
   isKSymbol,
   isKKeyword,
+  mapKey,
   mapKeyValue,
   KSymbol,
   type KValue,
@@ -20,6 +22,7 @@ import { normalizeCoreProgram } from "../surface/core.js";
 import { datum } from "../surface/datum.js";
 import { head, name } from "../surface/effect.js";
 import {
+  type LinkedFormContext,
   matchFormSyntax,
   normalizeUnifiedForm,
   parseUnifiedForm,
@@ -108,6 +111,8 @@ export interface ElaboratedApplication {
   readonly span: Span;
   /** The value the form's projection body produced. */
   readonly ir: KValue;
+  /** The linked form descriptor and owning compile-time module. */
+  readonly linkedForm?: LinkedModuleForm;
 }
 const spanOf = (e: SExpr): Span => ({
   sourceId: e.loc.sourceId ?? "",
@@ -453,6 +458,7 @@ export function prepareCompileTimeModule(
           ...(binding ? { name: binding.name } : {}),
           span: spanOf(expression),
           ir,
+          linkedForm: form,
         }];
       }),
     expand: (expressions) =>
@@ -593,15 +599,6 @@ export function prepareCompileTimeModule(
       } else if (expression && applications.has(symbol)) {
         const form = forms.get(head(expression)!)!;
         const descriptor = form.descriptor;
-        // Prepare helpers in their definition scope before binding caller holes.
-        for (const dependency of collect(descriptor.surface!.body))
-          if (!descriptor.surface!.holes.has(dependency)) {
-            try {
-              form.owner.read(dependency);
-            } catch (error) {
-              if (error instanceof ModuleError) throw error;
-            }
-          }
         const normalized = normalizeUnifiedForm(descriptor, expression);
         const input = {
           formName: descriptor.name,
@@ -614,19 +611,33 @@ export function prepareCompileTimeModule(
         };
         const registry = new FormDescriptorRegistry();
         for (const f of forms.values()) registry.register(f.descriptor);
-        const hooks = unifiedFormHooks(
-          descriptor,
-          registry,
-          undefined,
-          undefined,
-          {
-            environment: form.owner.environment,
-            evaluateHole: (hole, type) =>
-              isSyntaxHole(type) ? datum(hole) : run(hole),
-            run: (body, scope, builtins) =>
-              form.owner.run(body, scope, builtins),
-          },
-        );
+        const contextFor = (targetDescriptor: FormDescriptor): LinkedFormContext => {
+          const selected = [...forms.values()].find(f => f.descriptor === targetDescriptor)!;
+          const spec = targetDescriptor.surface!;
+          // Demand every hook's lexical dependencies before taking its hole frame.
+          for (const dependency of [spec.body, ...spec.options.values()].flatMap(collect))
+            if (!spec.holes.has(dependency)) {
+              try { selected.owner.read(dependency); }
+              catch (error) { if (error instanceof ModuleError) throw error; }
+            }
+          const evaluate = (hole: SExpr, type: SExpr): KValue => {
+            type = unwrap(resolveTypeAlias(type, spec.types));
+            if (type._tag === "Map" && hole._tag === "Map") return new Map(hole.pairs.map(([key, val]) => {
+              const fieldType = type.pairs.find(([k]) => mapKey(datum(k)) === mapKey(datum(key)))?.[1];
+              return [mapKey(datum(key))!, fieldType ? evaluate(val, fieldType) : run(val)];
+            }));
+            if (head(type) === "List" && type._tag === "List" && hole._tag === "Vector")
+              return hole.items.map(item => evaluate(item, type.items[1]!));
+            return isSyntaxHole(type) ? datum(hole) : run(hole);
+          };
+          return {
+            environment: selected.owner.environment,
+            evaluateHole: evaluate,
+            forDescriptor: contextFor,
+            run: (body, scope, builtins) => selected.owner.run(body, scope, builtins),
+          };
+        };
+        const hooks = unifiedFormHooks(descriptor, registry, undefined, undefined, contextFor(descriptor));
         // A hook that fails to run is reported at the application, not as an internal error.
         const runHook = <A>(hook: () => A): A => {
           try {

@@ -1,0 +1,86 @@
+{
+  "format": "json",
+  "entry": "program.json",
+  "modules": [
+    {
+      "moduleId": "program.lisp",
+      "fileName": "program.json",
+      "format": "json",
+      "output": [
+        {
+          "kind": "connector",
+          "name": "Stripe",
+          "doc": "Payment processor",
+          "capabilities": ["charge", "refund"],
+          "signals": ["webhook"],
+          "owns": ["PaymentFlow"]
+        },
+        {
+          "kind": "machine",
+          "name": "PaymentFlow",
+          "doc": "Tracks a card charge lifecycle",
+          "signal": "webhook",
+          "initial": "pending",
+          "final": ["settled", "failed"],
+          "states": [
+            { "name": "pending", "label": "Pending" },
+            { "name": "settled", "label": "Settled" },
+            { "name": "failed", "label": "Failed" }
+          ],
+          "transitions": [
+            { "from": "pending", "to": "settled" },
+            { "from": "pending", "to": "failed" }
+          ]
+        }
+      ]
+    }
+  ],
+  "system": {
+    "nodes": [
+      {
+        "id": "connector:Stripe",
+        "kind": "connector",
+        "name": "Stripe",
+        "data": {
+          "capabilities": ["charge", "refund"],
+          "signals": ["webhook"]
+        }
+      },
+      {
+        "id": "machine:PaymentFlow",
+        "kind": "machine",
+        "name": "PaymentFlow",
+        "data": {
+          "signal": "webhook",
+          "initial": "pending"
+        }
+      },
+      {
+        "id": "state:PaymentFlow/pending",
+        "kind": "state",
+        "name": "PaymentFlow/pending",
+        "data": { "label": "Pending" }
+      },
+      {
+        "id": "state:PaymentFlow/settled",
+        "kind": "state",
+        "name": "PaymentFlow/settled",
+        "data": { "label": "Settled" }
+      },
+      {
+        "id": "state:PaymentFlow/failed",
+        "kind": "state",
+        "name": "PaymentFlow/failed",
+        "data": { "label": "Failed" }
+      }
+    ],
+    "edges": [
+      { "from": "connector:Stripe", "to": "machine:PaymentFlow", "kind": "owns" },
+      { "from": "machine:PaymentFlow", "to": "state:PaymentFlow/pending", "kind": "contains" },
+      { "from": "machine:PaymentFlow", "to": "state:PaymentFlow/settled", "kind": "contains" },
+      { "from": "machine:PaymentFlow", "to": "state:PaymentFlow/failed", "kind": "contains" },
+      { "from": "state:PaymentFlow/pending", "to": "state:PaymentFlow/settled", "kind": "transitions-to" },
+      { "from": "state:PaymentFlow/pending", "to": "state:PaymentFlow/failed", "kind": "transitions-to" }
+    ]
+  }
+}
