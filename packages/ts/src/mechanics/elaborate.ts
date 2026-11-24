@@ -149,12 +149,13 @@ export function elaborateEffectForms(
   let exprs: readonly SExpr[];
   const surfaceDiagnostic = (error: unknown, expression?: SExpr): EffectProgramDiagnostic => {
     const loc = error instanceof Error && "loc" in error ? error.loc as SExpr["loc"] : expression?.loc;
-    const code = error instanceof InferenceError && typeof error.details["code"] === "string" ? error.details["code"] : "mechanics/ontology-operation";
+    const details = error instanceof InferenceError ? error.details : error instanceof Error && "details" in error && typeof error.details === "object" && error.details !== null ? error.details as Record<string, unknown> : undefined;
+    const code = typeof details?.["code"] === "string" ? details["code"] : "mechanics/ontology-operation";
     return {phase:"project",severity:"error",code,message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {})};
   };
   const surfaceErrors: EffectProgramDiagnostic[] = [];
   for (const expression of authored) {
-    if (expression._tag !== "List" || expression.items[0]?._tag !== "Sym" || !["type", "class", "error", "service"].includes(expression.items[0].name)) continue;
+    if (expression._tag !== "List" || expression.items[0]?._tag !== "Sym" || !["type", "class", "error", "service", "layer"].includes(expression.items[0].name)) continue;
     try { normalizeEffectProgram([expression]); }
     catch (error) { surfaceErrors.push(surfaceDiagnostic(error, expression)); }
   }

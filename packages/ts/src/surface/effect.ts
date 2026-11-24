@@ -80,7 +80,6 @@ function body(e: SExpr, protectedNames: ReadonlySet<string> = new Set()): SExpr 
   if (e._tag !== "List" || head(e) === "quote" || head(e) === "quasiquote") return e;
   if (head(e) === ":" && e.items.length === 3) return call(e, ":", body(e.items[1]!,protectedNames), normalizeEffectTypes(e.items[2]!));
   if (head(e) === "match") return list(e,e.items.map((a,i)=>i>=2 && i%2===0 ? a : body(a,protectedNames)));
-  if (head(e) === "catch") return list(e, e.items.map((a, i) => i >= 2 && i % 2 === 0 && a._tag === "Sym" && /^[a-z_]/.test(a.name) ? call(a, "_", a) : body(a,protectedNames)));
   return { ...e, items: e.items.map(v=>body(v,protectedNames)) };
 }
 
@@ -153,7 +152,7 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
     switch (name(h)) {
       case "type": case "__schema":
         return n && args[0] ? call(e, "__schema", n, normalizeEffectTypes(args[0], true, n)) : e;
-      case "class": case "__error": case "__class": {
+      case "__error": case "__class": {
         if (!n) return e;
         const hasRecord=args[0]?._tag === "Map" || head(args[0]) === "Struct" || head(args[0]) === ":fields";
         const record = hasRecord ? normalizeEffectTypes(args[0]!, true) : call(e, "Struct");
@@ -162,32 +161,38 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
       }
       case "__service":
         return call(e, "__service", n!, ...args.map(a => a._tag === "List" ? list(a, a.items.map((m, i) => i === 0 || m._tag !== "List" ? m : normalizeMethod(m))) : a));
-      case "layer": {
+      case "__layer": {
         if (!n) return e;
         if (args.length === 1) return call(e, "__layer", n, normalizeBody(args[0]!));
-        const sections: SExpr[] = [];
-        const definitions = args.filter(a=>head(a)==="define" && a._tag === "List") as Extract<SExpr,{_tag:"List"}>[];
-        const providesAt = args.findIndex(a=>name(a)===":provides");
-        const serviceName = name(args[providesAt+1]);
-        const service = exprs.find(a=>head(a)==="__service" && a._tag === "List" && name(a.items[1])===serviceName);
-        const methodsBlock = service?._tag === "List" ? service.items.find(a=>head(a)===":methods") : undefined;
-        const exported = methodsBlock?._tag === "List" ? new Set(methodsBlock.items.slice(1).map(a=>a._tag === "List" ? name(a.items[0]) : undefined)) : undefined;
-        const helpers = definitions.filter(a=>exported && !exported.has(name(a.items[1])));
-        const helperBindings = helpers.flatMap(a=>[a.items[1]!, a.items[2]?._tag === "Vector" ? call(a,"fn",a.items[2],...a.items.slice(3)) : a.items[2]!]);
-        const methods = definitions.filter(a=>!helpers.includes(a)).map(a=>{
-          const params = a.items[2]?._tag === "Vector" ? a.items[2] : vector(a,[]);
-          const expressions = a.items.slice(params === a.items[2] ? 3 : 2);
-          const wrapped = helperBindings.length ? [call(a,"let",vector(a,helperBindings),call(a,"do",...expressions))] : expressions;
-          const scope = new Set([...moduleBindings(exprs),...patternBindings(params),...args.flatMap((a, i) => name(a) === ":setup" && args[i + 1]?._tag === "Vector" ? (args[i + 1] as Extract<SExpr, {_tag: "Vector"}>).items.filter((_, i) => i % 2 === 0).flatMap(a => [...patternBindings(a)]) : []),...helpers.flatMap(a=>name(a.items[1]) ? [name(a.items[1])!] : [])]);
-          return list(a,[a.items[1]!,params,...wrapped.map(v=>body(lowerConstructors(lowerMembers(v,scope),constructors),protectedNames))]);
+        const provides = args.find(a => a._tag === "List" && head(a) === ":provides");
+        const serviceName = provides?._tag === "List" ? name(provides.items[1]) : undefined;
+        const service = exprs.find(a => head(a) === "__service" && a._tag === "List" && name(a.items[1]) === serviceName);
+        const methodsBlock = service?._tag === "List" ? service.items.find(a => head(a) === ":methods") : undefined;
+        const exported = methodsBlock?._tag === "List" ? new Set(methodsBlock.items.slice(1).map(a => a._tag === "List" ? name(a.items[0]) : undefined)) : undefined;
+        const setupBindings = args.flatMap(a => a._tag === "List" && head(a) === ":setup" && a.items[1]?._tag === "Vector"
+          ? (a.items[1] as Extract<SExpr, { _tag: "Vector" }>).items.filter((_, i) => i % 2 === 0).flatMap(p => [...patternBindings(p)])
+          : []);
+        const rawMethodsBlock = args.find(a => a._tag === "List" && head(a) === ":methods");
+        const entries = rawMethodsBlock?._tag === "List"
+          ? rawMethodsBlock.items.slice(1).filter((m): m is Extract<SExpr, { _tag: "List" }> => m._tag === "List")
+          : [];
+        const helpers = entries.filter(m => exported && !exported.has(name(m.items[0])));
+        const helperBindings = helpers.flatMap(m => [m.items[0]!, m.items[1]?._tag === "Vector" ? call(m, "fn", m.items[1], ...m.items.slice(2)) : m.items[1]!]);
+        const helperNames = helpers.flatMap(m => name(m.items[0]) ? [name(m.items[0])!] : []);
+        const methods = entries.filter(m => !helpers.includes(m)).map(m => {
+          const params = m.items[1]?._tag === "Vector" ? m.items[1] : vector(m, []);
+          const expressions = m.items.slice(params === m.items[1] ? 2 : 1);
+          const wrapped = helperBindings.length ? [call(m, "let", vector(m, helperBindings), call(m, "do", ...expressions))] : expressions;
+          const scope = new Set([...moduleBindings(exprs), ...patternBindings(params), ...setupBindings, ...helperNames]);
+          return list(m, [m.items[0]!, params, ...wrapped.map(v => body(lowerConstructors(lowerMembers(v, scope), constructors), protectedNames))]);
         });
-        for (let i=0;i<args.length;i++) {
-          const a = args[i]!;
-          if (name(a)?.startsWith(":") && args[i+1]) sections.push(list(a,[a,normalizeBody(args[++i]!)]));
-          else if (head(a)!=="define") sections.push(normalizeBody(a));
-        }
-        sections.push(call(e,":methods",...methods));
-        return call(e,"__layer",n,...sections);
+        const sections = args
+          .filter(a => !(a._tag === "List" && head(a) === ":methods"))
+          .map(a => a._tag === "List" && name(a.items[0])?.startsWith(":") && a.items.length === 2
+            ? list(a, [a.items[0]!, normalizeBody(a.items[1]!)])
+            : normalizeBody(a));
+        sections.push(call(rawMethodsBlock ?? e, ":methods", ...methods));
+        return call(e, "__layer", n, ...sections);
       }
       case ":":
         return n && args[0] ? call(e, ":", n, normalizeEffectTypes(args[0])) : e;
