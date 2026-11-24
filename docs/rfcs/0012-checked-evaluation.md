@@ -2,10 +2,11 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; partly implemented |
+| Status | Accepted for stages 1–3; check-before-run, step limits, and host-call pauses partly implemented |
 | Created | 2026-10-09 |
-| Scope | Checking before running, capability grants, resource limits, permission points at host calls, diagnostics for programs that repair code, threat model |
-| Direction | One host operation checks source against a grant set before it runs, then runs it under limits with every host call paused for a decision |
+| Updated | 2026-11-24 |
+| Scope | Checking before running, capability grants, capability manifests, resource limits, permission points at host calls, diagnostics for programs that repair code, threat model |
+| Direction | One host operation checks source against a grant set before it runs, returns a capability manifest, then runs under limits with every host call paused at a source span |
 
 ## Summary
 
@@ -250,28 +251,18 @@ unhandled runtime failures or schema violations in unchecked native code.
 
 ## Implementation stages and validation
 
-1. **Check, then run (TypeScript).** Add the operation with grant scoping,
-   type checking, expected type, and step limits. Fixture
-   `conformance/checked-run/` covers: a type error and an ungranted
-   capability are rejected with spans and a test asserts zero host calls; a
-   granted call pauses with its span; a denial fails with
-   `capability/denied`; the step limit fails with `limit/steps`.
-2. **Engine requirements.** Effect labels for host builtins and the reachable
-   capability set from the checked program. The workbench uses it; its
-   existing requirement tests pass unchanged.
-3. **Limits.** Wall-clock deadline, cooperative abort, host-call counts, and
-   result size. A test aborts a pure infinite loop and expects
-   `evaluation/aborted` within a bounded time; a test exhausts the time
-   budget during type inference.
-4. **Diagnostics.** `renderDiagnostics` with golden output for each
-   rejection and failure code.
+1. **Check, then run + capability manifest (TypeScript).**
+   - *Already shipped:* `forma run`, `forma file evaluate`, `forma mcp` `run`, and `createLanguage().run` check before running; `stepLimit` and `hostBuiltins` pause/resume exist.
+   - *Remaining for stage 1:* Add one `checkedRun` host operation (and JSON ABI entry) with grant scoping, expected type, and step limits; return a structured **capability manifest** from `check` (source/prelude digests, reachable capabilities, and required types); attach source `span` to every `HostCall` pause; make `createLanguage` require typed capability schemas by default (or explicit `untyped: true` opt-in so `Unknown` is never a silent trap).
+   - Fixture `conformance/checked-run/` covers: a type error and an ungranted capability are rejected with spans and zero host calls; a granted call pauses with its exact span; a denial fails with `capability/denied`; the step limit fails with `limit/steps`.
+2. **Engine requirements.** Effect labels for host builtins and the reachable capability set from the checked program. The workbench uses it; its existing requirement tests pass unchanged.
+3. **Limits & isolation recipe.** Wall-clock deadline, cooperative abort (checked inside the VM loop, not only at host calls), max host-call count, macro-expansion budget, and result size limit. A test aborts a pure infinite loop and expects `evaluation/aborted` within a bounded time; a test exhausts the expansion/time budget. Ship a tested isolation recipe (`node:worker_threads` + Cloudflare Worker) with the honest in-process threat model.
+4. **Diagnostics.** `renderDiagnostics` with golden output for each rejection and failure code. *(Mostly shipped via CLI rendering; extend to new `limit/*` and `capability/*` codes.)*
 5. **OCaml parity.** Dropped: the OCaml engine was removed.
 
-## Decisions still required
+## Resolved defaults (2026-11-24)
 
-- Whether `allow` mode should exist or every call should pause.
-- Whether grants can constrain arguments, such as path prefixes, or whether
-  that stays in host builtin implementations.
-- How the authority check, which covers produced facts, relates to effect
-  labels on host builtins that write facts.
-- Defaults for limits when a request omits them.
+- **Pause policy:** Every host call pauses at the host boundary (`checkedRun` / `LanguageHost`). High-level `createLanguage` handlers auto-resume pauses by default, with an optional `onHostCall` policy hook to approve, deny, or inspect spans before executing.
+- **Argument confinement:** Stays in host builtin implementations (the trust boundary), not the type checker.
+- **Default limits when omitted:** `stepLimit: 50_000`, `maxHostCalls: 1_000`, `timeoutMs: 5_000`, `maxExpansionSteps: 10_000`, `maxResultBytes: 1_048_576`.
+- **Remaining open question:** How the authority check (`Type.checkAuthority`), which covers produced facts, relates to effect labels on host builtins that write facts.

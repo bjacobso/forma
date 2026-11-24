@@ -2,8 +2,9 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Stages 1–2 accepted and in flight (`EP12`); Stage 3 queued behind RFC 0019 Stage 4; Stages 4–6 proposed |
 | Created | 2026-11-05 |
+| Updated | 2026-11-24 |
 | Resolves | [RFC 0003](./0003-direct-style-effects.md)'s open decision on the syntax and inference rules for open requirement and failure rows, for Effect programs; [RFC 0018](./0018-type-generics.md)'s "Effect integration" decision |
 | Depends on | [RFC 0019](./0019-everyday-checker-gaps.md) section 10 (named callbacks) for stage 3 |
 | Scope | Type variables in operation signatures, error-set and requirement-set variables, call-site instantiation, body checking, set subtraction, built-in combinators as signatures, Effect TypeScript lowering, IR, diagnostics, host profiles |

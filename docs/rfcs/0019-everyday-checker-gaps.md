@@ -2,8 +2,9 @@
 
 | | |
 | --- | --- |
-| Status | Stages 1–3 implemented (six checked runtime contracts, exhaustiveness errors, constructor identity and optional fields); remaining stages proposed |
+| Status | Stages 1–3 implemented; Stage 7 numeric inference stages 1–2 implemented (`T3`); Stage 4 (named callbacks and refinement literals) accepted and queued; remaining stages proposed |
 | Created | 2026-11-03 |
+| Updated | 2026-11-24 |
 | Scope | Builtin contract parity, numeric inference, local recursion, nullary functions, recursive generic aliases, Effect-name routing, match exhaustiveness, and four Effect checker gaps: constructor types, optional fields, callback references, and refinement literals |
 | Direction | The evaluator, the kernel typechecker, and the Effect checker agree about ordinary programs; a program that one accepts is not silently rejected, retyped, or crashed by another |
 
