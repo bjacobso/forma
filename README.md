@@ -448,11 +448,12 @@ deployments pass `--yes` so CI can handle a missing or outdated state store.
 The Effect 4.1 crypto compatibility patch and offline deployment checks are
 documented in [patches/README.md](patches/README.md).
 
-Use `pnpm website:build` to build, `pnpm website:plan` to inspect infrastructure
-changes, and `pnpm website:deploy` to deploy locally with Alchemy credentials.
-The `prod` stage owns the custom domain. Other stages use separate Worker
-names without binding the production domain. The existing Wrangler config
-remains available for `pnpm website:dry-run` in CI.
+Use `pnpm website:build` to build, `pnpm website:dev` to run the Effect-native
+Worker, Durable Object, and R2 bucket locally with `alchemy dev` (no Cloudflare
+credentials required), `pnpm website:plan` to inspect infrastructure changes,
+and `pnpm website:deploy` to deploy with Alchemy credentials. The `prod` stage
+owns the custom domain. Other stages use separate Worker names without binding
+the production domain.
 
 ## License
 

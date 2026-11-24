@@ -1,5 +1,8 @@
 import { expect, test, vi } from "vitest";
-import worker from "./worker";
+import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import { McpRateLimit, makeMemoryReplSessions } from "./mcp";
+import { PlaygroundService, StaticAssets, runWebsiteRequest } from "./worker";
 import { MAX_SNAPSHOT_BYTES } from "./lib/playgroundSnapshot";
 import { defaultPreludeDemo } from "./lib/preludeShare";
 import { playgroundApi, type PlaygroundEnv } from "./playgroundStore";
@@ -73,11 +76,17 @@ test("does not expose bucket keys or allow modification through the API", async 
 test("the website serves saved titles as escaped social metadata and handles missing snapshots", async () => {
   const { env } = storage();
   const saved = await (await save(env, { version: 1, ...defaultPreludeDemo, title: '<DSL & "friends">' })).json() as { path: string };
-  const website = { ...env, ASSETS: { fetch: vi.fn(async () => new Response('<title>Forma</title><meta property="og:title" content="Forma" />')) } };
-  const response = await worker.fetch(new Request(`https://forma-lang.com${saved.path}`), website);
+  const assetsFetch = vi.fn(async (_request: Request) => new Response('<title>Forma</title><meta property="og:title" content="Forma" />'));
+  const layer = Layer.mergeAll(
+    Layer.succeed(StaticAssets, { fetch: (req) => Effect.promise(() => assetsFetch(req)) }),
+    Layer.succeed(PlaygroundService, { env }),
+    McpRateLimit.Unlimited,
+    makeMemoryReplSessions().layer,
+  );
+  const response = await runWebsiteRequest(new Request(`https://forma-lang.com${saved.path}`), layer);
   expect(await response.text()).toContain('<meta property="og:title" content="&lt;DSL &amp; &quot;friends&quot;&gt; - Forma" />');
-  const missing = await worker.fetch(new Request(`https://forma-lang.com/playground/p/${"a".repeat(32)}`), website);
+  const missing = await runWebsiteRequest(new Request(`https://forma-lang.com/playground/p/${"a".repeat(32)}`), layer);
   expect(missing.status).toBe(404);
   env.PLAYGROUNDS.get.mockRejectedValue(new Error("offline"));
-  expect((await worker.fetch(new Request(`https://forma-lang.com${saved.path}`), website)).status).toBe(503);
+  expect((await runWebsiteRequest(new Request(`https://forma-lang.com${saved.path}`), layer)).status).toBe(503);
 });

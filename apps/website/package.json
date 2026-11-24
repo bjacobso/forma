@@ -24,7 +24,8 @@
     "@formalang/editor": "workspace:*",
     "@formalang/host": "workspace:*",
     "@formalang/ts": "workspace:*",
-    "@modelcontextprotocol/sdk": "1.32.2",
+    "@alchemy.run/cloudflare": "2.0.0-beta.84",
+    "alchemy": "2.0.0-beta.84",
     "effect": "4.1.1",
     "lucide-react": "^1.17.0",
     "lz-string": "^1.5.0",
@@ -36,6 +37,7 @@
     "@codemirror/lint": "^6.8.5"
   },
   "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.32.2",
     "@playwright/test": "^1.60.0",
     "@tailwindcss/vite": "^4.3.0",
     "@types/react": "^19.2.16",
@@ -44,7 +46,6 @@
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.16",
-    "vitest": "5.0.4",
-    "wrangler": "^4.130.0"
+    "vitest": "5.0.4"
   }
 }
