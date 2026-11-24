@@ -88,7 +88,7 @@ Status key:
 | Effect construct | Forma surface | Status | Case |
 | --- | --- | --- | --- |
 | `Effect.all` (record, tuple, `concurrency`) | `(all {...} :concurrency n)`, `(all [...])` | supported | concurrent-workflow |
-| `Effect.forEach` (`concurrency`) | `(for-each xs (fn [x] eff) :concurrency n)` | supported | concurrent-workflow |
+| `Effect.forEach` (`concurrency`) | `(for-each xs (fn [x] eff) :concurrency n)`, `(for-each xs operation)` | supported | concurrent-workflow, named-callbacks |
 | `Effect.race`, `forkChild`, `Fiber.join`, `Fiber.interrupt` | `race`, `fork`, `join`, `interrupt` | supported | concurrent-workflow |
 | `Effect.sleep`, `Effect.timeout` | `sleep`, `timeout`, `millis`/`seconds` | supported | concurrent-workflow |
 | `Effect.retry`, `Effect.repeat` | `(retry eff :times n :schedule s)`, `(repeat eff ...)` with `spaced`, `exponential`, `fixed`, `recurs`, `jittered` | partial | concurrent-workflow. Schedule composition and `while`/`until` predicates are missing. |

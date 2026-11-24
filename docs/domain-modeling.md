@@ -122,10 +122,11 @@ export const Bags = Schema.Int.check(Schema.isGreaterThanOrEqualTo(1))
 
 Know when these checks run. **Refinements are enforced when data is
 decoded.** That is the boundary where untrusted input enters the domain
-(section 4). Forma does not prove refinements statically. A value computed
-inside the program is checked against its base type (`Int`), not its range.
-Section 3 shows how to build a smart constructor when you need the check
-elsewhere.
+(section 4). A literal is also checked where you write it: `-5` declared as
+`Cents`, or `(Bags 0)`, is a compile-time error at the literal. Forma does not
+prove refinements for computed values. A value computed inside the program is
+checked against its base type (`Int`), not its range. Section 3 shows how to
+build a smart constructor when you need the check elsewhere.
 
 ### Choices
 
@@ -293,9 +294,10 @@ translate into a domain error:
 
 Combining a brand and a refinement gives a type that can't be confused with a
 plain Int. In the generated code, applying the brand directly, as in
-`(Quantity 0)`, calls Effect's `Quantity.make`, which throws at run time when
-the value is out of range. That is a defect, not a typed error. Forma accepts
-`(Quantity 0)` at compile time, so use the smart constructor for values you
+`(Quantity n)`, calls Effect's `Quantity.make`, which throws at run time when
+the value is out of range. That is a defect, not a typed error. Forma rejects
+an out-of-range literal such as `(Quantity 0)` at compile time, but it accepts
+`(Quantity n)` for a computed `n`, so use the smart constructor for values you
 haven't checked.
 
 ### Where to enforce a rule
@@ -397,7 +399,7 @@ prices every line, adds shipping, and totals:
 
 (: price-order (-> ValidatedOrder (Effect PricedOrder [UnknownSku] [Catalog.price])))
 (define price-order [order]
-  (do! [lines (for-each (get order :lines) (fn [line] (price-line line)))
+  (do! [lines (for-each (get order :lines) price-line)
         :let [shipping (shipping-cost (get order :delivery) (total-bags (get order :lines)))
               subtotal (sum (map (fn [line] (get line :line-total)) lines))]]
     {:id (get order :id)
@@ -409,8 +411,9 @@ prices every line, adds shipping, and totals:
      :total (+ subtotal shipping)}))
 ```
 
-`for-each` runs an effect for each element and collects the results. If any
-line fails, the whole step fails with that line's `UnknownSku`.
+`for-each` runs an effect for each element and collects the results. It takes a
+literal `fn` or the name of a declared operation, as `price-line` is here. If
+any line fails, the whole step fails with that line's `UnknownSku`.
 
 ### Recover where the business says to
 
@@ -612,18 +615,15 @@ builds a small one from scratch.
 ## What the model can't express yet
 
 Forma is pre-alpha. These limits affect domain modeling today.
-[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) proposes fixes for the first two.
 
-- **Refinements are checked at decode time, not proven.** `(Bags 0)`,
-  `(Quantity 0)`, and even `-5` declared as `Cents` compile. Use `decode` or a
-  smart constructor for values you haven't checked. The RFC proposes checking
-  literals at compile time; computed values would still be checked at run
-  time.
-- **`for-each` needs a literal `fn`.** `(for-each lines price-line)` is
-  rejected, so `price-order` writes `(fn [line] (price-line line))`. `map`
-  already accepts a named function.
-- **Generic operations are not supported** in Effect programs. Every operation
-  has concrete types.
+- **Refinements are checked at decode time, not proven.** Literals are checked
+  where you write them, but a computed value is only checked against its base
+  type. Use `decode` or a smart constructor for values you haven't checked.
+- **Effect-polymorphic signatures cannot discharge anything yet.** An operation
+  can take an effectful callback and pass its errors and requirements through
+  with set variables, as in `(Effect a [e AuditDown] [r Audit.log])`. A wrapper
+  that removes a requirement or handles an error for its callback (RFC 0023,
+  stage 4) is not available.
 - **There is no date or time type.** Model dates as `Int` day numbers and do
   calendar arithmetic, such as month lengths, in the host. See
   [Authoring your own program](./authoring.md#modelling-time).
