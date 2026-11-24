@@ -103,6 +103,23 @@ export {
 } from "./context.js";
 export { inferExpr, inferProgram, inferProgramAll } from "./infer.js";
 export { unify, unifyRows, unifyERows, applyFn } from "./unify.js";
+export {
+  SHARED_PRIMITIVE_NAMES,
+  isPrimitiveName,
+  isNumericPrimitive,
+  isPrimitiveAssignable,
+  joinNumericPrimitives,
+  literalBasePrimitive,
+  parseLiteralTypeName,
+  literalBaseName,
+  isLiteralAssignableToPrimitive,
+  isLiteralAssignableToLiteral,
+  decideDataRelation,
+  type SharedPrimitiveName,
+  type DataLiteral,
+  type DataNode,
+  type DataRelationDecision,
+} from "./data-relation.js";
 export type { Subst } from "./substitution.js";
 export { applyType, applyRow, applyERow, emptySubst } from "./substitution.js";
 export type { Kind } from "./kind.js";
