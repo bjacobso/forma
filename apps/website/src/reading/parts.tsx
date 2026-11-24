@@ -110,7 +110,11 @@ export function ReaderToolbar({ edits = true }: { readonly edits?: boolean }) {
 }
 
 export function CheckStatus() {
-  const { analysis, checking } = useReader();
+  const { analysis, checking, failure } = useReader();
+  if (failure && !checking) return <span className="rd-check bad" role="alert" title={failure}>
+    <span className="rd-dot" />
+    Could not check <span className="rd-check-failure">{failure}</span>
+  </span>;
   const errors = analysis?.diagnostics.filter(d => d.severity === "error").length ?? 0;
   const warnings = analysis?.diagnostics.filter(d => d.severity === "warning").length ?? 0;
   return <span className={`rd-check ${checking ? "busy" : errors ? "bad" : "good"}`}>

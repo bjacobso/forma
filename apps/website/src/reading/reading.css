@@ -114,6 +114,7 @@
 .rd-check.bad { color: var(--rd-error); }
 .rd-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 .rd-check.busy .rd-dot { animation: rd-pulse 1s ease-in-out infinite; }
+.rd-check-failure { max-width: 48ch; overflow: hidden; color: var(--rd-ink); font-weight: 450; text-overflow: ellipsis; white-space: nowrap; }
 .rd-keys { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px; }
 .rd-keys kbd { margin-left: 6px; padding: 1px 5px; border: 1px solid var(--rd-line); border-bottom-width: 2px; border-radius: 4px; color: var(--rd-ink); font-family: "IBM Plex Mono", monospace; font-size: 11px; }
 .rd-keys kbd + kbd { margin-left: 2px; }

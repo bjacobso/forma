@@ -71,6 +71,8 @@ export interface ReaderModel {
 
   readonly analysis: Analysis | null;
   readonly checking: boolean;
+  /** Why the last check of the active file did not finish, such as a checker error. */
+  readonly failure: string | null;
   readonly problems: Problems;
   readonly symbols: readonly FileSymbol[];
   readonly subject: Subject | null;
@@ -184,6 +186,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   const [symbols, setSymbols] = useState<readonly FileSymbol[]>([]);
   const [analysis, setAnalysisState] = useState<Analysis | null>(null);
   const [checking, setChecking] = useState(true);
+  const [failure, setFailure] = useState<string | null>(null);
   const [selection, setSelection] = useState(0);
   const [inspection, setInspection] = useState<Inspection>({});
   const [inlineTypes, setInlineTypesState] = useState(initialInlineTypes);
@@ -230,12 +233,22 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
     setChecking(true);
     timer.current = window.setTimeout(async () => {
       const file = activeRef.current;
-      const analyzed = await client.analyze(filesRef.current, file);
+      const sent = filesRef.current;
+      let analyzed: Analysis;
+      try {
+        analyzed = await client.analyze(sent, file);
+      } catch (error) {
+        if (view.current !== editor || activeRef.current !== file || editor.state.doc.toString() !== sent.find(f => f.id === file)?.source) return;
+        setFailure(error instanceof Error ? error.message : String(error));
+        setChecking(false);
+        return;
+      }
       const shown = diagnosticsRef.current;
       const result = shown === true ? analyzed : { ...analyzed, diagnostics: shown === false ? [] : shown };
       if (view.current !== editor || activeRef.current !== file || editor.state.doc.toString() !== result.source) return;
       editor.dispatch({ effects: setAnalysis.of(result) }, lint(editor.state, result.diagnostics));
       setAnalysisState(result);
+      setFailure(null);
       setChecking(false);
     }, 120);
   }, [client]);
@@ -544,7 +557,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   const model: ReaderModel = {
     client, fileIds, active, readOnly: readOnly || isPreludeFile(active), fixedFiles,
     files: () => filesRef.current, show, open, openFile, back, canGoBack: backStack.length > 0, addFile, closeFile,
-    analysis, checking, problems: shownProblems, symbols, subject, inspection, breadcrumbs, outline,
+    analysis, checking, failure, problems: shownProblems, symbols, subject, inspection, breadcrumbs, outline,
     inlineTypes, setInlineTypes: setInlineTypesState, sidebar, setSidebar, quickOpen, setQuickOpen, panel, setPanel,
     references, findReferences, generated, renaming, renameError, startRename, commitRename,
     mount, view: () => view.current, run, select, replace, goTo, jumpToName,
