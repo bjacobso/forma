@@ -29,6 +29,10 @@
       "types": "./dist/editor.d.mts",
       "import": "./dist/editor.mjs"
     },
+    "./repl": {
+      "types": "./dist/repl.d.mts",
+      "import": "./dist/repl.mjs"
+    },
     "./ts-host": {
       "types": "./dist/ts-host.d.mts",
       "import": "./dist/ts-host.mjs"
@@ -50,6 +54,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
+    "examples:generate": "node scripts/generate-examples.mjs",
     "pack:check": "node ../../scripts/pnpm-pack-check.mjs"
   },
   "dependencies": {

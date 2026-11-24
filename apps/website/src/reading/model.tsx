@@ -58,6 +58,8 @@ export interface ReaderModel {
   readonly fileIds: readonly string[];
   readonly active: string;
   readonly readOnly: boolean;
+  /** The host owns the set of files: no new files, and its files stay open. */
+  readonly fixedFiles: boolean;
   readonly files: () => readonly SourceFile[];
   readonly show: (id: string) => void;
   readonly open: (location: Location) => void;
@@ -143,6 +145,12 @@ export interface ReaderRootProps {
   readonly label?: string | undefined;
   /** Show the files for reading only, such as an excerpt of a prelude. Default false. */
   readonly readOnly?: boolean | undefined;
+  /** The file shown at first. Default the first file. */
+  readonly active?: string | undefined;
+  /** Files in scope for every other file without an import, such as a language definition. */
+  readonly implicit?: readonly string[] | undefined;
+  /** The host owns the set of files: hide New file, and keep its files open. Default false. */
+  readonly fixedFiles?: boolean | undefined;
   readonly className?: string | undefined;
   readonly children: ReactNode;
 }
@@ -151,10 +159,10 @@ export interface ReaderRootProps {
  * Owns one reader. Give it a `key` that changes with `files` to load another set:
  * the files are read when it mounts.
  */
-export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", sidebar: initialSidebar = false, preludes = "effect", before, inlineTypes: initialInlineTypes = true, onChange, diagnostics = true, label = "Forma source", readOnly = false, className, children }: ReaderRootProps) {
+export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", sidebar: initialSidebar = false, preludes = "effect", before, inlineTypes: initialInlineTypes = true, onChange, diagnostics = true, label = "Forma source", readOnly = false, active: initialActive, implicit, fixedFiles = false, className, children }: ReaderRootProps) {
   const { theme } = useTheme();
   // Like `files`, the preludes are read when the reader mounts; the earlier code can change.
-  const client = useMemo(() => new ReadingClient({ preludes, before }), []);
+  const client = useMemo(() => new ReadingClient({ preludes, before, ...(implicit ? { implicit } : {}) }), []);
   useEffect(() => () => client.dispose(), [client]);
 
   const view = useRef<EditorView | null>(null);
@@ -167,7 +175,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   themeRef.current = theme;
 
   const filesRef = useRef<readonly SourceFile[]>(initialFiles);
-  const activeRef = useRef<string>(initialFiles[0]!.id);
+  const activeRef = useRef<string>(initialActive && initialFiles.some(f => f.id === initialActive) ? initialActive : initialFiles[0]!.id);
   const states = useRef(new Map<string, EditorState>());
   const [fileIds, setFileIds] = useState<readonly string[]>(initialFiles.map(f => f.id));
   const [active, setActive] = useState(activeRef.current);
@@ -534,7 +542,7 @@ export function ReaderRoot({ files: initialFiles, focus, focusAs = "selection", 
   }, [problems, diagnostics, active]);
 
   const model: ReaderModel = {
-    client, fileIds, active, readOnly: readOnly || isPreludeFile(active),
+    client, fileIds, active, readOnly: readOnly || isPreludeFile(active), fixedFiles,
     files: () => filesRef.current, show, open, openFile, back, canGoBack: backStack.length > 0, addFile, closeFile,
     analysis, checking, problems: shownProblems, symbols, subject, inspection, breadcrumbs, outline,
     inlineTypes, setInlineTypes: setInlineTypesState, sidebar, setSidebar, quickOpen, setQuickOpen, panel, setPanel,

@@ -1,3 +1,5 @@
+;; Builtin list and number functions with checked contracts: reverse, sqrt, conj,
+;; concat, reduce with the accumulator first, and integer quot.
 (: reversed (-> (List Int) (List Int)))
 (define reversed [xs] (reverse xs))
 (: root (-> Float Float))

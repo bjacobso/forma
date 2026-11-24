@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { cp, mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -62,11 +62,79 @@ test("lean distribution loads ordinary entries and explains missing bin dependen
     missing([join(library, "dist/cli.mjs"), "mcp"], "@modelcontextprotocol/sdk", "^1.32.2");
     const server = join(library, "dist/forma-language-server.mjs");
     missing([server, "--stdio"], "vscode-languageserver", "^9.0.1");
+    missing([cli, "lsp"], "vscode-languageserver", "^9.0.1");
     // Check each LSP peer independently: the server package's own transitive
     // dependencies resolve through its real workspace location.
     await symlink(await realpath(join(root, "packages/language-server/node_modules/vscode-languageserver")), join(modules, "vscode-languageserver"));
     missing([server, "--stdio"], "vscode-languageserver-textdocument", "^1.0.12");
+    await symlink(await realpath(join(root, "packages/language-server/node_modules/vscode-languageserver-textdocument")), join(modules, "vscode-languageserver-textdocument"));
+    await driveLanguageServer(spawn(process.execPath, [cli, "lsp"], { cwd: temporary }));
   } finally {
     await rm(temporary, { recursive: true, force: true });
   }
 });
+
+/** Drive an installed `forma lsp` the way an editor does: framed JSON-RPC over stdio. */
+async function driveLanguageServer(server) {
+  let buffer = Buffer.alloc(0);
+  let nextId = 1;
+  const pending = new Map();
+  const notifications = [];
+  const waiters = [];
+  const exited = new Promise(resolve => server.once("exit", resolve));
+  server.stdout.on("data", chunk => {
+    buffer = Buffer.concat([buffer, chunk]);
+    for (let end; (end = buffer.indexOf("\r\n\r\n")) >= 0;) {
+      const length = Number(/Content-Length: (\d+)/.exec(buffer.subarray(0, end).toString())[1]);
+      if (buffer.length < end + 4 + length) return;
+      const message = JSON.parse(buffer.subarray(end + 4, end + 4 + length).toString());
+      buffer = buffer.subarray(end + 4 + length);
+      if ("id" in message && !("method" in message)) pending.get(message.id)(message);
+      else {
+        notifications.push(message);
+        for (const waiter of waiters.splice(0)) waiter();
+      }
+    }
+  });
+  const send = message => {
+    const body = JSON.stringify({ jsonrpc: "2.0", ...message });
+    server.stdin.write(`Content-Length: ${Buffer.byteLength(body)}\r\n\r\n${body}`);
+  };
+  const request = (method, params) => new Promise((resolve, reject) => {
+    const id = nextId++;
+    const timer = setTimeout(() => reject(new Error(`${method} timed out`)), 30_000);
+    pending.set(id, message => { clearTimeout(timer); resolve(message.result); });
+    send({ id, method, params });
+  });
+  /** The first notification matching `test`, including one already received. */
+  const notification = test => new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("notification timed out")), 30_000);
+    const check = () => {
+      const found = notifications.find(test);
+      if (found) { clearTimeout(timer); resolve(found.params); } else waiters.push(check);
+    };
+    check();
+  });
+  try {
+    const { capabilities } = await request("initialize", { processId: process.pid, rootUri: null, capabilities: {} });
+    assert.equal(capabilities.hoverProvider, true);
+    assert.equal(capabilities.definitionProvider, true);
+    send({ method: "initialized", params: {} });
+    const uri = "file:///workspace/main.lisp";
+    send({ method: "textDocument/didOpen", params: { textDocument: {
+      uri, languageId: "forma", version: 1, text: '(define (double n) (* n 2))\n(double 4)\n(+ 1 "nope")',
+    } } });
+    const published = await notification(message => message.method === "textDocument/publishDiagnostics" && message.params.uri === uri);
+    assert.deepEqual(published.diagnostics.map(diagnostic => diagnostic.range.start.line), [2]);
+    const hover = await request("textDocument/hover", { textDocument: { uri }, position: { line: 1, character: 2 } });
+    assert.match(JSON.stringify(hover), /double : Int -> Int/);
+    assert.deepEqual(await request("textDocument/definition", { textDocument: { uri }, position: { line: 1, character: 2 } }), {
+      uri, range: { start: { line: 0, character: 9 }, end: { line: 0, character: 15 } },
+    });
+    await request("shutdown", null);
+    send({ method: "exit" });
+    assert.equal(await exited, 0);
+  } finally {
+    server.kill();
+  }
+}

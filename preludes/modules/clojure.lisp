@@ -14,6 +14,8 @@
 (export def defn defn- if-let when-let if-not when-not comment -> ->>)
 
 ;; def — bind a value to a name
+;;
+;; (def answer 42)
 (macro (def name value) `(define ~name ~value))
 
 ;; defn — define a function from a parameter vector and a body
@@ -31,25 +33,37 @@
 
 ;; defn- — module-private in Clojure; Forma modules export by name, so this
 ;; is `defn`
+;;
+;; (defn- helper [x] (+ x 1))
 (macro (defn- name parts ...) `(defn ~name ~@parts))
 
 ;; if-let — branch on an Option, binding the value inside Some
 ;;
-;; (if-let [user (find-user id)] (greet user) "nobody")
+;; (if-let [n (Some 3)] (+ n 1) 0)
 (macro (if-let binding then else)
   (let [items (sexpr-items binding)]
     `(match ~(nth items 1) (Some ~(first items)) ~then None ~else)))
 
 ;; when-let — run the body with the value inside Some, or return nil
+;;
+;; The body's type must be Unit, the type of nil, because None returns nil.
+;;
+;; (when-let [n (Some 3)] nil)
 (macro (when-let binding body ...)
   (let [items (sexpr-items binding)]
     `(match ~(nth items 1) (Some ~(first items)) (do ~@body) None nil)))
 
 ;; if-not — inverse if
+;;
+;; (if-not (> 1 2) "small" "big")
 (macro (if-not test then else) `(if ~test ~else ~then))
 
 ;; when-not — run the body when the test is false
+;;
+;; (when-not (> 1 2) "small")
 (macro (when-not test body ...) `(if ~test nil (do ~@body)))
 
 ;; comment — ignore the enclosed forms
+;;
+;; (comment (launch-rockets))
 (macro (comment forms ...) nil)

@@ -445,7 +445,15 @@ export class TsLanguageHost implements LanguageHost {
             expressions: candidate.parsedPreludes.get(source.sourceId)! })), checked.scope!.prelude!);
         timings.metacheckMs = performance.now() - metacheckStart;
         if (diagnostics.some(d => d.severity === "error")) return { ...timingResult(), sourceId, formCount: parsed.ast.length, diagnostics };
-        session.language.env = evaluated.env;
+        // Evaluation drops macro definitions; keep the prelude's macros so session
+        // evaluation, expansion and REPL submissions expand them as typechecking does.
+        let env = evaluated.env;
+        const macros = checked.scope!.macroEnv;
+        for (const name of macros?.bindingNames() ?? []) {
+          const value = macros!.lookup(name);
+          if (value !== undefined && Evaluator.isKMacro(value) && !env.has(name)) env = env.bind(name, value);
+        }
+        session.language.env = env;
         session.language.scope = checked.scope!;
       } catch (error) {
         timings.evalMs ??= performance.now() - evalStart;

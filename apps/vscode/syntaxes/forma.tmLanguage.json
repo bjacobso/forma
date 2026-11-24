@@ -1,0 +1,76 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Forma",
+  "scopeName": "source.forma",
+  "comment": "Mirrors packages/editor/src/grammar/lisp.grammar. The language server adds semantic tokens on top.",
+  "patterns": [{ "include": "#expression" }],
+  "repository": {
+    "expression": {
+      "patterns": [
+        { "include": "#comment" },
+        { "include": "#multiline-string" },
+        { "include": "#string" },
+        { "include": "#special-form" },
+        { "include": "#number" },
+        { "include": "#boolean" },
+        { "include": "#keyword" },
+        { "include": "#quote" },
+        { "include": "#bracket" },
+        { "include": "#symbol" }
+      ]
+    },
+    "comment": {
+      "name": "comment.line.semicolon.forma",
+      "match": ";.*$"
+    },
+    "multiline-string": {
+      "name": "string.quoted.triple.forma",
+      "begin": "\"\"\"",
+      "end": "\"\"\""
+    },
+    "string": {
+      "name": "string.quoted.double.forma",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [{ "name": "constant.character.escape.forma", "match": "\\\\." }]
+    },
+    "special-form": {
+      "comment": "A special form or definer in head position.",
+      "match": "(?<=\\()\\s*(define|type|error|class|macro|service|layer|typeclass|instance|fn|let|if|do!?|unless|when|cond|match|quote|entity|attribute|relation|seed|link|query|rule|action|process|form|view|nav|lens|require|import|export|try|catch|throw|loop|recur|set!|and|or|not)(?=[\\s()\\[\\]{}\"]|$)",
+      "captures": { "1": { "name": "keyword.control.forma" } }
+    },
+    "number": {
+      "name": "constant.numeric.forma",
+      "match": "(?<![a-zA-Z0-9\\-_:?!*+/<>=$.&])-?[0-9]+(\\.[0-9]+)?([eE][+-]?[0-9]+)?(?![a-zA-Z0-9\\-_:?!*+/<>=$.&])"
+    },
+    "boolean": {
+      "name": "constant.language.boolean.forma",
+      "match": "(?<![a-zA-Z0-9\\-_:?!*+/<>=$.&])(true|false)(?![a-zA-Z0-9\\-_:?!*+/<>=$.&])"
+    },
+    "keyword": {
+      "name": "constant.other.keyword.forma",
+      "match": ":[a-zA-Z0-9\\-_/?!*+<>=$.&]+"
+    },
+    "quote": {
+      "name": "keyword.operator.quote.forma",
+      "match": "~@|['`~]"
+    },
+    "bracket": {
+      "name": "punctuation.section.forma",
+      "match": "[()\\[\\]{}]"
+    },
+    "symbol": {
+      "patterns": [
+        {
+          "comment": "Type names are capitalized by convention.",
+          "name": "entity.name.type.forma",
+          "match": "(?<![a-zA-Z0-9\\-_:?!*+/<>=$.&])[A-Z][a-zA-Z0-9\\-_:?!*+/<>=$.&]*"
+        },
+        {
+          "name": "variable.other.forma",
+          "match": "[a-zA-Z\\-_?!*+/<>=$.&][a-zA-Z0-9\\-_:?!*+/<>=$.&]*"
+        }
+      ]
+    }
+  }
+}

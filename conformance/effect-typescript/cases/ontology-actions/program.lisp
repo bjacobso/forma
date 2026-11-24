@@ -1,3 +1,5 @@
+;; Ontology actions: entities and a relation declared as ontology forms, and
+;; typed actions that create, link, update and retract their records.
 (entity Employee {:name String :active Bool})
 (entity Department {:name String})
 (relation works-at Employee Department {:since Int})

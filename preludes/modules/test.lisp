@@ -4,11 +4,20 @@
 
 (define assertion-fail fail)
 
+;; test — a named test; forma test runs its body
+;;
+;; (test "addition" (is= (+ 1 2) 3))
 (macro (test name body ...) `(fn [] (do ~@body)))
 
+;; is — assert that a condition is true
+;;
+;; (is (> 2 1))
 (macro (is condition)
   `(if ~condition true (do (assertion-fail "expected true, actual false") true)))
 
+;; is= — assert that two values are equal, reporting both when they differ
+;;
+;; (is= (+ 1 2) 3)
 (macro (is= actual expected)
   (let [a (gensym "actual") e (gensym "expected")]
     `(let [~a ~actual ~e ~expected]

@@ -73,6 +73,7 @@ export function evaluate(
       ...(options.contextTypes?.length ? { contextTypes: options.contextTypes } : {}),
       builtins: options.builtins ?? {},
       ...(options.env ? { env: options.env } : {}),
+      ...(options.sourceId ? { sourceId: options.sourceId } : {}),
     });
     if (frontend.exprs.length === 0) {
       return { value: null, steps: 0, env: options.env ?? Env.empty() } satisfies KernelResult;

@@ -1,0 +1,89 @@
+{
+  "name": "forma-vscode",
+  "displayName": "Forma",
+  "description": "Forma language support: highlighting, diagnostics, hover, go to definition and more from the Forma language server.",
+  "version": "0.1.0",
+  "private": true,
+  "publisher": "forma-lang",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bjacobso/forma.git",
+    "directory": "apps/vscode"
+  },
+  "homepage": "https://forma-lang.com",
+  "engines": {
+    "vscode": "^1.91.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters",
+    "Formatters"
+  ],
+  "main": "./dist/extension.cjs",
+  "contributes": {
+    "languages": [
+      {
+        "id": "forma",
+        "aliases": [
+          "Forma"
+        ],
+        "extensions": [
+          ".lisp"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "forma",
+        "scopeName": "source.forma",
+        "path": "./syntaxes/forma.tmLanguage.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "forma.restartServer",
+        "title": "Forma: Restart Language Server"
+      }
+    ],
+    "configuration": {
+      "title": "Forma",
+      "properties": {
+        "forma.server.command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Command that starts the language server over stdio, such as `[\"pnpm\", \"exec\", \"forma\", \"lsp\"]`. When empty, the extension runs the project's installed `@forma-language/forma`, or falls back to `npx`."
+        },
+        "forma.server.node": {
+          "type": "string",
+          "default": "node",
+          "markdownDescription": "Node.js executable (22.19 or later) used to run the project's installed `@forma-language/forma`."
+        },
+        "forma.preludes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "markdownDescription": "Prelude files to type documents against, absolute or relative to the workspace root. Passed to the server as `FORMA_LANGUAGE_SERVER_PRELUDES`."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "build": "tsdown",
+    "typecheck": "tsc --noEmit",
+    "package": "tsdown && pnpm dlx @vscode/vsce@4.1.1 package --no-dependencies --skip-license --out dist/forma.vsix"
+  },
+  "devDependencies": {
+    "@types/node": "^24.10.1",
+    "@types/vscode": "~1.91.0",
+    "tsdown": "^0.22.2",
+    "typescript": "^6.0.3",
+    "vscode-languageclient": "^9.0.1"
+  }
+}

@@ -2,8 +2,11 @@ import { galleryDescription, plainText, playgroundDescription } from "./lib/site
 import { getPipeline } from "./pipelines";
 import { FORMA_WORKBENCH_URL } from "./lib/workbenchLocation";
 import { loadPlayground, playgroundApi, type PlaygroundEnv } from "./playgroundStore";
+import { handleMcp, isMcpRequest, type McpEnv } from "./mcp";
 
-interface Env extends PlaygroundEnv {
+export { ReplSession } from "./mcp";
+
+interface Env extends PlaygroundEnv, McpEnv {
   readonly ASSETS: {
     fetch(request: Request): Promise<Response>;
   };
@@ -18,6 +21,8 @@ interface RouteMeta {
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const requestUrl = new URL(request.url);
+    // MCP clients post to /mcp; browsers keep getting the MCP docs page there.
+    if ((requestUrl.pathname === "/mcp" || requestUrl.pathname === "/mcp/") && isMcpRequest(request)) return handleMcp(request, env);
     if (requestUrl.pathname === "/playground/api/playgrounds" || requestUrl.pathname.startsWith("/playground/api/playgrounds/")) {
       try { return await playgroundApi(request, env); }
       catch { return Response.json({ error: "Playground storage is temporarily unavailable." }, { status: 503 }); }

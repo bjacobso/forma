@@ -3,13 +3,14 @@ import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
 import type { Span } from "../diagnostic/diagnostic.js";
 import { diagnosticFromUnknown } from "../diagnostic/diagnostic.js";
-import { normalizeEffectProgram, serviceValues } from "../surface/effect.js";
+import { layerShapes, normalizeEffectProgram, serviceValues } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 
 export interface MechanicsArtifactDiagnostic {
   readonly code: string;
   readonly message: string;
   readonly span?: Span;
+  readonly help?: string;
 }
 
 export type MechanicsArtifactResult =
@@ -606,8 +607,9 @@ function failed(
   expr: SExpr,
   code: string,
   message: string,
+  help?: string,
 ): { readonly ok: false; readonly diagnostics: readonly MechanicsArtifactDiagnostic[] } {
-  return { ok: false, diagnostics: [diagnostic(sourceId, expr, code, message)] };
+  return { ok: false, diagnostics: [{ ...diagnostic(sourceId, expr, code, message), ...(help ? { help } : {}) }] };
 }
 
 /**
@@ -719,7 +721,7 @@ function layerDeclaration(
   operationEffects: OperationEffects,
 ): DeclarationResult {
   if (expr._tag !== "List" || expr.items.length < 3) {
-    return failed(sourceId, expr, "artifact/layer", "layer expects a name and a layer body.");
+    return failed(sourceId, expr, "artifact/layer", "layer expects a name and a layer body.", `layer has the shape ${layerShapes}`);
   }
   const name = symName(expr.items[1]);
   if (!name) return failed(sourceId, expr.items[1]!, "artifact/layer", "layer expects a layer name.");
@@ -743,7 +745,7 @@ function layerDeclaration(
     implementation = result.value;
   } else {
     if (sections.length !== 1) {
-      return failed(sourceId, expr, "artifact/layer", "a composed layer is a single layer expression.");
+      return failed(sourceId, expr, "artifact/layer", "a composed layer is a single layer expression.", `layer has the shape ${layerShapes}`);
     }
     const result = layerExprToJson(sourceId, sections[0]!);
     if (!result.ok) return result;
@@ -945,15 +947,15 @@ function report(context: BodyContext, expr: SExpr, code: string, message: string
  * `effects` is a vector or map of effect programs, `type` is a type
  * expression, and `value` is an ordinary value expression.
  */
-type CombinatorArg = "effect" | "value" | "lambda" | "effects" | "type";
+export type CombinatorArg = "effect" | "value" | "lambda" | "effects" | "type";
 
-interface CombinatorSpec {
+export interface CombinatorSpec {
   readonly args: readonly CombinatorArg[];
   readonly rest?: CombinatorArg;
   readonly options?: readonly string[];
 }
 
-const combinators: ReadonlyMap<string, CombinatorSpec> = new Map<string, CombinatorSpec>([
+export const effectCombinators: ReadonlyMap<string, CombinatorSpec> = new Map<string, CombinatorSpec>([
   ["scoped", { args: ["effect"] }],
   ["acquire-release", { args: ["effect", "lambda"] }],
   ["ensuring", { args: ["effect", "effect"] }],
@@ -983,9 +985,12 @@ const combinators: ReadonlyMap<string, CombinatorSpec> = new Map<string, Combina
   ["decode", { args: ["type", "value"] }],
 ]);
 
+/** Effect body forms the elaborator handles itself rather than through `effectCombinators`. */
+export const effectCoreFormNames: readonly string[] = ["succeed", "fail", "catch", "do!", "do", "<-", "when", "unless"];
+
 /** Names that build effects and so only make sense in an effect body. */
 export function isEffectFormName(name: string): boolean {
-  return combinators.has(name) || ["succeed", "fail", "catch", "do!", "do", "<-", "when", "unless"].includes(name);
+  return effectCombinators.has(name) || effectCoreFormNames.includes(name);
 }
 
 function effectBodyFormsToJson(context: BodyContext, bodyForms: readonly SExpr[]): JsonValue {
@@ -1032,7 +1037,7 @@ function effectCoreExprToJson(context: BodyContext, expr: SExpr): JsonValue {
       };
     }
 
-    const combinator = head ? combinators.get(head) : undefined;
+    const combinator = head ? effectCombinators.get(head) : undefined;
     if (head && combinator) return combinatorToJson(context, expr, head, combinator);
 
     switch (head) {

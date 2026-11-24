@@ -1,0 +1,5 @@
+---
+"@forma-language/forma": minor
+---
+
+The `repl` tool is easier to explore from `:help` alone. `:outline` lists what a session provides by name, and `:outline <module or prelude>` maps a bundled source with line numbers; `:source <name> <from>-<to>` shows a range, and `:describe <name>` shows one form, function or type in full. Results longer than 8,000 characters come in pages, continued with `:more` (or `:more all`). `:doc` now documents every prelude form (signature, arguments, option keys, IR and its `:examples`), every bundled macro, every Effect program keyword and the common builtins, each with an example that checks, and names related entries when nothing matches. `:ir` (or `:export`) returns all of a session's declarations as one JSON document. On a server that cannot run effects, `:help` and a session's first reply say so, and `:run` fails before checking. Value results no longer repeat the value as a JSON tree next to its printed form. `@forma-language/forma/mechanics` exports `effectCombinators` and `effectCoreFormNames`.

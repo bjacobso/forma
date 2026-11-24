@@ -38,6 +38,14 @@ describe("transactional session loading", () => {
     expect(await host.evaluateInSession({ sessionId, source: "old" })).toMatchObject({ status: "failed" });
   });
 
+  it("expands prelude macros when evaluating, expanding and submitting to the REPL", async () => {
+    const { host, sessionId } = await session();
+    expect((await host.loadSource({ sessionId, sourceId: "core", kind: "prelude", source: "(macro (twice x) `(+ ~x ~x))" })).diagnostics).toEqual([]);
+    expect(await host.replSubmit({ sessionId, source: "(twice 4)" })).toMatchObject({ status: "completed", result: { value: { kind: "int", value: 8 }, type: { display: "Int" } } });
+    expect(await host.evaluateInSession({ sessionId, source: "(twice 5)" })).toMatchObject({ status: "completed", result: { value: { kind: "int", value: 10 } } });
+    expect((await host.expand({ sessionId, source: "(twice 1)" })).ast).toMatchObject([{ kind: "list", items: [{ value: "+" }, { value: 1 }, { value: 1 }] }]);
+  });
+
   it("validates surface syntax on load but leaves reference checking to analysis", async () => {
     const { host, sessionId } = await session();
     expect((await host.loadSource({ sessionId, sourceId: "file", source: "(+ future 1)" })).diagnostics).toEqual([]);

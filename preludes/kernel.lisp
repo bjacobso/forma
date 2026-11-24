@@ -5,19 +5,25 @@
 ; Used by: Descriptor bootstrap and, via generated modules/kernel.lisp, explicit file-module imports.
 ; -----------------------------------------------------------------------------
 ;; not — logical negation
+;;
+;; (not (> 1 2))
 (macro (not x) `(if ~x false true))
 
 ;; when — conditional with implicit do
+;;
+;; (when (> 2 1) "bigger")
 (macro (when test body ...) `(if ~test (do ~@body) nil))
 
 ;; unless — inverse conditional with implicit do
+;;
+;; (unless (> 1 2) "not bigger")
 (macro (unless test body ...) `(if ~test nil (do ~@body)))
 
 ;; cond — multi-branch conditional
 ;;
 ;; (cond
-;;   (> x 0)  "positive"
-;;   (< x 0)  "negative"
+;;   (> 5 0)  "positive"
+;;   (< 5 0)  "negative"
 ;;   :else    "zero")
 ;;
 (macro (cond clauses ...)
@@ -34,7 +40,9 @@
 
 ;; and — short-circuit logical AND
 ;;
-;; (and x y z) expands to nested let/if that stops on first falsy value
+;; Expands to nested let/if that stops on the first falsy value.
+;;
+;; (and (> 2 1) (< 2 3))
 ;;
 (macro (and args ...)
   (if (empty? args)
@@ -46,7 +54,9 @@
 
 ;; or — short-circuit logical OR
 ;;
-;; (or x y z) expands to nested let/if that stops on first truthy value
+;; Expands to nested let/if that stops on the first truthy value.
+;;
+;; (or (> 1 2) (< 1 2))
 ;;
 (macro (or args ...)
   (if (empty? args)
@@ -58,7 +68,9 @@
 
 ;; -> — thread-first
 ;;
-;; (-> x (f a) (g b)) expands to (g (f x a) b)
+;; Threads x into the first argument: x (f a) (g b) becomes (g (f x a) b).
+;;
+;; (-> 5 (- 1) (* 2))
 ;;
 (macro (-> x forms ...)
   (if (empty? forms)
@@ -76,7 +88,9 @@
 
 ;; ->> — thread-last
 ;;
-;; (->> x (f a) (g b)) expands to (g b (f a x))
+;; Threads x into the last argument: x (f a) (g b) becomes (g b (f a x)).
+;;
+;; (->> [1 2 3] (map (fn [x] (* x 2))) (filter (fn [x] (> x 2))))
 ;;
 (macro (->> x forms ...)
   (if (empty? forms)

@@ -1,3 +1,5 @@
+;; Surface regressions: Tagged unions with payload-free cases, enum-keyed maps,
+;; layers with :setup bindings, and catch with tag and catch-all handlers.
 (type Shape (Tagged (Circle Int) None))
 (type Other (Tagged (Circle String) Empty))
 (type Role (Union :admin :member))

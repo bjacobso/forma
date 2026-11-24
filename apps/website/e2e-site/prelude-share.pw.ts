@@ -1,5 +1,8 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { defaultPreludeDemo, encodePreludeDemo } from "../src/lib/preludeShare";
+
+const source = (page: Page) => page.getByRole("textbox", { name: "Forma source", exact: true });
+const openFile = (page: Page, file: string) => page.getByRole("tablist", { name: "Files" }).locator(".rd-file", { hasText: file }).getByRole("button").first().click();
 
 test("a cold shared link loads a custom prelude and editable example", async ({ page }) => {
   const prelude = defaultPreludeDemo.prelude.replaceAll('"Step"', '"Task"')
@@ -8,17 +11,16 @@ test("a cold shared link loads a custom prelude and editable example", async ({ 
   const demo = { ...defaultPreludeDemo, prelude, title: "My shared workflow", source: '(workflow shared (step check "process.check"))' };
   await page.goto(`/playground/custom${encodePreludeDemo(demo)}`);
   await expect(page.getByRole("textbox", { name: "Example title" })).toHaveValue(demo.title);
-  await expect(page.getByRole("tab", { name: "Result", exact: true })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("tab", { name: "Definition", exact: true })).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("complementary", { name: "Files and outline" })).toContainText("example.lisp");
+  await page.getByRole("tab", { name: "Result", exact: true }).click();
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText('"Task"');
   for (const value of ["false", "0", "{}", "[]"]) await expect(page.getByRole("region", { name: "Compiler output" }).getByText(value, { exact: true })).toBeVisible();
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText("nothing is executed here");
-  await expect(page.getByRole("textbox", { name: "Prelude source", exact: true })).not.toBeVisible();
   await expect(page.getByRole("tab", { name: "Forms", exact: true })).toHaveCount(0);
-  await page.getByRole("checkbox", { name: "Split files" }).check();
-  await expect(page.getByRole("textbox", { name: "Prelude source", exact: true })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Example source", exact: true })).toBeVisible();
-  await expect(page.getByRole("tablist", { name: "Source files" })).not.toBeVisible();
-  await page.getByRole("checkbox", { name: "Split files" }).uncheck();
+  await openFile(page, "prelude.lisp");
+  await expect(source(page)).toContainText("(form (workflow");
+  await openFile(page, "example.lisp");
   await page.getByRole("tab", { name: "JSON", exact: true }).click();
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText('"name": "shared"');
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText('"kind": "Task"');
@@ -29,26 +31,21 @@ test("a cold shared link loads a custom prelude and editable example", async ({ 
   expect(workspace?.height).toBeLessThanOrEqual(950);
   const inspector = await page.getByRole("region", { name: "Compiler output" }).boundingBox();
   expect(inspector!.y + inspector!.height).toBeLessThan(950);
-  const divider = page.getByRole("separator", { name: "Resize editors" });
-  await divider.focus();
-  await divider.press("ArrowRight");
-  await expect(divider).toHaveAttribute("aria-valuenow", "58");
-  await expect(page.getByRole("textbox", { name: "Example source", exact: true })).toHaveText(demo.source);
-  await page.getByRole("button", { name: "Compiler internals", exact: true }).click();
+  await expect(source(page)).toHaveText(demo.source);
+  await page.getByRole("button", { name: "Internals", exact: true }).click();
   await page.getByRole("tab", { name: "Forms", exact: true }).click();
   await expect(page.getByRole("tabpanel")).toContainText("workflow");
   await page.getByRole("tab", { name: "Syntax tree", exact: true }).click();
   await expect(page.getByRole("tabpanel")).toContainText("workflow");
   await page.getByRole("tab", { name: "Source maps", exact: true }).click();
   await page.locator(".studio-mapping button").first().click();
-  await expect(page.getByRole("textbox", { name: "Example source", exact: true })).toBeFocused();
+  await expect(source(page)).toBeFocused();
   await page.getByRole("tab", { name: "Debug", exact: true }).click();
   await expect(page.getByRole("tabpanel")).toContainText("Load prelude");
-  await page.getByRole("button", { name: "Compiler internals", exact: true }).click();
+  await page.getByRole("button", { name: "Internals", exact: true }).click();
   await expect(page.getByRole("tab", { name: "Result", exact: true })).toHaveAttribute("aria-selected", "true");
-  const source = page.getByRole("textbox", { name: "Example source", exact: true });
-  await source.fill('(workflow shared (step check 42))');
-  await expect(page.locator(".diagnostic-error")).toBeVisible();
+  await source(page).fill('(workflow shared (step check 42))');
+  await expect(page.locator(".rd-problem-error")).toBeVisible();
   await expect(page.locator(".cm-lintRange-error")).toBeVisible();
   await expect(page.getByRole("region", { name: "Compiler output" })).toContainText("Fix the diagnostics to inspect checked data.");
   await expect(page.getByRole("region", { name: "Compiler output" }).getByRole("heading", { name: "shared" })).toHaveCount(0);
@@ -86,16 +83,17 @@ test("new playgrounds open without losing the draft and edits create independent
   await expect(fresh.getByRole("textbox", { name: "Example title" })).toHaveValue("Untitled playground");
   await expect(page.getByRole("textbox", { name: "Example title" })).toHaveValue("Keep this draft");
   await fresh.getByRole("textbox", { name: "Example title" }).fill("A new language");
-  await fresh.getByRole("textbox", { name: "Prelude source", exact: true }).fill(defaultPreludeDemo.prelude);
-  await fresh.getByRole("tab", { name: "Program", exact: true }).click();
-  await fresh.getByRole("textbox", { name: "Example source", exact: true }).fill('(workflow first (step check "process.check"))');
+  await openFile(fresh, "prelude.lisp");
+  await source(fresh).fill(defaultPreludeDemo.prelude);
+  await openFile(fresh, "example.lisp");
+  await source(fresh).fill('(workflow first (step check "process.check"))');
   await fresh.getByRole("tab", { name: "JSON", exact: true }).click();
   await expect(fresh.getByRole("region", { name: "Compiler output" })).toContainText('"name": "first"');
   await fresh.getByRole("button", { name: "Create public snapshot", exact: true }).click();
   await fresh.getByRole("button", { name: "Publish snapshot", exact: true }).click();
   await expect(fresh).toHaveURL(/\/playground\/p\/[a-f0-9]{32}$/);
   const original = fresh.url();
-  await fresh.getByRole("textbox", { name: "Example source", exact: true }).fill('(workflow second (step check "process.check"))');
+  await source(fresh).fill('(workflow second (step check "process.check"))');
   await expect(fresh.getByText("Unshared changes", { exact: true })).toBeVisible();
   await fresh.getByRole("button", { name: "Create public snapshot", exact: true }).click();
   await fresh.getByRole("button", { name: "Publish snapshot", exact: true }).click();

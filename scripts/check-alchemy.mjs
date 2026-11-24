@@ -43,7 +43,7 @@ test("production and PR stages preserve routes and isolate Workers and domains o
       assert.equal(worker.Props.workersDev, true);
       assert.equal(worker.Props.main, "apps/website/src/worker.ts");
       assert.equal(worker.Props.assets.notFoundHandling, "404-page");
-      assert.deepEqual(worker.Props.assets.runWorkerFirst, ["/feed.xml", "/sitemap.xml", "/robots.txt", "/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/"]);
+      assert.deepEqual(worker.Props.assets.runWorkerFirst, ["/feed.xml", "/sitemap.xml", "/robots.txt", "/playground", "/playground/*", "/about", "/demo", "/demo/*", "/workbench/demo", "/workbench/demo/", "/mcp", "/mcp/"]);
       assert.equal(worker.RemovalPolicy, "destroy");
       const playgrounds = stack.resources.Playgrounds;
       assert.equal(playgrounds.Type, "Cloudflare.R2.Bucket");
@@ -52,6 +52,8 @@ test("production and PR stages preserve routes and isolate Workers and domains o
       assert.equal(playgrounds.RemovalPolicy, stage === "prod" ? "retain" : "destroy");
       assert.equal(worker.Props.env.PLAYGROUNDS, playgrounds);
       assert.equal(worker.Props.env.PLAYGROUND_WRITES.simple.limit, 10);
+      assert.equal(worker.Props.env.REPL_SESSIONS.className, "ReplSession");
+      assert.equal(worker.Props.env.MCP_CALLS.simple.limit, 120);
     }), { stage }).pipe(
       Effect.provideService(AlchemyContext, { dotAlchemy: ".alchemy", dev: false, adopt: false }),
       Effect.provide(PlatformServices),

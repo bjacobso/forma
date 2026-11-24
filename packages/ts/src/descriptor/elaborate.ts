@@ -290,7 +290,11 @@ export function elaborateSources(
       } catch (error) {
         const failure = error instanceof InferenceError ? error : undefined;
         const errorLoc = error && typeof error === "object" && "loc" in error ? error.loc as Loc : undefined;
-        at(typeof failure?.details.code === "string" ? failure.details.code : "elaborate/malformed-form", errorMessage(error), origin.kind === "authored" ? errorLoc ?? loc : loc, { form: recognized.formName });
+        const { code: _code, ...details } = failure?.details ?? {};
+        // Repairs edit author source, so macro-produced forms keep only their help.
+        const fix = origin.kind === "authored" ? failure?.fix?.map(edit => ({ ...edit, span: locate({ ...errorLoc ?? loc, start: edit.span.startOffset, end: edit.span.endOffset }) })) : undefined;
+        at(typeof failure?.details.code === "string" ? failure.details.code : "elaborate/malformed-form", errorMessage(error), origin.kind === "authored" ? errorLoc ?? loc : loc, { ...details, form: recognized.formName },
+          { ...(failure?.help ? { help: failure.help } : {}), ...(fix ? { fix } : {}) });
       }
     }
   }

@@ -65,6 +65,8 @@ export interface MechanicsCheckDiagnostic {
   readonly message: string;
   readonly severity: "error" | "warning";
   readonly span?: MechanicsSourceSpan;
+  readonly help?: string;
+  readonly fix?: readonly { readonly span: MechanicsSourceSpan; readonly newText: string }[];
 }
 
 export interface MechanicsSourceSpan {
@@ -1891,7 +1893,17 @@ class Checker {
     const optional = options.allowOption ? resolve(type, this.env) : undefined;
     const checked = optional?.kind === "option" && expected && !isAssignable(type, expected, this.env) ? optional.item : type;
     if (expected && !(options.allowEffect && type.kind === "effect") && !isAssignable(checked, expected, this.env)) {
-      this.error(spanOf(node), "mechanics/type-mismatch", `Expected ${showType(expected)}, but this is ${showType(type)}.`);
+      // A base value where a brand is expected: wrapping it with the brand's constructor is the repair.
+      const brand = resolve(expected, this.env);
+      const location = brand.kind === "brand" && resolve(type, this.env).kind !== "brand" && isAssignable(type, brand.base, this.env) ? toSourceSpan(spanOf(node)) : undefined;
+      this.push("error", spanOf(node), "mechanics/type-mismatch", `Expected ${showType(expected)}, but this is ${showType(type)}.`, brand.kind === "brand" && location ? {
+        details: { expected: showType(expected), actual: showType(type) },
+        help: `Wrap the value with the brand constructor: (${brand.name} ${resolve(type, this.env).kind === "literal" ? showType(type) : "value"}).`,
+        fix: [
+          { span: { ...location, endOffset: location.startOffset }, newText: `(${brand.name} ` },
+          { span: { ...location, startOffset: location.endOffset }, newText: ")" },
+        ],
+      } : { details: { expected: showType(expected), actual: showType(type) } });
       // Reported here; enclosing expressions should not report it again.
       return tUnknown;
     }
@@ -2786,7 +2798,7 @@ class Checker {
     this.push("warning", span, code, message);
   }
 
-  private push(severity: "error" | "warning", span: JsonValue | undefined, code: string, message: string): void {
+  private push(severity: "error" | "warning", span: JsonValue | undefined, code: string, message: string, advice: Pick<MechanicsCheckDiagnostic, "details" | "help" | "fix"> = {}): void {
     const location = toSourceSpan(span);
     if (
       this.diagnostics.some(
@@ -2798,7 +2810,7 @@ class Checker {
     ) {
       return;
     }
-    this.diagnostics.push({ code, message, severity, ...(location ? { span: location } : {}) });
+    this.diagnostics.push({ code, message, severity, ...(location ? { span: location } : {}), ...advice });
   }
 }
 

@@ -292,7 +292,10 @@ function checkReplSubmissionUnlocated(session: LanguageSession, sourceId: string
     captureEnv: env => { typeEnv = env; },
     captureState: state => { inferenceState = state; },
   }));
-  return { typeEnv, inferenceState, display: result.resultTypeString ?? "Unit", diagnostics: inferenceDiagnostics(sourceId, result) };
+  // Earlier submissions' spans carry no source ID, so this analysis keeps its
+  // default one; repairs always edit this submission, so they are relabeled.
+  const diagnostics = inferenceDiagnostics(sourceId, result).map(d => d.fix ? { ...d, fix: d.fix.map(edit => edit.span.sourceId === "source" ? { ...edit, span: { ...edit.span, sourceId } } : edit) } : d);
+  return { typeEnv, inferenceState, display: result.resultTypeString ?? "Unit", diagnostics };
 }
 
 /** Validate the complete candidate prelude before its environment is committed. */

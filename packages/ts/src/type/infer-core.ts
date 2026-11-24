@@ -781,7 +781,7 @@ const inferApp = (
       const args: Type[] = [];
       for (const [index,arg] of expr.args.entries()) {
         const t = yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst),env),arg);
-        yield* (op === "mod" ? assignType(t,TCon("Int"),originOf(arg,"numeric-argument")) : requireNumeric(t,originOf(arg,"numeric-argument"))).pipe(
+        yield* (op === "mod" ? assignType(t,TCon("Int"),originOf(arg,"numeric-argument")) : requireNumeric(t,originOf(arg,"numeric-argument"),args)).pipe(
           Effect.mapError(error => new InferenceError({
             message: `Argument ${index + 1} to ${op}: ${error.message}`,
             origin: error.origin,

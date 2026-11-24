@@ -36,6 +36,8 @@ export interface EffectProgramDiagnostic {
   readonly code: string;
   readonly message: string;
   readonly span?: EffectProgramSpan;
+  readonly help?: string;
+  readonly fix?: readonly { readonly span: EffectProgramSpan; readonly newText: string }[];
 }
 
 export interface EffectProgramOptions {
@@ -151,7 +153,13 @@ export function elaborateEffectForms(
     const loc = error instanceof Error && "loc" in error ? error.loc as SExpr["loc"] : expression?.loc;
     const details = error instanceof InferenceError ? error.details : error instanceof Error && "details" in error && typeof error.details === "object" && error.details !== null ? error.details as Record<string, unknown> : undefined;
     const code = typeof details?.["code"] === "string" ? details["code"] : "mechanics/ontology-operation";
-    return {phase:"project",severity:"error",code,message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {})};
+    const help = error instanceof InferenceError ? error.help : error instanceof Error && "help" in error && typeof error.help === "string" ? error.help : undefined;
+    const advice = {
+      ...(help ? {help} : {}),
+      ...(error instanceof InferenceError && error.fix ? {fix:error.fix.map(edit => ({newText:edit.newText, span:locate(edit.span.startOffset, edit.span.endOffset)}))} : {}),
+      ...(error instanceof InferenceError && Object.keys(error.details).length > 1 ? {details:Object.fromEntries(Object.entries(error.details).filter(([key]) => key !== "code"))} : {}),
+    };
+    return {phase:"project",severity:"error",code,message:error instanceof Error ? error.message : String(error), ...(loc ? {span:locate(loc.start,loc.end)} : {}), ...advice};
   };
   const surfaceErrors: EffectProgramDiagnostic[] = [];
   for (const expression of authored) {
@@ -215,6 +223,7 @@ function projectDiagnostic(
     code: diagnostic.code,
     message: diagnostic.message,
     ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
+    ...(diagnostic.help ? { help: diagnostic.help } : {}),
   };
 }
 
@@ -229,6 +238,8 @@ function checkDiagnostic(
     message: diagnostic.message,
     ...(diagnostic.details ? {details:diagnostic.details} : {}),
     ...(diagnostic.span ? { span: locate(diagnostic.span.startOffset, diagnostic.span.endOffset) } : {}),
+    ...(diagnostic.help ? { help: diagnostic.help } : {}),
+    ...(diagnostic.fix ? { fix: diagnostic.fix.map(edit => ({ newText: edit.newText, span: locate(edit.span.startOffset, edit.span.endOffset) })) } : {}),
   };
 }
 

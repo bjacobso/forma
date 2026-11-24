@@ -1,6 +1,6 @@
-import { surfaceError, SurfaceInputError } from "./errors.js";
+import { replaceSyntax, surfaceError, SurfaceInputError } from "./errors.js";
 import { descriptorConstant } from "./metadata.js";
-import { formatSExprMany } from "../Formatter.js";
+import { formatSExpr, formatSExprMany } from "../Formatter.js";
 import {buildDescriptorTreeLayoutAliases,rewriteDescriptorTreeLayoutAliases} from "../descriptor/descriptor-tree-aliases.js";
 import { createMetaBuiltins, type HostedMetaBuiltinsFactory } from "../descriptor/meta-builtins.js";
 import { datum, syntaxForDatum } from "./datum.js";
@@ -8,11 +8,12 @@ import { typeCheckDescriptorTree } from "../descriptor/descriptor-tree-check.js"
 import { coerceProgram } from "./coerce.js";
 import { reachableHelpers } from "./helpers.js";
 import { typeSyntaxErrors, retiredNumericTypeErrors, unknownTypeReferences, primitiveTypeNames, typeHoleMetadata, refinementMetadata, refinementTargetErrors } from "./type-syntax.js";
-import { KernelTypeError, type KernelError } from "../diagnostic/errors.js";
+import { InferenceError, KernelTypeError, type KernelError } from "../diagnostic/errors.js";
 import { KKeyword, KSymbol, mapKey, mapKeyValue, isKKeyword, isKSymbol } from "../evaluator/types.js";
 import { Effect, Layer, Ref } from "effect";
 import type { SExpr } from "../reader/types.js";
-import { authorNames, failureLocation } from "../diagnostic/diagnostic.js";
+import { authorNames, failureLocation, type DiagnosticTextEdit } from "../diagnostic/diagnostic.js";
+import { closestName } from "../diagnostic/closest-name.js";
 import type { FormDescriptor, IdentifierSpec, SlotSpec, DescriptorExtensionValue } from "../descriptor/FormDescriptor.js";
 import { ElaborationError, type ElaborationHook, type HookInput, type SemanticEnvironment } from "../descriptor/ElaborationHook.js";
 import { SimpleNormalizedSlots, type SlotValue } from "../descriptor/NormalizedSlots.js";
@@ -268,14 +269,58 @@ export function matchFormSyntax(spec: UnifiedForm, expr: SExpr): ReadonlyMap<str
   }
 }
 
+/** A form's canonical shape from its pattern, such as `(entity name fields [:doc doc])`; optional parts are bracketed. */
+export function formShape(formName: string, spec: Pick<UnifiedForm, "pattern" | "holes">): string {
+  const optional = (n: string, text: string) => head(spec.holes.get(n)) === "Option" ? `[${text}]` : text;
+  const parts: string[] = [formName];
+  spec.pattern.forEach((p, i) => {
+    if (p._tag === "Map") {
+      const keys = p.pairs[0]?.[1];
+      if (keys?._tag === "Vector") for (const k of keys.items) { const n = name(k)!; parts.push(optional(n, `:${n} ${n}`)); }
+    } else if (name(p) !== "...") {
+      const n = name(p)!;
+      parts.push(name(spec.pattern[i + 1]) === "..." ? `${n}...` : optional(n, n));
+    }
+  });
+  return `(${parts.join(" ")})`;
+}
+
 function matchFormSyntaxInner(spec: UnifiedForm, expr: SExpr): ReadonlyMap<string, SExpr> {
   if (expr._tag !== "List") throw new SurfaceInputError("Expected a form application", "expression._tag");
-  const result = new Map<string, SExpr>();
+  try { return matchFormItems(spec, expr); }
+  catch (error) {
+    if (!(error instanceof InferenceError) || error.help) throw error;
+    // Every shape error echoes the form's canonical shape, and repairs an
+    // options map written where the form takes keyword options.
+    const formName = name(expr.items[0]) ?? "form", shape = formShape(formName, spec);
+    const accepted = acceptedOptions(spec);
+    const optionMap = (e: SExpr) => e._tag === "Map" && e.pairs.length > 0 && e.pairs.every(([k]) => accepted.has(fieldName(k) ?? ""));
+    const maps = expr.items.slice(1).filter(optionMap);
+    let fix: DiagnosticTextEdit[] | undefined;
+    if (maps.length) {
+      const items = [...expr.items.filter(e => !maps.includes(e)), ...maps.flatMap(m => m._tag === "Map" ? m.pairs.flatMap(([k, v]) => [sym(k, `:${fieldName(k)}`), v]) : [])];
+      const repaired = { _tag: "List" as const, items, loc: expr.loc };
+      try { matchFormItems(spec, repaired); fix = [replaceSyntax(expr, formatSExpr(repaired))]; } catch { /* no single clear repair */ }
+    }
+    const help = `${formName} has the shape ${shape}${maps.length ? `; write options as keywords, such as :${fieldName(maps[0]!._tag === "Map" ? maps[0]!.pairs[0]![0] : maps[0]!)} …, not as a map` : ""}`;
+    throw surfaceError(error.message, expr, (error.details["code"] as string | undefined) ?? "elaborate/malformed-form", {
+      help, ...(fix ? { fix } : {}), details: { ...error.details, form: formName, expected: shape },
+    });
+  }
+}
+
+function acceptedOptions(spec: UnifiedForm): Set<string> {
   const accepted = new Set<string>();
   for (const p of spec.pattern) if (p._tag === "Map") {
     const keys = p.pairs[0]![1];
     if (keys._tag === "Vector") keys.items.forEach(k => accepted.add(name(k)!));
   }
+  return accepted;
+}
+
+function matchFormItems(spec: UnifiedForm, expr: SExpr & { _tag: "List" }): ReadonlyMap<string, SExpr> {
+  const result = new Map<string, SExpr>();
+  const accepted = acceptedOptions(spec);
   let at = 1;
   for (let i = 0; i < spec.pattern.length; i++) {
     const p = spec.pattern[i]!;
@@ -362,6 +407,20 @@ const projectionBuiltins: Record<string, BuiltinFn> = {
   Map: args => Effect.succeed([KSymbol("Map"), ...args]),
 
 };
+
+/** What authored syntax is, for "expected T, got …" messages: `String "u-1"`, `Float 2.5`, `symbol x`. */
+function syntaxKind(e: SExpr): string {
+  const text = formatSExprMany([e]).trim(), short = text.length > 40 ? `${text.slice(0, 39)}…` : text;
+  switch (e._tag) {
+    case "Str": return `String ${short}`;
+    case "Num": return `${e.numericKind === "float" || !Number.isInteger(e.value) ? "Float" : "Int"} ${short}`;
+    case "Bool": return `Bool ${short}`;
+    case "Sym": return `${e.name.startsWith(":") ? "keyword" : "symbol"} ${short}`;
+    case "Vector": return `vector ${short}`;
+    case "Map": return `map ${short}`;
+    default: return short;
+  }
+}
 
 function validLiteral(e: SExpr, type: SExpr, types: ReadonlyMap<string,SExpr> = new Map()): boolean {
   let t = stripTypeMetadata(unwrapOption(type));
@@ -619,7 +678,7 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
         const childHole = name(u) !== undefined && /^[a-z]/.test(name(u)!) && !spec.types.has(name(u)!);
         const literal = !syntaxHole && !childHole && (e._tag === "Str" || e._tag === "Num" || e._tag === "Bool");
         const problems = linked && !syntaxHole ? contractErrors(converted.get(`:${n}`)!,holeValueContract(t,spec.types),spec.types,n)
-          : !validLiteral(e,t,spec.types) ? [enumMembers(u,spec.types) ? `${n} must be one of ${enumMembers(u,spec.types)!.join(", ")}` : `${n} does not match its declared hole type`]
+          : !validLiteral(e,t,spec.types) ? [enumMembers(u,spec.types) ? `${n} must be one of ${enumMembers(u,spec.types)!.join(", ")}` : `${n} does not match its declared hole type: expected ${formatSExprMany([t]).trim()}, got ${syntaxKind(e)}`]
           : literal ? contractErrors(datum(e),t,spec.types,n) : [];
         const holeDetails = { form: descriptor.name, hole: n, expected: formatSExprMany([t]).trim(), actual: formatSExprMany([e]).trim(), ...(name(e) ? { name: name(e)! } : {}), ...(enumMembers(u,spec.types) ? { candidates: enumMembers(u,spec.types)! } : {}) };
         for (const message of problems) diagnostics.push({severity:"error",message,loc:e.loc,details:holeDetails,help:`Use a value matching the declared type of ${n}.`});
@@ -656,13 +715,25 @@ export function unifiedFormHooks(descriptor: FormDescriptor, registry?: FormDesc
             diagnostics.push({code:"elaborate/hole-type",severity:"error",message:"A reference must be a declared name",loc:value.loc});
           } else if (head(type) === "List" && type._tag === "List" && value._tag === "Vector") {
             for (const item of value.items) checkReferences(item, type.items[1]!);
-          } else if (head(type) === "Refers" && value._tag === "Sym") {
-            const declared = input.semanticEnv.getDeclaredNames().get(value.name);
+          } else if (head(type) === "Refers" && (value._tag === "Sym" || value._tag === "Str")) {
+            // String keys, as in `(Declares X String)`, resolve like symbols.
+            const key = value._tag === "Sym" ? value.name : value.value, shown = value._tag === "Sym" ? key : JSON.stringify(key);
+            const declared = input.semanticEnv.getDeclaredNames().get(key);
             const declaring = declared ? registry?.get(declared.formName) : undefined;
             const classification = [...(declaring?.surface?.holes.values() ?? [])].find(t => head(t) === "Declares");
-            const actual = classification ? typeName(arg(classification)) : input.semanticEnv.getBindingType(value.name) ?? declared?.type;
-            if (!declared && !actual) diagnostics.push({code:linked ? "elaborate/unknown-reference" : "elaborate/hole-type",severity:"error", message:`Unknown reference ${value.name}`, loc:value.loc,details:{...holeDetails,name:value.name,expected:formatSExprMany([type]).trim(),actual:value.name,candidates:[...input.semanticEnv.getDeclaredNames().keys()]}});
-            else if (actual && name(arg(type)) && (actual._tag !== "TCon" || actual.name !== name(arg(type)))) diagnostics.push({code:linked ? "elaborate/reference-type" : "elaborate/hole-type",severity:"error", message:`${value.name} is ${showType(actual)}, expected ${name(arg(type))}`, loc:value.loc,details:{...holeDetails,name:value.name,expected:name(arg(type))!,actual:showType(actual)}});
+            const actual = classification ? typeName(arg(classification)) : value._tag === "Sym" ? input.semanticEnv.getBindingType(key) ?? declared?.type : declared?.type;
+            if (!declared && !actual) {
+              // Suggest only names declared as the referenced kind.
+              const wanted = name(arg(type));
+              const kinds = [...input.semanticEnv.getDeclaredNames()].filter(([, d]) => !wanted || [...(registry?.get(d.formName)?.surface?.holes.values() ?? [])].some(t => head(t) === "Declares" && name(arg(t)) === wanted)).map(([k]) => k);
+              const suggestion = closestName(key, kinds);
+              const replacement = suggestion && (value._tag === "Sym" ? suggestion : JSON.stringify(suggestion));
+              diagnostics.push({code:linked ? "elaborate/unknown-reference" : "elaborate/hole-type",severity:"error", message:`Unknown reference ${shown}${replacement ? ` (did you mean ${replacement}?)` : ""}`, loc:value.loc,
+                details:{...holeDetails,name:key,expected:formatSExprMany([type]).trim(),actual:shown,candidates:kinds.length ? kinds : [...input.semanticEnv.getDeclaredNames().keys()]},
+                help:`Refer to a declared ${wanted ?? "name"}${kinds.length ? `: ${kinds.slice(0, 5).join(", ")}` : "; none is declared yet"}.`,
+                ...(replacement ? {fix:[{loc:value.loc,newText:replacement}]} : {})});
+            }
+            else if (actual && name(arg(type)) && (actual._tag !== "TCon" || actual.name !== name(arg(type)))) diagnostics.push({code:linked ? "elaborate/reference-type" : "elaborate/hole-type",severity:"error", message:`${shown} is ${showType(actual)}, expected ${name(arg(type))}`, loc:value.loc,details:{...holeDetails,name:key,expected:name(arg(type))!,actual:showType(actual)}});
           }
         };
         checkReferences(e, u);
