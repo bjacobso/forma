@@ -1,6 +1,7 @@
 import type { ModuleInterface, LinkedEffectProgram, PackageTable } from "@formalang/ts/modules";
 import type { Diagnostic, Span } from "@formalang/ts/diagnostic";
 export type { Diagnostic, Span } from "@formalang/ts/diagnostic";
+import type { HostCallJournal, JournalRequest, OnJournalEntryCallback } from "./journal.js";
 
 export type AstNode =
   | { readonly kind: "nil"; readonly span?: Span | undefined }
@@ -216,6 +217,8 @@ export interface CheckedRunRequest {
   readonly variables?: readonly SessionVariable[] | undefined;
   readonly retainValues?: "none" | "functions" | "all" | undefined;
   readonly resultProjection?: readonly ValueProjectionName[] | undefined;
+  readonly journal?: JournalRequest | undefined;
+  readonly onJournalEntry?: OnJournalEntryCallback | undefined;
 }
 
 export type CheckedRunState =
@@ -236,11 +239,13 @@ export type CheckedRunState =
       readonly type: string;
       readonly hostCalls: number;
       readonly manifest: CapabilityManifest;
+      readonly journal?: HostCallJournal | undefined;
     }
   | {
       readonly status: "failed";
       readonly stage: "evaluate" | "limit" | "denied" | "aborted";
       readonly diagnostics: readonly Diagnostic[];
+      readonly journal?: HostCallJournal | undefined;
     };
 
 export type ValueProjectionName = "printed" | "plain-json" | "triple-value" | "truthy" | "summary";
@@ -299,12 +304,17 @@ export interface EvaluationResult {
 }
 
 export type EvaluationState =
-  | { readonly status: "completed"; readonly result: EvaluationResult }
+  | {
+      readonly status: "completed";
+      readonly result: EvaluationResult;
+      readonly journal?: HostCallJournal | undefined;
+    }
   | { readonly status: "host-call"; readonly call: HostCall }
   | {
       readonly status: "failed";
       readonly diagnostics: readonly Diagnostic[];
       readonly observations?: ObservationResult | undefined;
+      readonly journal?: HostCallJournal | undefined;
     };
 
 export interface VersionResult {
@@ -454,6 +464,8 @@ export interface EvaluateInSessionRequest {
   /** Also applies to observed values: each record's value gets a `valueRef`. */
   readonly retainValues?: "none" | "functions" | "all" | undefined;
   readonly observe?: ObservationRequest | undefined;
+  readonly journal?: JournalRequest | undefined;
+  readonly onJournalEntry?: OnJournalEntryCallback | undefined;
 }
 
 export interface CallValueRequest {
@@ -464,6 +476,8 @@ export interface CallValueRequest {
   readonly stepLimit?: number | undefined;
   readonly resultProjection?: readonly ValueProjectionName[] | undefined;
   readonly retainValues?: "none" | "functions" | "all" | undefined;
+  readonly journal?: JournalRequest | undefined;
+  readonly onJournalEntry?: OnJournalEntryCallback | undefined;
 }
 
 export type HostCallResumeResult =

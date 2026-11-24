@@ -1,0 +1,5 @@
+---
+"@forma-language/forma": minor
+---
+
+Add RFC 0016 stages 2–3 host-call journals: `forma-journal/v1` JSON Lines recording and deterministic replay across `TsLanguageHost` (`evaluateInSession`, `checkedRun`, `callValue`), `createLanguage`, the JSON ABI, and `forma run --record <file>` / `--replay <file>`. Recording captures lossless `JournalValue` arguments and outcomes (preserving `Int`/`Float`, map-key kinds, vectors, ordinal function matching `{kind: "function", ordinal: n}`, callback-nested evaluation paths, streaming `onJournalEntry`, and optional `redact` replacement with `{kind: "redacted"}`). Replay answers matching calls without surfacing live host calls and reports coded diagnostics at the author's `HostCall` span for divergence (`journal/diverged`), redacted entries (`journal/redacted`), exhausted journals (`journal/exhausted`, or live continuation with `onExhausted: "pause"`), unknown builtins (`journal/unknown-builtin`), unused entries (`journal/unused-entries`), and digest mismatches (`journal/program-mismatch`, or warning under `allowProgramMismatch: true`).

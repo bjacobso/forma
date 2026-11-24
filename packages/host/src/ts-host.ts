@@ -18,6 +18,16 @@ import * as Syntax from "@formalang/ts/syntax";
 import * as VM from "@formalang/ts/vm";
 
 import { typeProjection } from "./abi-projections.js";
+import {
+  JOURNAL_FORMAT,
+  JournalRuntime,
+  journalArgsFromProjections,
+  validateReplayHeader,
+  valueProjectionFromJournal,
+  type JournalHeader,
+  type JournalRequest,
+  type OnJournalEntryCallback,
+} from "./journal.js";
 import { floatProjectionValue, keyStringFromProjection, projectInlineValue } from "./value-projections.js";
 import type {
   AbortEvaluationRequest,
@@ -131,12 +141,21 @@ interface CheckedRunContext {
   readonly callCounts: Map<string, number>;
 }
 
+interface JournalParentContext {
+  readonly runtime: JournalRuntime;
+  readonly evaluationPath: readonly number[];
+  readonly nextChild: () => number;
+}
+
 interface TsPendingEvaluation {
   readonly session: TsSession;
   readonly evaluationId: string;
   readonly sourceId: string;
   readonly sourceText?: string | undefined;
   readonly checkedRun?: CheckedRunContext | undefined;
+  readonly journalRuntime?: JournalRuntime | undefined;
+  readonly evaluationPath: readonly number[];
+  nextChildIndex: number;
   deadlineMs?: number | undefined;
   timeoutMs?: number | undefined;
   pausedAtMs?: number | undefined;
@@ -621,7 +640,8 @@ export class TsLanguageHost implements LanguageHost {
       request.evaluationId !== undefined ||
       request.timeoutMs !== undefined ||
       request.maxExpansionSteps !== undefined ||
-      request.maxResultBytes !== undefined
+      request.maxResultBytes !== undefined ||
+      request.journal !== undefined
     ) {
       return this.#evaluateInSessionWithHostBuiltins(session, {...request,sourceId}, source, env);
     }
@@ -674,7 +694,7 @@ export class TsLanguageHost implements LanguageHost {
       session.language.rememberParsedSource("source", sourceId, parsed.exprs);
     };
     const type = typeProjection(checked.display);
-    if (session.hostBuiltins.length) return this.#evaluateInSessionWithHostBuiltins(session,
+    if (session.hostBuiltins.length || request.journal !== undefined) return this.#evaluateInSessionWithHostBuiltins(session,
       { ...request, sourceId }, request.source, session.language.env, { commit, type });
     const result = await Engine.evaluateInSession({ session: session.language, sourceId,
       source: request.source, env: session.language.env, stepLimit: request.stepLimit ?? session.defaultStepLimit,
@@ -1343,6 +1363,18 @@ export class TsLanguageHost implements LanguageHost {
         };
       }
     }
+    const preparedJournal = this.#prepareJournalRuntime(
+      session,
+      sourceId,
+      source,
+      grantedBuiltins,
+      request.journal,
+      request.onJournalEntry,
+    );
+    if (!preparedJournal.ok) {
+      return { status: "failed", stage: "evaluate", diagnostics: preparedJournal.diagnostics };
+    }
+    const journalRuntime = preparedJournal.runtime;
     const env = request.variables
       ? session.language.env.extend(variablesToBindings(request.variables))
       : session.language.env;
@@ -1365,7 +1397,14 @@ export class TsLanguageHost implements LanguageHost {
         hostCalls: 0,
         callCounts: new Map(),
       };
-      const evaluation = createPendingEvaluation(session, evaluationId, sourceId, source, checkedRunContext);
+      const evaluation = createPendingEvaluation(
+        session,
+        evaluationId,
+        sourceId,
+        source,
+        checkedRunContext,
+        journalRuntime,
+      );
       applyBudget(evaluation, budget);
       const builtins = {
         ...Builtins.defaultBuiltins,
@@ -1374,11 +1413,27 @@ export class TsLanguageHost implements LanguageHost {
       const completion = runBudgeted(expressions, { stepLimit, builtins, env: prepared.env }, evaluation, budget)
         .then((result): CheckedRunState => {
           const printed = Evaluator.printKValue(result.value);
+          const terminalJournal = journalRuntime?.toJournal();
           const oversize = resultSizeDiagnostic(printed, budget.maxResultBytes);
-          if (oversize) return { status: "failed", stage: "limit", diagnostics: [oversize] };
+          if (oversize) {
+            return {
+              status: "failed",
+              stage: "limit",
+              diagnostics: [...(journalRuntime?.completionDiagnostics(false) ?? []), oversize],
+              ...(terminalJournal ? { journal: terminalJournal } : {}),
+            };
+          }
           const value = this.#projectValue(session, result.value, request.retainValues);
           const projectedOversize = resultSizeDiagnostic(JSON.stringify(value), budget.maxResultBytes);
-          if (projectedOversize) return { status: "failed", stage: "limit", diagnostics: [projectedOversize] };
+          if (projectedOversize) {
+            return {
+              status: "failed",
+              stage: "limit",
+              diagnostics: [...(journalRuntime?.completionDiagnostics(false) ?? []), projectedOversize],
+              ...(terminalJournal ? { journal: terminalJournal } : {}),
+            };
+          }
+          const journalDiagnostics = journalRuntime?.completionDiagnostics(true) ?? [];
           return {
             status: "completed",
             result: {
@@ -1386,14 +1441,25 @@ export class TsLanguageHost implements LanguageHost {
               printed,
               steps: result.steps,
               type: typeProjection(actualType),
-              diagnostics: [],
+              diagnostics: [...journalDiagnostics],
             },
             type: actualType,
             hostCalls: checkedRunContext.hostCalls,
             manifest,
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
           };
         })
-        .catch((error): CheckedRunState => failedFromError(error));
+        .catch((error): CheckedRunState => {
+          const failed = failedFromError(error);
+          if (failed.status !== "failed") return failed;
+          const journalWarnings = journalRuntime?.completionDiagnostics(false) ?? [];
+          const terminalJournal = journalRuntime?.toJournal();
+          return {
+            ...failed,
+            diagnostics: [...journalWarnings, ...failed.diagnostics],
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        });
       Object.assign(evaluation, { completion });
       session.evaluations.set(evaluationId, evaluation);
       return (await this.#nextEvaluationState(evaluation)) as CheckedRunState;
@@ -1561,6 +1627,82 @@ export class TsLanguageHost implements LanguageHost {
     return text !== undefined ? spanLocator(text)(rawSpan) : rawSpan;
   }
 
+  #buildJournalHeader(
+    session: TsSession,
+    sourceId: string,
+    source: string,
+    descriptors: readonly HostBuiltinDescriptor[],
+  ): JournalHeader {
+    const preludes = (session.language.orderedSources("prelude") ?? []).map((entry) => ({
+      id: entry.id,
+      sha256: sha256(entry.text),
+    }));
+    const sources = [
+      ...session.language
+        .orderedSources("source")
+        .filter((entry) => entry.id !== sourceId)
+        .map((entry) => ({ id: entry.id, sha256: sha256(entry.text) })),
+      { id: sourceId, sha256: sha256(source) },
+    ];
+    return {
+      format: JOURNAL_FORMAT,
+      engine: "typescript",
+      program: {
+        sources,
+        preludes,
+        entry: sourceId,
+      },
+      builtins: descriptors.map((b) => ({ name: b.name, effect: b.handler.effect })),
+    };
+  }
+
+  #prepareJournalRuntime(
+    session: TsSession,
+    sourceId: string,
+    source: string,
+    descriptors: readonly HostBuiltinDescriptor[],
+    journalRequest: JournalRequest | undefined,
+    onJournalEntry: OnJournalEntryCallback | undefined,
+  ):
+    | { readonly ok: true; readonly runtime?: JournalRuntime | undefined }
+    | { readonly ok: false; readonly diagnostics: readonly Diagnostic[] } {
+    if (!journalRequest) return { ok: true };
+    const currentHeader = this.#buildJournalHeader(session, sourceId, source, descriptors);
+    if (journalRequest.mode === "record") {
+      return {
+        ok: true,
+        runtime: new JournalRuntime({
+          recordHeader: currentHeader,
+          redact: journalRequest.redact,
+          onJournalEntry,
+        }),
+      };
+    }
+    const knownBuiltins = new Set(descriptors.map((b) => b.name));
+    const validation = validateReplayHeader(
+      journalRequest.journal.header,
+      currentHeader,
+      knownBuiltins,
+      journalRequest.allowProgramMismatch === true,
+    );
+    if (!validation.ok) {
+      return { ok: false, diagnostics: validation.diagnostics };
+    }
+    return {
+      ok: true,
+      runtime: new JournalRuntime({
+        recordHeader: journalRequest.record ? currentHeader : undefined,
+        redact: journalRequest.redact,
+        onJournalEntry,
+        replay: {
+          entries: journalRequest.journal.entries,
+          onExhausted: journalRequest.onExhausted ?? "fail",
+          warnings: validation.diagnostics,
+        },
+      }),
+    };
+  }
+
   async #evaluateInSessionWithHostBuiltins(
     session: TsSession,
     request: EvaluateInSessionRequest,
@@ -1569,11 +1711,23 @@ export class TsLanguageHost implements LanguageHost {
     repl?: { readonly commit: (env: Env) => void; readonly type: import("./types.js").TypeProjection },
   ): Promise<EvaluationState> {
     const sourceId = request.sourceId ?? "session";
+    const preparedJournal = this.#prepareJournalRuntime(
+      session,
+      sourceId,
+      source,
+      session.hostBuiltins,
+      request.journal,
+      request.onJournalEntry,
+    );
+    if (!preparedJournal.ok) {
+      return { status: "failed", diagnostics: preparedJournal.diagnostics };
+    }
+    const journalRuntime = preparedJournal.runtime;
     let expressions:readonly Reader.SExpr[];
     try {const prepared=await Engine.prepareModuleImports({session:session.language,sourceId,source,env,stepLimit:request.stepLimit ?? session.defaultStepLimit},sourceId,source,env);expressions=prepared.expressions;env=prepared.env;}
     catch(error) {return {status:"failed",diagnostics:error instanceof Modules.ModuleError ? [...error.diagnostics] : [Engine.diagnosticFromUnknown(error,"evaluate",sourceId)]};}
     const evaluationId = request.evaluationId ?? `ts-eval-${this.#nextEvaluationId++}`;
-    const evaluation = createPendingEvaluation(session, evaluationId, sourceId, source);
+    const evaluation = createPendingEvaluation(session, evaluationId, sourceId, source, undefined, journalRuntime);
     const budget = resolveBudget(request, false);
     applyBudget(evaluation, budget);
     const builtins = {
@@ -1595,24 +1749,29 @@ export class TsLanguageHost implements LanguageHost {
           result,
           request.retainValues,
         );
+        const terminalJournal = journalRuntime?.toJournal();
         if (result.diagnostics.length > 0) {
+          const journalWarnings = journalRuntime?.completionDiagnostics(false) ?? [];
           return {
             status: "failed",
-            diagnostics: result.diagnostics,
+            diagnostics: [...journalWarnings, ...result.diagnostics],
             ...(observations ? { observations } : {}),
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
           };
         }
         if (repl && !evaluation.aborted) repl.commit(result.env!);
+        const journalDiagnostics = journalRuntime?.completionDiagnostics(true) ?? [];
         return {
           status: "completed",
           result: {
             value: this.#projectValue(session, result.value, request.retainValues),
             printed: Evaluator.printKValue(result.value),
             steps: result.steps,
-            diagnostics: [],
+            diagnostics: [...journalDiagnostics],
             ...(repl ? { type: repl.type } : {}),
             ...(observations ? { observations } : {}),
           },
+          ...(terminalJournal ? { journal: terminalJournal } : {}),
         };
       });
       Object.assign(evaluation, { completion });
@@ -1627,25 +1786,42 @@ export class TsLanguageHost implements LanguageHost {
     )
       .then((result): EvaluationState => {
         const printed = Evaluator.printKValue(result.value);
+        const terminalJournal = journalRuntime?.toJournal();
         const oversize = resultSizeDiagnostic(printed, budget.maxResultBytes);
-        if (oversize) return { status: "failed", diagnostics: [oversize] };
+        if (oversize) {
+          return {
+            status: "failed",
+            diagnostics: [...(journalRuntime?.completionDiagnostics(false) ?? []), oversize],
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        }
         if (repl && !evaluation.aborted) repl.commit(result.env);
+        const journalDiagnostics = journalRuntime?.completionDiagnostics(true) ?? [];
         return {
           status: "completed",
           result: {
             value: this.#projectValue(session, result.value, request.retainValues),
             printed,
             steps: result.steps,
-            diagnostics: [],
+            diagnostics: [...journalDiagnostics],
             ...(repl ? { type: repl.type } : {}),
           },
+          ...(terminalJournal ? { journal: terminalJournal } : {}),
         };
       })
       .catch(
-        (error): EvaluationState => ({
-          status: "failed",
-          diagnostics: [diagnosticLocator(id => id === sourceId ? source : session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))],
-        }),
+        (error): EvaluationState => {
+          const journalWarnings = journalRuntime?.completionDiagnostics(false) ?? [];
+          const terminalJournal = journalRuntime?.toJournal();
+          return {
+            status: "failed",
+            diagnostics: [
+              ...journalWarnings,
+              diagnosticLocator(id => id === sourceId ? source : session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId)),
+            ],
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        },
       );
     Object.assign(evaluation, { completion });
     session.evaluations.set(evaluationId, evaluation);
@@ -1732,16 +1908,66 @@ export class TsLanguageHost implements LanguageHost {
         evaluation.checkedRun.hostCalls++;
         evaluation.checkedRun.callCounts.set(descriptor.name, currentCount + 1);
       }
+      const journalParent: JournalParentContext | undefined = evaluation.journalRuntime
+        ? {
+            runtime: evaluation.journalRuntime,
+            evaluationPath: evaluation.evaluationPath,
+            nextChild: () => evaluation.nextChildIndex++,
+          }
+        : undefined;
+      const projectedArgs = args.map((arg) =>
+        this.#projectValue(
+          evaluation.session,
+          arg,
+          "functions",
+          (callArgs) => apply(arg, callArgs),
+          journalParent,
+        ),
+      );
+      const actualJournalArgs = evaluation.journalRuntime
+        ? journalArgsFromProjections(projectedArgs)
+        : undefined;
+      if (evaluation.journalRuntime?.isReplaying) {
+        const step = evaluation.journalRuntime.matchReplayCall(
+          evaluation.evaluationPath,
+          descriptor.handler.effect,
+          descriptor.name,
+          actualJournalArgs!,
+          span,
+        );
+        if (step.action === "fail") {
+          resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([step.diagnostic])));
+          return Effect.void;
+        }
+        if (step.action === "resume") {
+          if (step.entry.outcome.ok) {
+            try {
+              const decoded = valueProjectionFromJournal(step.entry.outcome.value);
+              resume(Effect.succeed(kValueFromProjection(decoded, evaluation.session)));
+            } catch (error) {
+              resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+                code: "journal/invalid",
+                severity: "error",
+                message: error instanceof Error ? error.message : String(error),
+                phase: "host-effect",
+                ...(span ? { span } : {}),
+              }])));
+            }
+          } else {
+            const diagnostics = span
+              ? step.entry.outcome.diagnostics.map((d) => (d.span ? d : { ...d, span }))
+              : step.entry.outcome.diagnostics;
+            resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics(diagnostics)));
+          }
+          return Effect.void;
+        }
+      }
       const call: HostCall = {
         evaluationId: evaluation.evaluationId,
         callId: `ts-call-${this.#nextCallId++}`,
         effect: descriptor.handler.effect,
         name: descriptor.name,
-        args: args.map((arg) =>
-          this.#projectValue(evaluation.session, arg, "functions", (callArgs) =>
-            apply(arg, callArgs),
-          ),
-        ),
+        args: projectedArgs,
         ...(span ? { span } : {}),
         ...(evaluation.checkedRun ? { mode: evaluation.checkedRun.grants.get(descriptor.name)?.mode ?? "ask" } : {}),
       };
@@ -1753,6 +1979,26 @@ export class TsLanguageHost implements LanguageHost {
             evaluation.deadlineMs += Date.now() - evaluation.pausedAtMs;
           }
           evaluation.pausedAtMs = undefined;
+          if (!evaluation.aborted && evaluation.journalRuntime?.isRecording) {
+            try {
+              evaluation.journalRuntime.recordCall(
+                evaluation.evaluationPath,
+                descriptor.handler.effect,
+                descriptor.name,
+                actualJournalArgs!,
+                result,
+              );
+            } catch (error) {
+              resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+                code: "journal/invalid",
+                severity: "error",
+                message: error instanceof Error ? error.message : String(error),
+                phase: "host-effect",
+                ...(span ? { span } : {}),
+              }])));
+              return;
+            }
+          }
           if (result.ok) {
             resume(Effect.succeed(kValueFromProjection(result.value, evaluation.session)));
           } else {
@@ -1779,6 +2025,7 @@ export class TsLanguageHost implements LanguageHost {
     value: KValue,
     retainValues: EvaluateInSessionRequest["retainValues"] | undefined,
     apply?: ((args: readonly KValue[]) => Effect.Effect<KValue, KernelError>) | undefined,
+    journalParent?: JournalParentContext | undefined,
   ): ValueProjection {
     if (Evaluator.isKKeyword(value) || Evaluator.isKSymbol(value)) {
       return this.#maybeRetainProjectedValue(session,value,{kind:Evaluator.isKKeyword(value) ? "keyword" : "symbol",value:value.name},retainValues);
@@ -1812,7 +2059,7 @@ export class TsLanguageHost implements LanguageHost {
         value,
         {
           kind: "list",
-          items: value.map((item) => this.#projectValue(session, item, retainValues)),
+          items: value.map((item) => this.#projectValue(session, item, retainValues, undefined, journalParent)),
         },
         retainValues,
       );
@@ -1830,7 +2077,7 @@ export class TsLanguageHost implements LanguageHost {
               mapKeyProjection(key),
               retainValues,
             ),
-            value: this.#projectValue(session, nested, retainValues),
+            value: this.#projectValue(session, nested, retainValues, undefined, journalParent),
           })),
         },
         retainValues,
@@ -1842,7 +2089,7 @@ export class TsLanguageHost implements LanguageHost {
           session,
           value,
           apply,
-          this.#callableValueInvoker(session, value),
+          this.#callableValueInvoker(session, value, journalParent),
         );
         return { kind: "function", valueRef, display: Evaluator.printKValue(value) };
       }
@@ -1888,19 +2135,51 @@ export class TsLanguageHost implements LanguageHost {
   #callableValueInvoker(
     session: TsSession,
     value: KValue,
+    journalParent?: JournalParentContext | undefined,
   ): ((request: CallValueRequest) => Promise<EvaluationState>) | undefined {
     if (!Evaluator.isKFn(value)) return undefined;
-    return (request) => this.#invokeCallableValue(session, value, request);
+    return (request) => this.#invokeCallableValue(session, value, request, journalParent);
   }
 
   async #invokeCallableValue(
     session: TsSession,
     value: KFn,
     request: CallValueRequest,
+    journalParent?: JournalParentContext | undefined,
   ): Promise<EvaluationState> {
     const sourceId = "value-ref";
-    const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
-    const evaluation = createPendingEvaluation(session, evaluationId, sourceId);
+    const evaluationId = request.evaluationId ?? `ts-eval-${this.#nextEvaluationId++}`;
+    let journalRuntime: JournalRuntime | undefined;
+    let evaluationPath: readonly number[] = [];
+    let ownsJournal = false;
+    if (request.journal) {
+      const prepared = this.#prepareJournalRuntime(
+        session,
+        sourceId,
+        "",
+        session.hostBuiltins,
+        request.journal,
+        request.onJournalEntry,
+      );
+      if (!prepared.ok) {
+        return { status: "failed", diagnostics: prepared.diagnostics };
+      }
+      journalRuntime = prepared.runtime;
+      ownsJournal = true;
+    } else if (journalParent) {
+      journalRuntime = journalParent.runtime;
+      evaluationPath = [...journalParent.evaluationPath, journalParent.nextChild()];
+      journalRuntime.markPathEntered(evaluationPath);
+    }
+    const evaluation = createPendingEvaluation(
+      session,
+      evaluationId,
+      sourceId,
+      undefined,
+      undefined,
+      journalRuntime,
+      evaluationPath,
+    );
     const builtins = {
       ...Builtins.defaultBuiltins,
       ...this.#hostBuiltinFns(evaluation, session.hostBuiltins),
@@ -1932,20 +2211,33 @@ export class TsLanguageHost implements LanguageHost {
       })),
     )
       .then(
-        (value): EvaluationState => ({
-          status: "completed",
-          result: {
-            value: this.#projectValue(session, value, request.retainValues),
-            printed: Evaluator.printKValue(value),
-            diagnostics: [],
-          },
-        }),
+        (value): EvaluationState => {
+          const journalDiagnostics = ownsJournal ? (journalRuntime?.completionDiagnostics(true) ?? []) : [];
+          const terminalJournal = ownsJournal ? journalRuntime?.toJournal() : undefined;
+          return {
+            status: "completed",
+            result: {
+              value: this.#projectValue(session, value, request.retainValues),
+              printed: Evaluator.printKValue(value),
+              diagnostics: [...journalDiagnostics],
+            },
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        },
       )
       .catch(
-        (error): EvaluationState => ({
-          status: "failed",
-          diagnostics: [diagnosticLocator(id => session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId))],
-        }),
+        (error): EvaluationState => {
+          const journalWarnings = ownsJournal ? (journalRuntime?.completionDiagnostics(false) ?? []) : [];
+          const terminalJournal = ownsJournal ? journalRuntime?.toJournal() : undefined;
+          return {
+            status: "failed",
+            diagnostics: [
+              ...journalWarnings,
+              diagnosticLocator(id => session.language.sourceText(id))(Engine.diagnosticFromUnknown(error, "evaluate", sourceId)),
+            ],
+            ...(terminalJournal ? { journal: terminalJournal } : {}),
+          };
+        },
       );
     Object.assign(evaluation, { completion });
     session.evaluations.set(evaluationId, evaluation);
@@ -2174,6 +2466,8 @@ function createPendingEvaluation(
   sourceId: string,
   sourceText?: string,
   checkedRun?: CheckedRunContext,
+  journalRuntime?: JournalRuntime,
+  evaluationPath: readonly number[] = [],
 ): TsPendingEvaluation {
   return {
     session,
@@ -2181,6 +2475,9 @@ function createPendingEvaluation(
     sourceId,
     ...(sourceText !== undefined ? { sourceText } : {}),
     ...(checkedRun !== undefined ? { checkedRun } : {}),
+    ...(journalRuntime !== undefined ? { journalRuntime } : {}),
+    evaluationPath,
+    nextChildIndex: 0,
     completed: false,
     aborted: false,
     callQueue: [],
@@ -2226,7 +2523,18 @@ function hostCallDiagnosticsErrorFromDiagnostics(
     message: first?.message ?? "Host call failed",
     expected: "successful host call",
     got: code,
-    details: { code, hostDiagnostics: diagnostics },
+    ...(first?.span
+      ? {
+          loc: {
+            sourceId: first.span.sourceId,
+            start: first.span.startOffset,
+            end: first.span.endOffset,
+            line: first.span.startLine ?? 1,
+            col: first.span.startColumn ?? 1,
+          },
+        }
+      : {}),
+    details: { ...(first?.details ?? {}), code, hostDiagnostics: diagnostics },
   });
 }
 

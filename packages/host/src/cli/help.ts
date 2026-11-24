@@ -2,7 +2,7 @@ export const usage = `Usage: forma <command>
 
 Human commands:
   check <entry.lisp> [--json]          Typecheck a module graph.
-  run <entry.lisp> [--unchecked] [--json]
+  run <entry.lisp> [--unchecked] [--record <file>] [--replay <file>] [--allow-program-mismatch] [--json]
                                       Check, then print the evaluated value.
   test [paths...] [--json] [--filter <substring>]
                                       Check and run independent Forma tests.

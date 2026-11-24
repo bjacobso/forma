@@ -1,8 +1,11 @@
+import { readFileSync, writeFileSync } from "node:fs";
 import { readModuleGraph, readNodePackages, type NodePackages } from "@formalang/ts/node";
 import { moduleMechanicsDeclarations, type ModuleGraph } from "@formalang/ts/modules";
 import { isKFloat, isKKeyword, isKSymbol, mapKeyValue, type KValue } from "@formalang/ts/evaluator";
 import { JsonAbi, type JsonResponse } from "../json-abi.js";
 import { authorNames } from "@formalang/ts/diagnostic";
+import { parseJournalJsonl, serializeJournalJsonl, type HostCallJournal, type JournalRequest } from "../journal.js";
+import type { EvaluationState } from "../types.js";
 
 /** Plain JSON for elaborated IR: records become objects keyed without the leading ':'. */
 function plain(value: KValue): unknown {
@@ -32,19 +35,82 @@ function formApplications(graph: ModuleGraph) {
   );
 }
 
-export async function file(abi: JsonAbi, operation: string, path: string, unchecked = false): Promise<JsonResponse> {
+export interface FileRunOptions {
+  readonly unchecked?: boolean | undefined;
+  readonly recordPath?: string | undefined;
+  readonly replayPath?: string | undefined;
+  readonly allowProgramMismatch?: boolean | undefined;
+}
+
+export async function file(
+  abi: JsonAbi,
+  operation: string,
+  path: string,
+  uncheckedOrOptions: boolean | FileRunOptions = false,
+): Promise<JsonResponse> {
+  const options: FileRunOptions =
+    typeof uncheckedOrOptions === "boolean" ? { unchecked: uncheckedOrOptions } : uncheckedOrOptions;
+  const unchecked = options.unchecked === true;
+  let replayJournal: HostCallJournal | undefined;
+  if (operation === "evaluate" && options.replayPath !== undefined) {
+    try {
+      replayJournal = parseJournalJsonl(readFileSync(options.replayPath, "utf8"));
+    } catch (error) {
+      return {
+        ok: false,
+        diagnostics: [
+          {
+            code: "journal/invalid",
+            severity: "error",
+            message: error instanceof Error ? error.message : String(error),
+            phase: "evaluate",
+          },
+        ],
+      };
+    }
+  }
   const graph = readModuleGraph(path);
   const packages = readNodePackages(path);
   return withFileSession(abi, graph, packages, async (sessionId) => {
     const request = { sessionId, sourceId: graph.entry };
     if (operation === "typecheck") return await abi.handleJson(JSON.stringify({ op: "typecheck", ...request }));
     if (operation === "evaluate") {
+      if (replayJournal && replayJournal.header.builtins.length > 0) {
+        await abi.host.configureSession({
+          sessionId,
+          hostBuiltins: replayJournal.header.builtins.map((b) => ({
+            name: b.name,
+            arity: { min: 0 },
+            typeScheme: { kind: "variadic-function", params: [], rest: { kind: "any" }, result: { kind: "any" } },
+            handler: { kind: "host-effect", effect: b.effect },
+          })),
+        });
+      }
       // Evaluation does not typecheck by itself; an ill-typed program is not run.
       if (!unchecked) {
         const checked = await abi.handleJson(JSON.stringify({ op: "typecheck", ...request }));
         if (!checked.ok) return checked;
       }
-      return await abi.handleJson(JSON.stringify({ op: "evaluateInSession", ...request }));
+      const journal: JournalRequest | undefined = replayJournal
+        ? {
+            mode: "replay",
+            journal: replayJournal,
+            ...(options.allowProgramMismatch ? { allowProgramMismatch: true } : {}),
+            ...(options.recordPath ? { record: true } : {}),
+          }
+        : options.recordPath
+          ? { mode: "record" }
+          : undefined;
+      const response = await abi.handleJson(
+        JSON.stringify({ op: "evaluateInSession", ...request, ...(journal ? { journal } : {}) }),
+      );
+      if (options.recordPath && response.value && typeof response.value === "object") {
+        const state = response.value as EvaluationState;
+        if ((state.status === "completed" || state.status === "failed") && state.journal) {
+          writeFileSync(options.recordPath, serializeJournalJsonl(state.journal), "utf8");
+        }
+      }
+      return response;
     }
     if (operation === "interface") return await abi.handleJson(JSON.stringify({ op: "moduleGraph", ...request }));
     const result = moduleMechanicsDeclarations(graph);
