@@ -200,10 +200,14 @@ export interface CheckedRunGrant {
 export interface CheckedRunLimits {
   readonly steps?: number | undefined;
   readonly hostCalls?: number | undefined;
+  readonly timeoutMs?: number | undefined;
+  readonly maxExpansionSteps?: number | undefined;
+  readonly maxResultBytes?: number | undefined;
 }
 
 export interface CheckedRunRequest {
   readonly sessionId: string;
+  readonly evaluationId?: string | undefined;
   readonly source: string;
   readonly sourceId?: string | undefined;
   readonly grants: readonly CheckedRunGrant[];
@@ -443,6 +447,9 @@ export interface EvaluateInSessionRequest {
   readonly source?: string | undefined;
   readonly variables?: readonly SessionVariable[] | undefined;
   readonly stepLimit?: number | undefined;
+  readonly timeoutMs?: number | undefined;
+  readonly maxExpansionSteps?: number | undefined;
+  readonly maxResultBytes?: number | undefined;
   readonly resultProjection?: readonly ValueProjectionName[] | undefined;
   /** Also applies to observed values: each record's value gets a `valueRef`. */
   readonly retainValues?: "none" | "functions" | "all" | undefined;

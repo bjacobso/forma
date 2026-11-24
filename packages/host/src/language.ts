@@ -105,7 +105,7 @@ export class LanguageInitializationError extends Error {
  * or { ok: false, diagnostics }. Thrown/rejected handlers become host-effect/failed
  * diagnostics. Ungranted names fail checking; unexpected calls fail with a diagnostic.
  * timeoutMs covers evaluation and handler waits, calling abortEvaluation for a
- * suspended call. It cannot preempt synchronous engine work: also set steps.
+ * suspended call and, inside the VM loop, stops pure computations with limit/time.
  * close releases the session; await active operations before closing it.
  */
 export async function createLanguage(options: LanguageOptions = {}): Promise<Language> {
@@ -214,7 +214,8 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
       const onHostCall = request.onHostCall ?? options.onHostCall;
       if (timedOut()) return timeout();
       let state = await host.evaluateInSession({ sessionId, source, sourceId: request.sourceId ?? defaultSourceId,
-        stepLimit: request.limits?.steps });
+        stepLimit: request.limits?.steps,
+        ...(timeoutMs !== undefined ? { timeoutMs: Math.max(0, deadline - Date.now()) } : {}) });
       while (state.status === "host-call") {
         const call = state.call;
         const abort = async () => {

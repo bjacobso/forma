@@ -12,7 +12,7 @@ import { KKeyword, mapKey, quotedDatum } from "../evaluator/types.js";
  */
 
 import type { KernelObserver } from "../evaluator/observation.js";
-import { Effect } from "effect";
+import { Context, Effect } from "effect";
 import type { KValue, KFn, BuiltinFn } from "../evaluator/types.js";
 import {
   asNumber,
@@ -36,6 +36,33 @@ import { Op } from "./opcodes.js";
 // A reusable scheduler checkpoint. Effect.void is an Exit and is inlined by
 // Effect.gen, so it cannot give the scheduler an opportunity to interrupt.
 const VM_CHECKPOINT = Effect.sync(() => {});
+
+// Yields a macrotask so concurrent host timers / abortEvaluation calls can run
+// while a pure bytecode loop executes in the same JS thread.
+const VM_MACROTASK_YIELD = Effect.callback<void>((resume) => {
+  const timer = setTimeout(() => resume(Effect.void), 0);
+  return Effect.sync(() => clearTimeout(timer));
+});
+
+/** Cooperative deadline and abort control for VM execution. */
+export interface VMExecutionControl {
+  /**
+   * Wall-clock deadline in milliseconds since epoch (`Date.now()`). Read on every
+   * check, so a host may extend it (for example while paused for a host call).
+   */
+  readonly deadlineMs?: number | undefined;
+  /** Configured `timeoutMs` reported in `limit/time` diagnostic details. */
+  readonly timeoutMs?: number | undefined;
+  /** Return `true` or an abort reason string to stop execution cooperatively. */
+  readonly shouldAbort?: (() => boolean | string | undefined) | undefined;
+  /** Periodically yield to the JS event loop so async abort calls can arrive. */
+  readonly yieldToEventLoop?: boolean | undefined;
+}
+
+export const VMExecutionControlScope = Context.Reference<VMExecutionControl | undefined>(
+  "forma/VMExecutionControl",
+  { defaultValue: () => undefined },
+);
 
 // ---------------------------------------------------------------------------
 // VM Closure — stored internally on a KFn via __vmClosure property
@@ -62,6 +89,7 @@ interface VMRuntime {
   /** Owned by one run; shared by reentrant builtin callbacks and closures. */
   readonly stepCounter: { value: number };
   readonly observer?: KernelObserver;
+  readonly control?: VMExecutionControl;
 }
 
 interface DispatchWrapperData {
@@ -334,6 +362,8 @@ export interface VMOptions {
   strictGlobals?: boolean;
   /** Receives values for `OBSERVE` instructions */
   observer?: KernelObserver;
+  /** Cooperative deadline and abort control; overrides `VMExecutionControlScope`. */
+  executionControl?: VMExecutionControl;
 }
 
 export interface VMRunResult {
@@ -354,11 +384,14 @@ export function runChunkWithStats(
   options: VMOptions,
 ): Effect.Effect<VMRunResult, KernelError> {
   return Effect.gen(function* () {
+    const scopedControl = yield* Effect.service(VMExecutionControlScope);
+    const control = options.executionControl ?? scopedControl;
     const runtime: VMRuntime = {
       builtins: options.builtins,
       builtinLookup: options.builtinLookup ?? new Map(),
       globals: options.globals,
       stepLimit: options.stepLimit,
+      ...(control ? { control } : {}),
       ...(options.globalNames ? { globalNames: options.globalNames } : {}),
       ...(options.strictGlobals !== undefined ? { strictGlobals: options.strictGlobals } : {}),
       ...(options.observer ? { observer: options.observer } : {}),
@@ -568,11 +601,68 @@ function executeVM(
       }
     }
 
+    const control = runtime.control;
+    const shouldAbort = control?.shouldAbort;
+    const yieldToEventLoop = control?.yieldToEventLoop === true;
+
+    function checkControl(): KernelError | undefined {
+      if (shouldAbort) {
+        const aborted = shouldAbort();
+        if (aborted) {
+          const reason = typeof aborted === "string" && aborted.trim().length > 0
+            ? aborted
+            : "Evaluation aborted";
+          return withStackTrace(
+            new KernelTypeError({
+              message: reason,
+              expected: "running evaluation",
+              got: "aborted",
+              details: { code: "evaluation/aborted" },
+              ...errorContext(),
+            }),
+          );
+        }
+      }
+      const deadlineMs = control?.deadlineMs;
+      if (deadlineMs !== undefined && Date.now() >= deadlineMs) {
+        const limit = control?.timeoutMs;
+        return withStackTrace(
+          new KernelTypeError({
+            message: limit !== undefined
+              ? `Evaluation exceeded the time limit of ${limit}ms`
+              : "Evaluation exceeded its time limit",
+            expected: limit !== undefined ? `completion within ${limit}ms` : "completion within time limit",
+            got: "timeout",
+            details: {
+              code: "limit/time",
+              ...(limit !== undefined ? { limit } : {}),
+            },
+            ...errorContext(),
+          }),
+        );
+      }
+      return undefined;
+    }
+
+    if (control) {
+      const initialFailure = checkControl();
+      if (initialFailure) return yield* Effect.fail(initialFailure);
+    }
+
     while (true) {
       const totalSteps = ++stepCounter.value;
       // Keep pure bytecode interruptible through Effect's cooperative scheduler
       // without allocating a counter operation for every instruction.
-      if ((totalSteps & 63) === 0) yield* VM_CHECKPOINT;
+      if ((totalSteps & 63) === 0) {
+        yield* VM_CHECKPOINT;
+        if (control) {
+          if (yieldToEventLoop && (totalSteps & 4095) === 0) {
+            yield* VM_MACROTASK_YIELD;
+          }
+          const controlFailure = checkControl();
+          if (controlFailure) return yield* Effect.fail(controlFailure);
+        }
+      }
       if (stepLimit > 0 && totalSteps > stepLimit) {
         return yield* withStackTrace(
           new StepLimitExceeded({ limit: stepLimit, ...errorContext() }),

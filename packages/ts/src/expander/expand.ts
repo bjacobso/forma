@@ -4,7 +4,7 @@ import { Effect } from "effect";
 import type { SExpr, Loc } from "../reader/index.js";
 import { parseManyToSExpr } from "../reader/index.js";
 import { Env } from "../Env.js";
-import { ArityError, withKernelSourceTrace } from "../diagnostic/errors.js";
+import { ArityError, KernelTypeError, StepLimitExceeded, withKernelSourceTrace } from "../diagnostic/errors.js";
 import { authorNames } from "../diagnostic/diagnostic.js";
 import { evaluateCompileTimeExprs } from "../evaluator/eval.js";
 import { PRELUDE_SOURCE } from "./prelude.js";
@@ -25,11 +25,91 @@ import { GensymScope, type GensymCounter } from "../builtins/macro.js";
 
 const DEFAULT_MACRO_STEP_LIMIT = 10_000;
 
+/** Optional expansion step and wall-clock limits scoped around synchronous expansion. */
+export interface ExpansionBudget {
+  readonly maxExpansionSteps?: number | undefined;
+  readonly deadlineMs?: number | undefined;
+  readonly timeoutMs?: number | undefined;
+}
+
+let activeExpansionBudget: ExpansionBudget | undefined;
+
+/** Run `fn` with a scoped expansion budget honored by `expandProgramSync`. */
+export function withExpansionBudget<T>(budget: ExpansionBudget, fn: () => T): T {
+  const previous = activeExpansionBudget;
+  activeExpansionBudget = budget;
+  try {
+    return fn();
+  } finally {
+    activeExpansionBudget = previous;
+  }
+}
+
 const preludeEnvCache = new WeakMap<Record<string, BuiltinFn>, Env>();
 
 interface ExpandState {
   bindingCounter: number;
   readonly gensym: GensymCounter;
+  expansionSteps: number;
+  /** Per-call macro step limit, or the cumulative budget when `cumulative` is set. */
+  readonly maxExpansionSteps: number;
+  /** An explicit `maxExpansionSteps` budget bounds the whole expansion, not each macro call. */
+  readonly cumulative: boolean;
+  readonly deadlineMs?: number | undefined;
+  readonly timeoutMs?: number | undefined;
+}
+
+function expansionLimitError(limit: number, steps: number, loc?: Loc): KernelTypeError {
+  return new KernelTypeError({
+    message: `Macro expansion exceeded the step limit of ${limit}`,
+    expected: `at most ${limit} expansion steps`,
+    got: `${steps} steps`,
+    details: { code: "limit/expansion", limit },
+    ...(loc ? { loc } : {}),
+  });
+}
+
+function expansionTimeLimitError(timeoutMs: number | undefined, loc?: Loc): KernelTypeError {
+  return new KernelTypeError({
+    message: timeoutMs !== undefined
+      ? `Macro expansion exceeded the time limit of ${timeoutMs}ms`
+      : "Macro expansion exceeded its time limit",
+    expected: timeoutMs !== undefined ? `completion within ${timeoutMs}ms` : "completion within time limit",
+    got: "timeout",
+    details: { code: "limit/time", ...(timeoutMs !== undefined ? { limit: timeoutMs } : {}) },
+    ...(loc ? { loc } : {}),
+  });
+}
+
+function checkExpansionBudget(state: ExpandState, loc?: Loc): number {
+  if (state.deadlineMs !== undefined && Date.now() >= state.deadlineMs) {
+    throw expansionTimeLimitError(state.timeoutMs, loc);
+  }
+  if (!state.cumulative) return state.maxExpansionSteps;
+  const remaining = state.maxExpansionSteps - state.expansionSteps;
+  if (remaining <= 0) {
+    throw expansionLimitError(state.maxExpansionSteps, state.expansionSteps, loc);
+  }
+  return remaining;
+}
+
+/** Account for a finished compile-time evaluation against a cumulative budget. */
+function recordExpansionSteps(state: ExpandState, steps: number, loc?: Loc): void {
+  if (!state.cumulative) return;
+  state.expansionSteps += Math.max(1, steps);
+  if (state.expansionSteps > state.maxExpansionSteps) {
+    throw expansionLimitError(state.maxExpansionSteps, state.expansionSteps, loc);
+  }
+}
+
+function isStepLimitError(error: unknown): error is StepLimitExceeded {
+  if (error instanceof StepLimitExceeded) return true;
+  if (error && typeof error === "object") {
+    const candidate = error as { _tag?: string; cause?: { _tag?: string; error?: unknown } };
+    if (candidate._tag === "StepLimitExceeded") return true;
+    if (candidate.cause?._tag === "Fail") return isStepLimitError(candidate.cause.error);
+  }
+  return false;
 }
 
 export interface ExpandProgramOptions {
@@ -56,6 +136,8 @@ export interface ExpandProgramOptions {
    */
   readonly keepMacroDefs?: boolean;
   readonly macroStepLimit?: number;
+  readonly deadlineMs?: number;
+  readonly timeoutMs?: number;
   /**
    * The `gensym` counter to continue. Defaults to a fresh counter, so the
    * same program expands to the same names however many expansions ran before.
@@ -90,15 +172,26 @@ export function expandProgramSync(
   exprs: readonly SExpr[],
   options: ExpandProgramOptions,
 ): ExpandProgramResult {
-  const state: ExpandState = { bindingCounter: 0, gensym: options.gensym ?? { next: 0 } };
-  const macroStepLimit = options.macroStepLimit ?? DEFAULT_MACRO_STEP_LIMIT;
+  const explicitSteps = options.macroStepLimit ?? activeExpansionBudget?.maxExpansionSteps;
+  const macroStepLimit = explicitSteps ?? DEFAULT_MACRO_STEP_LIMIT;
+  const deadlineMs = options.deadlineMs ?? activeExpansionBudget?.deadlineMs;
+  const timeoutMs = options.timeoutMs ?? activeExpansionBudget?.timeoutMs;
+  const state: ExpandState = {
+    bindingCounter: 0,
+    gensym: options.gensym ?? { next: 0 },
+    expansionSteps: 0,
+    maxExpansionSteps: macroStepLimit,
+    cumulative: activeExpansionBudget?.maxExpansionSteps !== undefined && options.macroStepLimit === undefined,
+    ...(deadlineMs !== undefined ? { deadlineMs } : {}),
+    ...(timeoutMs !== undefined ? { timeoutMs } : {}),
+  };
   let macroEnv = makeMacroEnv(options);
   const inlineCompileTimeCalls = options.inlineCompileTimeCalls === true;
   const expanded: SExpr[] = [];
 
   for (const expr of normalizeCoreProgram(exprs, true, options.contextTypes)) {
     if (isTopLevelDefMacro(expr)) {
-      macroEnv = evalTopLevel(expr, macroEnv, options.builtins, macroStepLimit, state.gensym);
+      macroEnv = evalTopLevel(expr, macroEnv, options.builtins, state);
       if (options.keepMacroDefs === true) {
         expanded.push(expr);
       }
@@ -150,16 +243,26 @@ function evalTopLevel(
   expr: SExpr,
   env: Env,
   builtins: Record<string, BuiltinFn>,
-  stepLimit: number,
-  gensym: GensymCounter,
+  state: ExpandState,
 ): Env {
-  return Effect.runSync(
-    evaluateCompileTimeExprs([expr], {
-      stepLimit,
-      builtins,
-      env,
-    }).pipe(Effect.provideService(GensymScope, gensym)),
-  ).env;
+  const loc = sourceLocOf(expr);
+  const remaining = checkExpansionBudget(state, loc);
+  try {
+    const result = Effect.runSync(
+      evaluateCompileTimeExprs([expr], {
+        stepLimit: remaining,
+        builtins,
+        env,
+      }).pipe(Effect.provideService(GensymScope, state.gensym)),
+    );
+    recordExpansionSteps(state, result.steps, loc);
+    return result.env;
+  } catch (error) {
+    if (state.cumulative && isStepLimitError(error)) {
+      throw expansionLimitError(state.maxExpansionSteps, state.maxExpansionSteps + 1, loc);
+    }
+    throw error;
+  }
 }
 
 function freshBinding(prefix: string, loc: Loc, state: ExpandState): SExpr {
@@ -712,12 +815,12 @@ function expandMacroCall(
   expr: SExpr & { readonly _tag: "List" },
   binding: KMacro,
   builtins: Record<string, BuiltinFn>,
-  macroStepLimit: number,
+  _macroStepLimit: number,
   state: ExpandState,
   normalize = true,
 ): SExpr | undefined {
   const args = expr.items.slice(1);
-  const result = evaluateMacro(binding, args, builtins, macroStepLimit, state.gensym, sourceLocOf(expr));
+  const result = evaluateMacro(binding, args, builtins, state, sourceLocOf(expr));
   if (declinesCall(expr.items[0]!, args, result)) return undefined;
   const hygienic = binding.name.includes("__forma_") ? hygienicExpansion(result, args, state) : result;
   const expanded = markExpansion(expr, hygienic, args);
@@ -750,8 +853,15 @@ export function expandMacroOnce(
   if (expr._tag !== "List" || expr.items[0]?._tag !== "Sym") return undefined;
   const binding = macroEnv.lookup(expr.items[0].name);
   if (binding === undefined || !isKMacro(binding)) return undefined;
-  const state: ExpandState = { bindingCounter: 0, gensym: options.gensym ?? { next: 0 } };
-  const expanded = expandMacroCall(expr, binding, options.builtins ?? defaultBuiltins, options.macroStepLimit ?? DEFAULT_MACRO_STEP_LIMIT, state, options.normalize ?? true);
+  const maxExpansionSteps = options.macroStepLimit ?? DEFAULT_MACRO_STEP_LIMIT;
+  const state: ExpandState = {
+    bindingCounter: 0,
+    gensym: options.gensym ?? { next: 0 },
+    expansionSteps: 0,
+    maxExpansionSteps,
+    cumulative: false,
+  };
+  const expanded = expandMacroCall(expr, binding, options.builtins ?? defaultBuiltins, maxExpansionSteps, state, options.normalize ?? true);
   return expanded === undefined ? undefined : { macro: binding.name, expr: expanded };
 }
 
@@ -759,10 +869,10 @@ function evaluateMacro(
   macro: KMacro,
   argExprs: readonly SExpr[],
   builtins: Record<string, BuiltinFn>,
-  stepLimit: number,
-  gensym: GensymCounter,
+  state: ExpandState,
   call?: Loc,
 ): SExpr {
+  const remaining = checkExpansionBudget(state, call);
   if (macro.restParam) {
     if (argExprs.length < macro.params.length) {
       throw new ArityError({
@@ -791,23 +901,34 @@ function evaluateMacro(
   }
 
   const macroEnv = macro.closure.extend(bindings);
-  const result = Effect.runSync(
-    evaluateCompileTimeExprs([macro.body], {
-      stepLimit,
-      builtins,
-      env: macroEnv,
-    }).pipe(
-      Effect.provideService(GensymScope, gensym),
-      // A library macro's own source means nothing to its caller: report a
-      // failure inside it at the call, unless it names the caller's syntax.
-      Effect.mapError((error) =>
-        call && error.loc && error.loc.sourceId !== call.sourceId
-          ? withKernelSourceTrace(error, { loc: call, macroOrigins: [{ macroName: authorNames(macro.name), loc: call }] })
-          : error,
+  let evaluated;
+  try {
+    evaluated = Effect.runSync(
+      evaluateCompileTimeExprs([macro.body], {
+        stepLimit: remaining,
+        builtins,
+        env: macroEnv,
+      }).pipe(
+        Effect.provideService(GensymScope, state.gensym),
+        // A library macro's own source means nothing to its caller: report a
+        // failure inside it at the call, unless it names the caller's syntax.
+        Effect.mapError((error) =>
+          call && error.loc && error.loc.sourceId !== call.sourceId
+            ? withKernelSourceTrace(error, { loc: call, macroOrigins: [{ macroName: authorNames(macro.name), loc: call }] })
+            : error,
+        ),
       ),
-    ),
-  ).value;
+    );
+  } catch (error) {
+    if (state.cumulative && isStepLimitError(error)) {
+      throw expansionLimitError(state.maxExpansionSteps, state.maxExpansionSteps + 1, call);
+    }
+    throw error;
+  }
 
+  recordExpansionSteps(state, evaluated.steps, call);
+
+  const result = evaluated.value;
   return isKSExpr(result) ? result.expr : kValueToSExpr(result);
 }
 

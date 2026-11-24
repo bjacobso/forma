@@ -1,5 +1,5 @@
 {
-  "description": "RFC 0012 stage 1 conformance fixtures for checkedRun, capability manifests, HostCall spans, denials, and step limits.",
+  "description": "RFC 0012 stage 1 and 3 conformance fixtures for checkedRun, capability manifests, HostCall spans, denials, and step/time/expansion/result-size/host-call limits.",
   "builtins": [
     {
       "name": "read-file",
@@ -107,6 +107,57 @@
         "status": "failed",
         "stage": "limit",
         "diagnosticCode": "limit/steps"
+      }
+    },
+    {
+      "id": "pure-infinite-loop-fails-with-limit-time",
+      "sourceId": "loop.lisp",
+      "source": "(define spin [n] (spin (+ n 1)))\n(spin 0)",
+      "grants": [],
+      "limits": { "steps": 2000000000, "timeoutMs": 150 },
+      "expected": {
+        "status": "failed",
+        "stage": "limit",
+        "diagnosticCode": "limit/time"
+      }
+    },
+    {
+      "id": "macro-expansion-bomb-fails-with-limit-expansion",
+      "sourceId": "bomb.lisp",
+      "source": "(macro (boom x) `(boom (boom ~x)))\n(boom 1)",
+      "grants": [],
+      "limits": { "maxExpansionSteps": 200 },
+      "expected": {
+        "status": "failed",
+        "stage": "limit",
+        "diagnosticCode": "limit/expansion"
+      }
+    },
+    {
+      "id": "oversized-result-fails-with-limit-result-size",
+      "sourceId": "big.lisp",
+      "source": "(str \"abcdefghij\" \"klmnopqrst\")",
+      "grants": [],
+      "limits": { "maxResultBytes": 8 },
+      "expected": {
+        "status": "failed",
+        "stage": "limit",
+        "diagnosticCode": "limit/result-size"
+      }
+    },
+    {
+      "id": "zero-host-call-budget-stops-before-first-call",
+      "sourceId": "no-calls.lisp",
+      "source": "(read-file \"a.txt\")",
+      "grants": [{ "name": "read-file", "mode": "allow" }],
+      "limits": { "hostCalls": 0 },
+      "expected": {
+        "status": "failed",
+        "stage": "limit",
+        "hostCalls": 0,
+        "diagnosticCode": "limit/host-calls",
+        "spanLine": 1,
+        "spanColumn": 1
       }
     }
   ]

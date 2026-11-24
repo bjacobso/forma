@@ -73,6 +73,9 @@ const observe = Schema.optionalKey(Schema.Struct({
   maxDepth: Schema.optionalKey(Schema.Int), maxStringLength: Schema.optionalKey(Schema.Int),
 }));
 const evaluation = { ...session, variables, stepLimit, observe, resultProjection, evaluationId: optionalString,
+  timeoutMs: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+  maxExpansionSteps: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
+  maxResultBytes: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
   retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])) };
 const artifact = { ...session, sourceId: optionalString, sourceIds: Schema.optionalKey(Schema.Array(id)), backend: optionalString };
 const span = Schema.Struct({ sourceId: Schema.String, startOffset: Schema.Number, endOffset: Schema.Number,
@@ -257,6 +260,7 @@ export const HOST_OPERATIONS = [
   operation("evaluateInSession", { ...sessionSource, ...evaluation }, async ({host}, request) => stateResponse(await host.evaluateInSession(request))),
   operation("checkedRun", {
     ...session, ...source,
+    evaluationId: optionalString,
     grants: Schema.Array(Schema.Struct({
       name: id,
       mode: Schema.optionalKey(Schema.Literals(["ask", "allow"])),
@@ -266,6 +270,9 @@ export const HOST_OPERATIONS = [
     limits: Schema.optionalKey(Schema.Struct({
       steps: stepLimit,
       hostCalls: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+      timeoutMs: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+      maxExpansionSteps: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
+      maxResultBytes: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThan(0))),
     })),
     variables,
     retainValues: Schema.optionalKey(Schema.Literals(["none", "functions", "all"])),

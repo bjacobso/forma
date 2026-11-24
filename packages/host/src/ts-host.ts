@@ -8,6 +8,7 @@ import { diagnosticLocator, spanLocator, KernelTypeError, type KernelError } fro
 import { Env } from "@formalang/ts/env";
 import * as Evaluator from "@formalang/ts/evaluator";
 import type { BuiltinFn, KFn, KValue } from "@formalang/ts/evaluator";
+import * as Expander from "@formalang/ts/expander";
 import * as Lsp from "@formalang/ts/lsp";
 import * as Reader from "@formalang/ts/reader";
 import * as Editor from "@formalang/ts/editor";
@@ -95,6 +96,10 @@ import type {
 } from "./types.js";
 
 const DEFAULT_STEP_LIMIT = 50_000;
+const DEFAULT_MAX_HOST_CALLS = 1_000;
+const DEFAULT_TIMEOUT_MS = 5_000;
+const DEFAULT_MAX_EXPANSION_STEPS = 10_000;
+const DEFAULT_MAX_RESULT_BYTES = 1_048_576;
 
 interface TsSession {
   readonly sessionId: string;
@@ -132,8 +137,12 @@ interface TsPendingEvaluation {
   readonly sourceId: string;
   readonly sourceText?: string | undefined;
   readonly checkedRun?: CheckedRunContext | undefined;
+  deadlineMs?: number | undefined;
+  timeoutMs?: number | undefined;
+  pausedAtMs?: number | undefined;
   completed: boolean;
   aborted: boolean;
+  abortReason?: string | undefined;
   pendingCall?: TsPendingHostCall | undefined;
   readonly callQueue: HostCall[];
   readonly callWaiters: ((call: HostCall) => void)[];
@@ -607,7 +616,13 @@ export class TsLanguageHost implements LanguageHost {
     const env = request.variables
       ? session.language.env.extend(variablesToBindings(request.variables))
       : session.language.env;
-    if (session.hostBuiltins.length > 0) {
+    if (
+      session.hostBuiltins.length > 0 ||
+      request.evaluationId !== undefined ||
+      request.timeoutMs !== undefined ||
+      request.maxExpansionSteps !== undefined ||
+      request.maxResultBytes !== undefined
+    ) {
       return this.#evaluateInSessionWithHostBuiltins(session, {...request,sourceId}, source, env);
     }
 
@@ -771,13 +786,14 @@ export class TsLanguageHost implements LanguageHost {
     const evaluation = session.evaluations.get(request.evaluationId);
     if (evaluation && !evaluation.completed) {
       evaluation.aborted = true;
+      evaluation.abortReason = request.reason ?? "Evaluation aborted";
       evaluation.pendingCall?.resume({
         ok: false,
         diagnostics: [
           {
             code: "evaluation/aborted",
             severity: "error",
-            message: request.reason ?? "Evaluation aborted",
+            message: evaluation.abortReason,
             phase: "evaluate",
           },
         ],
@@ -1244,9 +1260,22 @@ export class TsLanguageHost implements LanguageHost {
         { name: grant.name, mode: grant.mode ?? ("ask" as const), maxCalls: grant.maxCalls },
       ]),
     );
+    const budget = resolveBudget(request.limits, true);
+    const guard = <T>(fn: () => T): T => Expander.withExpansionBudget(expansionBudget(budget), fn);
     const grantedBuiltins = session.hostBuiltins.filter((builtin) => grantMap.has(builtin.name));
     const parsed = Engine.parseSource({ sourceId, source });
-    const { manifest, spans } = this.#buildManifest(session, sourceId, source, session.hostBuiltins);
+    const locateError = diagnosticLocator((id) => (id === sourceId ? source : session.language.sourceText(id)));
+    const failedFromError = (error: unknown): CheckedRunState => {
+      const mapped = mapCheckedRunDiagnostic(Engine.diagnosticFromUnknown(error, "evaluate", sourceId), locateError);
+      return { status: "failed", stage: checkedRunFailureStage(mapped), diagnostics: mapped };
+    };
+    let built: { readonly manifest: CapabilityManifest; readonly spans: ReadonlyMap<string, Span> };
+    try {
+      built = guard(() => this.#buildManifest(session, sourceId, source, session.hostBuiltins));
+    } catch (error) {
+      return failedFromError(error);
+    }
+    const { manifest, spans } = built;
     const requires = manifest.capabilities.map((cap) => cap.name);
     if (parsed.diagnostics.some((d) => d.severity === "error")) {
       return {
@@ -1274,13 +1303,16 @@ export class TsLanguageHost implements LanguageHost {
         manifest,
       };
     }
-    const checked = Engine.typecheck({
+    const checked = guard(() => Engine.typecheck({
       session: session.language,
       sourceId,
       source,
       hostBuiltins: grantedBuiltins,
       typePolicy: session.typePolicy,
-    });
+    }));
+    if (checked.diagnostics.some((d) => d.code.startsWith("limit/"))) {
+      return { status: "failed", stage: "limit", diagnostics: checked.diagnostics };
+    }
     if (checked.diagnostics.some((d) => d.severity === "error")) {
       return {
         status: "rejected",
@@ -1292,15 +1324,15 @@ export class TsLanguageHost implements LanguageHost {
     }
     const actualType = checked.display ?? "Unit";
     if (request.expectedType !== undefined) {
-      const expectedCheck = this.#checkExpectedType(
+      const expectedCheck = guard(() => this.#checkExpectedType(
         session,
         sourceId,
         source,
         parsed.exprs,
-        request.expectedType,
+        request.expectedType!,
         actualType,
         grantedBuiltins,
-      );
+      ));
       if (expectedCheck) {
         return {
           status: "rejected",
@@ -1324,63 +1356,53 @@ export class TsLanguageHost implements LanguageHost {
         env,
       );
       expressions = prepared.expressions;
-      const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
+      const evaluationId = request.evaluationId ?? `ts-eval-${this.#nextEvaluationId++}`;
       const checkedRunContext: CheckedRunContext = {
         grants: grantMap,
-        maxHostCalls: request.limits?.hostCalls,
+        maxHostCalls: request.limits?.hostCalls ?? DEFAULT_MAX_HOST_CALLS,
         type: actualType,
         manifest,
         hostCalls: 0,
         callCounts: new Map(),
       };
       const evaluation = createPendingEvaluation(session, evaluationId, sourceId, source, checkedRunContext);
+      applyBudget(evaluation, budget);
       const builtins = {
         ...Builtins.defaultBuiltins,
         ...this.#hostBuiltinFns(evaluation, grantedBuiltins),
       };
-      const completion = Effect.runPromise(
-        Effect.provide(
-          Evaluator.evaluateExprs(expressions, {
-            stepLimit,
-            builtins,
-            env: prepared.env,
-          }),
-          Evaluator.makePreludeLayer(builtins),
-        ),
-      )
-        .then((result): CheckedRunState => ({
-          status: "completed",
-          result: {
-            value: this.#projectValue(session, result.value, request.retainValues),
-            printed: Evaluator.printKValue(result.value),
-            steps: result.steps,
-            type: typeProjection(actualType),
-            diagnostics: [],
-          },
-          type: actualType,
-          hostCalls: checkedRunContext.hostCalls,
-          manifest,
-        }))
-        .catch((error): CheckedRunState => {
-          const locate = diagnosticLocator((id) => (id === sourceId ? source : session.language.sourceText(id)));
-          const raw = Engine.diagnosticFromUnknown(error, "evaluate", sourceId);
-          const mapped = mapCheckedRunDiagnostic(raw, locate);
+      const completion = runBudgeted(expressions, { stepLimit, builtins, env: prepared.env }, evaluation, budget)
+        .then((result): CheckedRunState => {
+          const printed = Evaluator.printKValue(result.value);
+          const oversize = resultSizeDiagnostic(printed, budget.maxResultBytes);
+          if (oversize) return { status: "failed", stage: "limit", diagnostics: [oversize] };
+          const value = this.#projectValue(session, result.value, request.retainValues);
+          const projectedOversize = resultSizeDiagnostic(JSON.stringify(value), budget.maxResultBytes);
+          if (projectedOversize) return { status: "failed", stage: "limit", diagnostics: [projectedOversize] };
           return {
-            status: "failed",
-            stage: checkedRunFailureStage(mapped),
-            diagnostics: mapped,
+            status: "completed",
+            result: {
+              value,
+              printed,
+              steps: result.steps,
+              type: typeProjection(actualType),
+              diagnostics: [],
+            },
+            type: actualType,
+            hostCalls: checkedRunContext.hostCalls,
+            manifest,
           };
-        });
+        })
+        .catch((error): CheckedRunState => failedFromError(error));
       Object.assign(evaluation, { completion });
       session.evaluations.set(evaluationId, evaluation);
       return (await this.#nextEvaluationState(evaluation)) as CheckedRunState;
     } catch (error) {
-      const locate = diagnosticLocator((id) => (id === sourceId ? source : session.language.sourceText(id)));
       const diagnostics = (error instanceof Modules.ModuleError
         ? [...error.diagnostics]
         : [Engine.diagnosticFromUnknown(error, "evaluate", sourceId)]
-      ).map(locate);
-      return { status: "failed", stage: "evaluate", diagnostics };
+      ).map(locateError);
+      return { status: "failed", stage: checkedRunFailureStage(diagnostics), diagnostics };
     }
   }
 
@@ -1550,8 +1572,10 @@ export class TsLanguageHost implements LanguageHost {
     let expressions:readonly Reader.SExpr[];
     try {const prepared=await Engine.prepareModuleImports({session:session.language,sourceId,source,env,stepLimit:request.stepLimit ?? session.defaultStepLimit},sourceId,source,env);expressions=prepared.expressions;env=prepared.env;}
     catch(error) {return {status:"failed",diagnostics:error instanceof Modules.ModuleError ? [...error.diagnostics] : [Engine.diagnosticFromUnknown(error,"evaluate",sourceId)]};}
-    const evaluationId = `ts-eval-${this.#nextEvaluationId++}`;
+    const evaluationId = request.evaluationId ?? `ts-eval-${this.#nextEvaluationId++}`;
     const evaluation = createPendingEvaluation(session, evaluationId, sourceId, source);
+    const budget = resolveBudget(request, false);
+    applyBudget(evaluation, budget);
     const builtins = {
       ...Builtins.defaultBuiltins,
       ...this.#hostBuiltinFns(evaluation, session.hostBuiltins),
@@ -1595,23 +1619,22 @@ export class TsLanguageHost implements LanguageHost {
       session.evaluations.set(evaluationId, evaluation);
       return (await this.#nextEvaluationState(evaluation)) as EvaluationState;
     }
-    const completion = Effect.runPromise(
-      Effect.provide(
-        Evaluator.evaluateExprs(expressions, {
-          stepLimit: request.stepLimit ?? session.defaultStepLimit,
-          builtins,
-          env,
-        }),
-        Evaluator.makePreludeLayer(builtins),
-      ),
+    const completion = runBudgeted(
+      expressions,
+      { stepLimit: request.stepLimit ?? session.defaultStepLimit, builtins, env },
+      evaluation,
+      budget,
     )
       .then((result): EvaluationState => {
+        const printed = Evaluator.printKValue(result.value);
+        const oversize = resultSizeDiagnostic(printed, budget.maxResultBytes);
+        if (oversize) return { status: "failed", diagnostics: [oversize] };
         if (repl && !evaluation.aborted) repl.commit(result.env);
         return {
           status: "completed",
           result: {
             value: this.#projectValue(session, result.value, request.retainValues),
-            printed: Evaluator.printKValue(result.value),
+            printed,
             steps: result.steps,
             diagnostics: [],
             ...(repl ? { type: repl.type } : {}),
@@ -1653,10 +1676,23 @@ export class TsLanguageHost implements LanguageHost {
   ): Effect.Effect<KValue, KernelError> {
     return Effect.callback<KValue, KernelError>((resume) => {
       if (evaluation.aborted) {
-        resume(Effect.fail(hostCallDiagnosticsError("evaluation/aborted", "Evaluation aborted")));
+        resume(Effect.fail(hostCallDiagnosticsError("evaluation/aborted", evaluation.abortReason ?? "Evaluation aborted")));
         return Effect.void;
       }
       const span = callLoc ? this.#locateCallSpan(evaluation, callLoc) : undefined;
+      if (evaluation.deadlineMs !== undefined && Date.now() >= evaluation.deadlineMs) {
+        resume(Effect.fail(hostCallDiagnosticsErrorFromDiagnostics([{
+          code: "limit/time",
+          severity: "error",
+          message: evaluation.timeoutMs !== undefined
+            ? `Evaluation exceeded the time limit of ${evaluation.timeoutMs}ms.`
+            : "Evaluation exceeded its time limit.",
+          phase: "evaluate",
+          ...(span ? { span } : {}),
+          ...(evaluation.timeoutMs !== undefined ? { details: { limit: evaluation.timeoutMs } } : {}),
+        }])));
+        return Effect.void;
+      }
       if (evaluation.checkedRun) {
         const grant = evaluation.checkedRun.grants.get(descriptor.name);
         if (!grant) {
@@ -1712,6 +1748,11 @@ export class TsLanguageHost implements LanguageHost {
       const pendingCall: TsPendingHostCall = {
         call,
         resume: (result) => {
+          // Time spent waiting on the host does not count against the evaluation deadline.
+          if (evaluation.pausedAtMs !== undefined && evaluation.deadlineMs !== undefined) {
+            evaluation.deadlineMs += Date.now() - evaluation.pausedAtMs;
+          }
+          evaluation.pausedAtMs = undefined;
           if (result.ok) {
             resume(Effect.succeed(kValueFromProjection(result.value, evaluation.session)));
           } else {
@@ -1723,6 +1764,7 @@ export class TsLanguageHost implements LanguageHost {
         },
       };
       evaluation.pendingCall = pendingCall;
+      evaluation.pausedAtMs = Date.now();
       enqueueHostCall(evaluation, call);
       return Effect.sync(() => {
         if (evaluation.pendingCall === pendingCall) {
@@ -2008,7 +2050,7 @@ function mapCheckedRunDiagnostic(
 }
 
 function checkedRunFailureStage(diagnostics: readonly Diagnostic[]): "evaluate" | "limit" | "denied" | "aborted" {
-  if (diagnostics.some((d) => d.code === "limit/steps" || d.code === "limit/host-calls" || d.code === "StepLimitExceeded")) return "limit";
+  if (diagnostics.some((d) => d.code.startsWith("limit/") || d.code === "StepLimitExceeded")) return "limit";
   if (diagnostics.some((d) => d.code === "capability/denied")) return "denied";
   if (diagnostics.some((d) => d.code === "evaluation/aborted")) return "aborted";
   return "evaluate";
@@ -2040,6 +2082,90 @@ function failedEvaluation(code: string, message: string): EvaluationState {
       },
     ],
   };
+}
+
+interface BudgetLimits {
+  readonly timeoutMs?: number | undefined;
+  readonly maxExpansionSteps?: number | undefined;
+  readonly maxResultBytes?: number | undefined;
+}
+
+interface ResolvedBudget {
+  readonly timeoutMs?: number | undefined;
+  /** Wall-clock deadline (epoch ms) counted from when the run started. */
+  readonly deadlineMs?: number | undefined;
+  readonly maxExpansionSteps?: number | undefined;
+  readonly maxResultBytes: number;
+}
+
+/** Resolve limits; `defaults` applies the RFC 0012 defaults to omitted budgets. */
+function resolveBudget(limits: BudgetLimits | undefined, defaults: boolean): ResolvedBudget {
+  const timeoutMs = limits?.timeoutMs ?? (defaults ? DEFAULT_TIMEOUT_MS : undefined);
+  return {
+    timeoutMs,
+    deadlineMs: timeoutMs !== undefined ? Date.now() + timeoutMs : undefined,
+    maxExpansionSteps: limits?.maxExpansionSteps ?? (defaults ? DEFAULT_MAX_EXPANSION_STEPS : undefined),
+    maxResultBytes: limits?.maxResultBytes ?? (defaults ? DEFAULT_MAX_RESULT_BYTES : Number.POSITIVE_INFINITY),
+  };
+}
+
+function expansionBudget(budget: ResolvedBudget): Expander.ExpansionBudget {
+  return {
+    maxExpansionSteps: budget.maxExpansionSteps,
+    deadlineMs: budget.deadlineMs,
+    timeoutMs: budget.timeoutMs,
+  };
+}
+
+function applyBudget(evaluation: TsPendingEvaluation, budget: ResolvedBudget): void {
+  evaluation.deadlineMs = budget.deadlineMs;
+  evaluation.timeoutMs = budget.timeoutMs;
+}
+
+function resultSizeDiagnostic(text: string, limit: number): Diagnostic | undefined {
+  if (!Number.isFinite(limit)) return undefined;
+  const actual = utf8Encoder.encode(text).length;
+  if (actual <= limit) return undefined;
+  return {
+    code: "limit/result-size",
+    severity: "error",
+    message: `Result size (${actual} bytes) exceeds the limit of ${limit} bytes.`,
+    phase: "evaluate",
+    details: { limit, actual },
+  };
+}
+
+/**
+ * Expand under the expansion budget, then evaluate with cooperative deadline and
+ * abort control checked inside the VM loop. Rejects (never throws) on failure.
+ */
+function runBudgeted(
+  expressions: readonly Reader.SExpr[],
+  options: { readonly stepLimit: number; readonly builtins: Record<string, BuiltinFn>; readonly env: Env },
+  evaluation: TsPendingEvaluation,
+  budget: ResolvedBudget,
+): Promise<Evaluator.KernelResult> {
+  try {
+    const gensym = { next: 0 };
+    const expanded = Expander.withExpansionBudget(expansionBudget(budget), () =>
+      Effect.runSync(
+        Evaluator.expandExprs(expressions, options).pipe(Effect.provideService(Evaluator.GensymScope, gensym)),
+      ),
+    );
+    const control: VM.VMExecutionControl = {
+      get deadlineMs() { return evaluation.deadlineMs; },
+      timeoutMs: budget.timeoutMs,
+      shouldAbort: () => (evaluation.aborted ? (evaluation.abortReason ?? true) : undefined),
+      yieldToEventLoop: true,
+    };
+    return Effect.runPromise(
+      Evaluator.evaluateExpandedExprs(expanded, options).pipe(
+        Effect.provideService(VM.VMExecutionControlScope, control),
+      ),
+    );
+  } catch (error) {
+    return Promise.reject(error);
+  }
 }
 
 function createPendingEvaluation(
