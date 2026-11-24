@@ -14,6 +14,7 @@ export {
 export {
   runChunk,
   runChunkWithStats,
+  currentBuiltinCallLoc,
   type VMClosureData,
   type VMOptions,
   type VMRunResult,

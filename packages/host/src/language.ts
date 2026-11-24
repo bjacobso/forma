@@ -4,8 +4,8 @@ export type { LanguageDescription } from "./description.js";
 import { TsLanguageHost } from "./ts-host.js";
 import { plainJsonFromValue } from "./value-projections.js";
 import type {
-  Diagnostic, EmitRequest, HostBuiltinDescriptor, LanguageHost,
-  TypeProjection, ValueProjection,
+  CapabilityManifest, Diagnostic, EmitRequest, HostBuiltinDescriptor, HostCall, LanguageHost,
+  Span, TypeProjection, TypeSchemeExpr, ValueProjection,
 } from "./types.js";
 
 export type LanguageJson = null | boolean | number | string | readonly LanguageJson[] | { readonly [key: string]: LanguageJson };
@@ -14,18 +14,45 @@ export type CapabilityResult =
   | { readonly ok: true; readonly value: LanguageJson }
   | { readonly ok: false; readonly diagnostics: readonly Diagnostic[] };
 
-export interface LanguageCapability {
-  readonly arity: HostBuiltinDescriptor["arity"];
-  /** Omitted schemes use the host's permissive any scheme, with the declared arity. */
-  readonly typeScheme?: HostBuiltinDescriptor["typeScheme"];
-  readonly handler: (...args: readonly unknown[]) => CapabilityResult | Promise<CapabilityResult>;
+export type LanguageCapability =
+  | {
+      readonly arity: HostBuiltinDescriptor["arity"];
+      /** Checked Forma type scheme for this capability. Required unless `untyped: true` is set. */
+      readonly typeScheme: TypeSchemeExpr;
+      readonly untyped?: false | undefined;
+      readonly purity?: HostBuiltinDescriptor["purity"] | undefined;
+      readonly handler: (...args: readonly unknown[]) => CapabilityResult | Promise<CapabilityResult>;
+    }
+  | {
+      readonly arity: HostBuiltinDescriptor["arity"];
+      readonly typeScheme?: undefined;
+      /** Explicit opt-in to an untyped (`Unknown`) capability signature. */
+      readonly untyped: true;
+      readonly purity?: HostBuiltinDescriptor["purity"] | undefined;
+      readonly handler: (...args: readonly unknown[]) => CapabilityResult | Promise<CapabilityResult>;
+    };
+
+export interface HostCallDecisionContext {
+  readonly call: HostCall;
+  readonly args: readonly unknown[];
+  readonly span?: Span | undefined;
 }
+
+export type HostCallDecision =
+  | { readonly action: "allow" }
+  | { readonly action: "deny"; readonly reason?: string | undefined };
+
+export type OnHostCallHook = (
+  context: HostCallDecisionContext,
+) => HostCallDecision | Promise<HostCallDecision>;
 
 export interface LanguageOptions {
   readonly preludes?: readonly { readonly id: string; readonly source: string }[];
   /** In-memory file modules. Only their exports become automatic imports. IDs are bundle-relative paths. */
   readonly modules?: readonly { readonly id: string; readonly source: string }[];
   readonly capabilities?: Readonly<Record<string, LanguageCapability>>;
+  /** Optional policy hook invoked before each capability call executes. */
+  readonly onHostCall?: OnHostCallHook | undefined;
 }
 
 export interface LanguageSourceOptions {
@@ -38,11 +65,14 @@ export interface LanguageRunOptions extends LanguageSourceOptions {
     /** Cooperative wall-clock deadline; aborts suspended host calls, not synchronous JS. */
     readonly timeoutMs?: number;
   };
+  /** Per-run policy hook overriding `LanguageOptions.onHostCall`. */
+  readonly onHostCall?: OnHostCallHook | undefined;
 }
 
 export interface LanguageCheckResult {
   readonly ok: boolean;
   readonly type?: TypeProjection;
+  readonly manifest: CapabilityManifest;
   readonly diagnostics: readonly Diagnostic[];
 }
 
@@ -99,16 +129,23 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
   };
   let closed = false;
   const assertOpen = () => { if (closed) throw new Error("Forma language is closed."); };
-  const failure = (code: string, message: string): LanguageRunResult => ({
-    ok: false, diagnostics: [{ code, severity: "error", message, phase: "evaluate" }],
+  const emptyManifest: CapabilityManifest = { sources: [], preludes: [], capabilities: [] };
+  const failure = (code: string, message: string, manifest: CapabilityManifest = emptyManifest): LanguageRunResult => ({
+    ok: false, manifest, diagnostics: [{ code, severity: "error", message, phase: "evaluate" }],
   });
   try {
+    for (const [name, capability] of capabilities) {
+      if (!capability.typeScheme && capability.untyped !== true) {
+        throw new TypeError(`Capability "${name}" requires a typeScheme (or explicit untyped: true).`);
+      }
+    }
     await host.configureSession({ sessionId, hostBuiltins: [...capabilities].map(([name, capability]) => ({
       name, arity: capability.arity, typeScheme: capability.typeScheme ?? {
         kind: typeof capability.arity === "number" ? "function" : "variadic-function",
         params: Array.from({ length: typeof capability.arity === "number" ? capability.arity : capability.arity.min }, () => ({ kind: "any" as const })),
         rest: { kind: "any" }, result: { kind: "any" },
       },
+      ...(capability.purity ? { purity: capability.purity } : {}),
       handler: { kind: "host-effect", effect: name },
     })) });
     for (const prelude of options.preludes ?? []) {
@@ -151,7 +188,9 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
     await prepare(request.sourceId ?? defaultSourceId);
     const checked = await host.typecheck({ sessionId, source, sourceId: request.sourceId ?? defaultSourceId });
     return { ok: !checked.diagnostics.some(d => d.severity === "error"),
-      ...(checked.type ? { type: checked.type } : {}), diagnostics: checked.diagnostics };
+      ...(checked.type ? { type: checked.type } : {}),
+      manifest: checked.manifest ?? emptyManifest,
+      diagnostics: checked.diagnostics };
   };
   return {
     check,
@@ -171,7 +210,8 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
       if (!checked.ok) return checked;
       const deadline = timeoutMs === undefined ? Infinity : Date.now() + Math.max(0, timeoutMs);
       const timedOut = () => Date.now() >= deadline;
-      const timeout = () => failure("evaluation/aborted", "Evaluation exceeded timeoutMs.");
+      const timeout = () => failure("evaluation/aborted", "Evaluation exceeded timeoutMs.", checked.manifest);
+      const onHostCall = request.onHostCall ?? options.onHostCall;
       if (timedOut()) return timeout();
       let state = await host.evaluateInSession({ sessionId, source, sourceId: request.sourceId ?? defaultSourceId,
         stepLimit: request.limits?.steps });
@@ -183,15 +223,46 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
         };
         if (timedOut()) return abort();
         const capability = capabilities.get(call.name);
+        const args = call.args.map(plainJsonFromValue);
         const handled = Promise.resolve().then(async (): Promise<CapabilityResult> => {
-          if (!capability) return { ok: false, diagnostics: failure("host-effect/failed", "No capability granted for this host call.").diagnostics };
+          if (!capability) return { ok: false, diagnostics: failure("host-effect/failed", "No capability granted for this host call.", checked.manifest).diagnostics };
+          if (onHostCall) {
+            try {
+              const decision = await onHostCall({ call, args, ...(call.span ? { span: call.span } : {}) });
+              if (decision.action === "deny") {
+                return {
+                  ok: false,
+                  diagnostics: [{
+                    code: "capability/denied",
+                    severity: "error",
+                    message: decision.reason ?? `Capability "${call.name}" was denied.`,
+                    phase: "host-effect",
+                    ...(call.span ? { span: call.span } : {}),
+                    details: { capability: call.name, effect: call.effect },
+                  }],
+                };
+              }
+            } catch {
+              return {
+                ok: false,
+                diagnostics: [{
+                  code: "capability/denied",
+                  severity: "error",
+                  message: `Host policy hook failed for capability "${call.name}".`,
+                  phase: "host-effect",
+                  ...(call.span ? { span: call.span } : {}),
+                  details: { capability: call.name, effect: call.effect },
+                }],
+              };
+            }
+          }
           try {
-            const result = await capability.handler(...call.args.map(plainJsonFromValue));
+            const result = await capability.handler(...args);
             if (result.ok) return { ok: true, value: result.value };
             return { ok: false, diagnostics: result.diagnostics.some(d => d.severity === "error")
-              ? result.diagnostics : failure("host-effect/failed", "Capability failed without an error diagnostic.").diagnostics };
+              ? result.diagnostics : failure("host-effect/failed", "Capability failed without an error diagnostic.", checked.manifest).diagnostics };
           } catch {
-            return { ok: false, diagnostics: failure("host-effect/failed", "Capability handler threw or rejected.").diagnostics };
+            return { ok: false, diagnostics: failure("host-effect/failed", "Capability handler threw or rejected.", checked.manifest).diagnostics };
           }
         });
         let timer: ReturnType<typeof setTimeout> | undefined;
@@ -205,15 +276,15 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
         try {
           result = answer.ok ? { ok: true as const, value: jsonProjection(answer.value) } : answer;
         } catch {
-          result = { ok: false as const, diagnostics: failure("host-effect/failed", "Capability returned an invalid JSON value.").diagnostics };
+          result = { ok: false as const, diagnostics: failure("host-effect/failed", "Capability returned an invalid JSON value.", checked.manifest).diagnostics };
         }
         state = await host.resumeHostCall({ sessionId, evaluationId: call.evaluationId, callId: call.callId, result });
       }
       if (timedOut()) return timeout();
-      if (state.status === "failed") return { ok: false, diagnostics: [...checked.diagnostics, ...state.diagnostics] };
+      if (state.status === "failed") return { ok: false, manifest: checked.manifest, diagnostics: [...checked.diagnostics, ...state.diagnostics] };
       return { ok: true, value: plainJsonFromValue(state.result.value),
         ...(state.result.printed !== undefined ? { printed: state.result.printed } : {}),
-        ...(checked.type ? { type: checked.type } : {}), diagnostics: [...checked.diagnostics, ...state.result.diagnostics] };
+        ...(checked.type ? { type: checked.type } : {}), manifest: checked.manifest, diagnostics: [...checked.diagnostics, ...state.result.diagnostics] };
     },
     async close() {
       if (!closed) { closed = true; await host.closeSession({ sessionId }); }

@@ -21,12 +21,12 @@ exports[`human CLI > preserves the exact machine file responses > interface main
 `;
 
 exports[`human CLI > preserves the exact machine file responses > typecheck bad.lisp 1`] = `
-"{"ok":false,"value":{"sourceId":"<cwd>/bad.lisp","pass":"typecheck"},"diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Expected Float, found String","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12},"details":{"code":"typecheck/type-mismatch","message":"Expected Float, found String","expected":"Float","got":"String"}}]}
+"{"ok":false,"value":{"sourceId":"<cwd>/bad.lisp","pass":"typecheck","manifest":{"sources":[{"sourceId":"<cwd>/bad.lisp","sha256":"874621d66a1beac5a4708cb6197ef681b65c7fe4954a5e56be8c6e70462ee6a7"}],"preludes":[],"capabilities":[]}},"diagnostics":[{"code":"typecheck/type-mismatch","severity":"error","message":"Argument 2 to +: Expected Float, found String","phase":"typecheck","span":{"sourceId":"<cwd>/bad.lisp","startOffset":5,"endOffset":11,"startLine":1,"startColumn":6,"endLine":1,"endColumn":12},"details":{"code":"typecheck/type-mismatch","message":"Expected Float, found String","expected":"Float","got":"String"}}]}
 "
 `;
 
 exports[`human CLI > preserves the exact machine file responses > typecheck main.lisp 1`] = `
-"{"ok":true,"value":{"sourceId":"<cwd>/main.lisp","pass":"typecheck","display":"Int","type":{"kind":"named","name":"Int","display":"Int"}},"type":"Int","diagnostics":[]}
+"{"ok":true,"value":{"sourceId":"<cwd>/main.lisp","pass":"typecheck","display":"Int","type":{"kind":"named","name":"Int","display":"Int"},"manifest":{"sources":[{"sourceId":"<cwd>/main.lisp","sha256":"390e79ac6bb3f3b2240e1186fd2c94da4af3a66387965acbbfcf40853bd4a652"}],"preludes":[],"capabilities":[]}},"type":"Int","diagnostics":[]}
 "
 `;
 

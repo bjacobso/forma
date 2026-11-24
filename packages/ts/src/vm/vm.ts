@@ -28,7 +28,7 @@ import type { KernelError, KernelStackFrame } from "../diagnostic/errors.js";
 import { KernelTypeError, ArityError, StepLimitExceeded, FailError } from "../diagnostic/errors.js";
 import { matchCompiledPattern, type CompiledMatchPattern } from "../evaluator/match.js";
 import type { SourceTrace } from "../evaluator/source-trace.js";
-import type { SExpr } from "../reader/index.js";
+import type { Loc, SExpr } from "../reader/index.js";
 import { evalQuasiquoteTemplate } from "../evaluator/quasiquote.js";
 import type { Chunk } from "./opcodes.js";
 import { Op } from "./opcodes.js";
@@ -152,15 +152,23 @@ function applyKFnValue(
   );
 }
 
+let activeBuiltinCallLoc: Loc | undefined;
+
+/** Source location of the currently executing builtin call, if available. */
+export function currentBuiltinCallLoc(): Loc | undefined {
+  return activeBuiltinCallLoc;
+}
+
 function applyCallableValue(
   fn: KValue,
   args: readonly KValue[],
   runtime: VMRuntime,
+  loc?: Loc,
 ): Effect.Effect<KValue, KernelError> {
   if (isKBuiltin(fn)) {
     const builtin = runtime.builtinLookup.get(fn.name);
     if (builtin) {
-      return invokeBuiltin(builtin, args, runtime);
+      return invokeBuiltin(builtin, args, runtime, loc);
     }
   }
   if (isKFn(fn)) {
@@ -176,12 +184,21 @@ function applyCallableValue(
 }
 
 /** Convert the shared builtins' synchronous type checks into located failures. */
-function invokeBuiltin(builtin: BuiltinFn, args: readonly KValue[], runtime: VMRuntime): Effect.Effect<KValue, KernelError> {
+function invokeBuiltin(
+  builtin: BuiltinFn,
+  args: readonly KValue[],
+  runtime: VMRuntime,
+  loc?: Loc,
+): Effect.Effect<KValue, KernelError> {
+  const previousLoc = activeBuiltinCallLoc;
+  activeBuiltinCallLoc = loc;
   try {
-    return builtin(args, (fn, fnArgs) => applyCallableValue(fn, fnArgs, runtime));
+    return builtin(args, (fn, fnArgs) => applyCallableValue(fn, fnArgs, runtime, loc));
   } catch (error) {
     if (!(error instanceof TypeCheckError)) throw error;
     return Effect.fail(new KernelTypeError({ message: error.message, expected: error.expected, got: error.got }));
+  } finally {
+    activeBuiltinCallLoc = previousLoc;
   }
 }
 
@@ -702,7 +719,7 @@ function executeVM(
             const args: KValue[] = [];
             for (let i = 0; i < argc; i++) args.push(stack[calleePos + 1 + i]!);
             stack.length = calleePos;
-            const result = yield* applyCallableValue(callee, args, runtime).pipe(
+            const result = yield* applyCallableValue(callee, args, runtime, currentTrace()?.loc).pipe(
               Effect.mapError(withStackTrace),
             );
             stack.push(result);
@@ -764,7 +781,7 @@ function executeVM(
             const args: KValue[] = [];
             for (let i = 0; i < argc; i++) args.push(stack[calleePos + 1 + i]!);
             stack.length = calleePos;
-            const result = yield* applyCallableValue(callee, args, runtime).pipe(
+            const result = yield* applyCallableValue(callee, args, runtime, currentTrace()?.loc).pipe(
               Effect.mapError(withStackTrace),
             );
             stack.push(result);
@@ -1042,7 +1059,7 @@ function executeVM(
               }),
             );
           }
-          const result = yield* invokeBuiltin(builtin, args, runtime).pipe(Effect.mapError(withStackTrace));
+          const result = yield* invokeBuiltin(builtin, args, runtime, currentTrace()?.loc).pipe(Effect.mapError(withStackTrace));
           stack.push(result);
           break;
         }

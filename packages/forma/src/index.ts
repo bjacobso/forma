@@ -16,16 +16,27 @@ export {
 } from "@formalang/ts/engine";
 export {
   createDefaultLanguageHost,
+  type CapabilityManifest,
+  type CheckedRunGrant,
+  type CheckedRunLimits,
+  type CheckedRunRequest,
+  type CheckedRunState,
   type DefaultLanguageHost,
+  type HostCall,
   type LanguageHost,
+  type ManifestCapability,
+  type ManifestDigest,
 } from "@formalang/host";
 export {
   createLanguage,
   LanguageInitializationError,
+  type HostCallDecision,
+  type HostCallDecisionContext,
   type Language,
   type LanguageCapability,
   type LanguageCheckResult,
   type LanguageOptions,
   type LanguageRunOptions,
   type LanguageRunResult,
+  type OnHostCallHook,
 } from "@formalang/host";
