@@ -13,8 +13,8 @@ interface Case {
   runtimeError?: boolean;
 }
 const cases: Case[] = JSON.parse(readFileSync(new URL("../../../conformance/numeric/expected.json", import.meta.url), "utf8"));
-// Stage 2 ships; opt in to the future branch-join contract with stage 3.
-const stage = Number(process.env.FORMA_NUMERIC_SPEC ?? 2);
+// Stage 3 ships branch-join coercion alongside stage 2 constrained inference.
+const stage = Number(process.env.FORMA_NUMERIC_SPEC ?? 3);
 describe("numeric semantics proposal contract", () => {
   it("keeps intrinsic numeric requirements separate from user typeclasses", async () => {
     const source = '(typeclass (Numeric a) (: describe-number (-> a String))) (instance (Numeric String) (define describe-number [x] x)) (define describe [x] (describe-number x)) (describe "custom")';

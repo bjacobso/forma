@@ -70,6 +70,8 @@ export enum Op {
   MOD = 34,
   /** push -top */
   NEGATE = 35,
+  /** coerce Int to Float; pass Float through unchanged */
+  TO_FLOAT = 36,
 
   // ── Inline comparison ───────────────────────────────────
   /** Structural equality */

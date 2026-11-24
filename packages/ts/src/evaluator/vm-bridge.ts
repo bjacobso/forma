@@ -5,44 +5,8 @@ import { Env } from "../Env.js";
 import type { KValue } from "./types.js";
 
 // ---------------------------------------------------------------------------
-// VM bridge — evaluator fallback detection and globals bridging
+// VM bridge — globals bridging and canonical public syntax checks
 // ---------------------------------------------------------------------------
-
-export const VM_EVALUATOR_FALLBACK_HEADS = new Set(["unquote", "unquote-splicing"]);
-
-export function requiresEvaluatorRuntime(exprs: readonly SExpr[]): boolean {
-  return exprs.some((expr) => hasEvaluatorOnlyRuntimeNode(expr));
-}
-
-export function hasEvaluatorOnlyRuntimeNode(expr: SExpr, inQuasiquote: boolean = false): boolean {
-  switch (expr._tag) {
-    case "Vector":
-      return expr.items.some((item) => hasEvaluatorOnlyRuntimeNode(item, inQuasiquote));
-    case "Map":
-      return expr.pairs.some(
-        ([k, v]) =>
-          hasEvaluatorOnlyRuntimeNode(k, inQuasiquote) ||
-          hasEvaluatorOnlyRuntimeNode(v, inQuasiquote),
-      );
-    case "List": {
-      const head = expr.items[0];
-      if (head?._tag === "Sym" && head.name === "quasiquote") {
-        return expr.items.slice(1).some((item) => hasEvaluatorOnlyRuntimeNode(item, true));
-      }
-      if (head?._tag === "Sym" && VM_EVALUATOR_FALLBACK_HEADS.has(head.name)) {
-        return !inQuasiquote;
-      }
-      return expr.items.some((item) => hasEvaluatorOnlyRuntimeNode(item, inQuasiquote));
-    }
-    case "Num":
-    case "Str":
-    case "Bool":
-    case "Sym":
-    case "Set":
-    case "Error":
-      return false;
-  }
-}
 
 export function buildVMGlobals(
   globals: { count: number; nameAt: (idx: number) => string | undefined },

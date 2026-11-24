@@ -859,6 +859,24 @@ function executeVM(
           stack.push(result);
           break;
         }
+        case Op.TO_FLOAT: {
+          const value = stack.pop()!;
+          if (isKFloat(value)) {
+            stack.push(value);
+          } else if (typeof value === "number") {
+            stack.push(new KFloat(value));
+          } else {
+            return yield* withStackTrace(
+              new KernelTypeError({
+                message: `__float: expected Int or Float, got ${describeType(value)}`,
+                expected: "Int or Float",
+                got: describeType(value),
+                ...errorContext(),
+              }),
+            );
+          }
+          break;
+        }
 
         // ── Inline comparison ──────────────────────────────
         case Op.EQ: {

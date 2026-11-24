@@ -758,6 +758,12 @@ const inferApp = (
       const key = keys.length > 1 ? TApp(TCon("Union"), keys) : keys[0] ?? (yield* ctx.freshTVar);
       return TApp(TCon("Map"),[key,value]);
     }
+    if (expr.fn._tag === "Var" && expr.fn.name === "__float") {
+      if (expr.args.length !== 1) return yield* ctx.fail(originOf(expr, "numeric-arity"), { code: "typecheck/arity", message: "__float expects 1 argument(s)" });
+      const argT = yield* inferExpr(env, expr.args[0]!);
+      yield* requireNumeric(argT, originOf(expr.args[0]!, "numeric-argument"));
+      return tFloat;
+    }
     // Special: __vector(args) → List<elemType>
     if (expr.fn._tag === "Var" && expr.fn.name === "__vector") {
       return yield* inferVector(env, expr);

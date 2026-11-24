@@ -203,28 +203,25 @@ describe("macro tracing regressions", () => {
     );
   });
 
-  test.each(["", "\n(if false ~unused 0)"])(
-    "identity macros preserve argument traces and observations%s",
-    async (suffix) => {
-      const source = "(macro (id x) x)\n(id (+ 1 2))\n(id (+ 3 4))" + suffix;
-      const result = await Engine.evaluate({ source, observe: {} });
-      expect(result.diagnostics).toEqual([]);
-      for (const [text, value] of [
-        ["(+ 1 2)", "3"],
-        ["(+ 3 4)", "7"],
-      ]) {
-        const record = result.observations?.records.find(
-          (record) => source.slice(record.span.start, record.span.end) === text,
-        );
-        expect(record?.count).toBe(1);
-        expect(Evaluator.printKValue(record!.value)).toBe(value);
-      }
-      const bad = source.replace("(+ 1 2)", '(+ 1 "x")');
-      const failure = await Engine.evaluate({ source: bad, observe: {} });
-      const span = failure.diagnostics[0]?.span;
-      expect(bad.slice(span?.startOffset, span?.endOffset)).toBe('(+ 1 "x")');
-    },
-  );
+  test("identity macros preserve argument traces and observations", async () => {
+    const source = "(macro (id x) x)\n(id (+ 1 2))\n(id (+ 3 4))";
+    const result = await Engine.evaluate({ source, observe: {} });
+    expect(result.diagnostics).toEqual([]);
+    for (const [text, value] of [
+      ["(+ 1 2)", "3"],
+      ["(+ 3 4)", "7"],
+    ]) {
+      const record = result.observations?.records.find(
+        (record) => source.slice(record.span.start, record.span.end) === text,
+      );
+      expect(record?.count).toBe(1);
+      expect(Evaluator.printKValue(record!.value)).toBe(value);
+    }
+    const bad = source.replace("(+ 1 2)", '(+ 1 "x")');
+    const failure = await Engine.evaluate({ source: bad, observe: {} });
+    const span = failure.diagnostics[0]?.span;
+    expect(bad.slice(span?.startOffset, span?.endOffset)).toBe('(+ 1 "x")');
+  });
 
   test("a shared template failure belongs to the first call that ran", async () => {
     const source = "(macro (m x) `(do ~x (undefined-fn 1)))\n(m 1)\n(m 2)";
