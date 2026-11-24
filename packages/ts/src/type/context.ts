@@ -138,6 +138,10 @@ export interface InferContextService {
   readonly ambientEffects: Ref.Ref<AmbientEffectState>;
   /** Pending type class constraints to be discharged at program end */
   readonly pendingConstraints: Ref.Ref<PendingConstraint[]>;
+  /** Next fresh variable numbers, for component reuse that must keep the supply aligned. */
+  readonly supply: Effect.Effect<{ readonly type: number; readonly row: number; readonly effect: number }>;
+  /** Advance the supply as if this many fresh variables had been allocated. */
+  readonly reserveSupply: (type: number, row: number, effect: number) => Effect.Effect<void>;
   /** Generate a fresh type variable (optionally with a kind) */
   readonly freshTVar: Effect.Effect<Type>;
   /** Generate a fresh type variable with a specific kind */
@@ -237,6 +241,15 @@ function makeContext(
       instanceRegistry,
       ambientEffects,
       pendingConstraints,
+
+      supply: Effect.sync(() => ({ type: tvarCounter, row: rvarCounter, effect: evarCounter })),
+
+      reserveSupply: (type, row, effect) =>
+        Effect.sync(() => {
+          tvarCounter += type;
+          rvarCounter += row;
+          evarCounter += effect;
+        }),
 
       freshTVar: Effect.sync(() => TVar(`t${tvarCounter++}`)),
 

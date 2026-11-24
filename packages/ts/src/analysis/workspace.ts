@@ -36,6 +36,8 @@ import {
   type SyntaxNode,
 } from "../syntax/identity.js";
 import type { MakeInferContextOptions } from "../type/context.js";
+import { hasEffectDeclarations } from "../mechanics/analysis.js";
+import { SccDocumentCache, withSccMemoSession, type SccMemoStats } from "../type/scc-memo.js";
 import { completionsAt, type CompletionItem } from "./completion.js";
 import { searchDefinitions, type SearchQuery, type SearchResult } from "./search.js";
 import {
@@ -104,6 +106,7 @@ export class AnalysisWorkspace {
   readonly #documents = new Map<string, Input>();
   readonly #memo = new Map<string, { readonly key: string; readonly value: unknown }>();
   readonly #symbolCache = createSymbolIndexCache();
+  readonly #sccCache = new SccDocumentCache();
   #nextRevision = 1;
 
   constructor(options: WorkspaceOptions = {}) {
@@ -171,14 +174,21 @@ export class AnalysisWorkspace {
   /** Types and diagnostics of one source. */
   analysis(sourceId: string): DocumentAnalysis {
     const input = this.#input(sourceId);
-    return this.#query(`analysis@${sourceId}`, `${this.#preludeKey()}|${input?.revision}`, () =>
-      analyzeDocument(
+    return this.#query(`analysis@${sourceId}`, `${this.#preludeKey()}|${input?.revision}`, () => {
+      const isDocument = this.#documents.has(sourceId);
+      return analyzeDocument(
         sourceId,
         input?.text ?? "",
         this.scope(sourceId),
         this.#options.inferOptions,
-      ),
-    );
+        isDocument ? { cache: this.#sccCache, scopeKey: this.#preludeKey() } : undefined,
+      );
+    });
+  }
+
+  /** Counters of per-form SCC reuse, for tests and benchmarks. */
+  sccMemoStats(): SccMemoStats {
+    return this.#sccCache.stats();
   }
 
   diagnostics(sourceId: string): readonly LocatedDiagnostic[] {
@@ -434,6 +444,7 @@ function analyzeDocument(
   text: string,
   scope: Scope,
   inferOptions: MakeInferContextOptions | undefined,
+  memo?: { readonly cache: SccDocumentCache; readonly scopeKey: string },
 ): DocumentAnalysis {
   const parsed = parse(text);
   const diagnostics: Diagnostic[] = parsed.errors.map((error) => ({
@@ -450,7 +461,14 @@ function analyzeDocument(
   // Forms that do not parse are blanked, keeping every offset, so the forms
   // around them are still typed.
   const typedText = parsed.errors.length > 0 ? blankBrokenForms(text) : text;
-  const { result, bindings } = analyzeBindings(sourceId, typedText, analyzeOptions(scope, inferOptions));
+  const options = analyzeOptions(scope, inferOptions);
+  // Mechanics-owned documents stay on full analysis in stage 1.
+  const mechanicsInvolved = memo !== undefined && (
+    (scope.mechanicsSources ?? []).some(source => hasEffectDeclarations(source.expressions)) ||
+    hasEffectDeclarations(toSExprMany(parse(typedText).redTree)));
+  const { result, bindings } = memo !== undefined && !mechanicsInvolved
+    ? withSccMemoSession(memo.cache, memo.scopeKey, () => analyzeBindings(sourceId, typedText, options))
+    : analyzeBindings(sourceId, typedText, options);
   for (const error of result.errors) {
     diagnostics.push({
       code: error.diagnosticCode ?? "typecheck/type-mismatch",

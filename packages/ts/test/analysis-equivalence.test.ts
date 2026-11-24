@@ -19,6 +19,11 @@ const corpus = [
   ["(type Local Int)", "(: a Local)", "(define a 1)", "a"],
   ["(define a ?goal)", '(+ a "wrong")', "(define b 2)"],
   ["(define a (Some 1))", "(match a (Some x) x None 0)"],
+  // Closed-SCC reuse boundaries: polymorphism, rows, recursion and numerics.
+  ["(define id (fn [x] x))", "(define pair (fn [x y] {:a x :b y}))", "(define a (pair (id 1) (id \"s\")))", "(define b (get a :a))", "b"],
+  ["(define even (fn [n] (odd n)))", "(define odd (fn [n] (even n)))", "(define a (even 1))", "a"],
+  ["(define add (fn [x y] (+ x y)))", "(define a (add 1 2))", "(define b (add 1.5 2))", "(define c (fn [x] (add x 1)))", "c"],
+  ["(define a 1)", "(define b a)", "(define c (fn [x] (+ x b)))", "(define d (c a))", "d"],
 ];
 
 const replacements = [
