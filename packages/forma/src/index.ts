@@ -29,9 +29,21 @@ export {
 } from "@formalang/host";
 export {
   createLanguage,
+  JOURNAL_FORMAT,
   LanguageInitializationError,
+  parseJournalJsonl,
+  REDACTED_JOURNAL_VALUE,
+  serializeJournalJsonl,
   type HostCallDecision,
   type HostCallDecisionContext,
+  type HostCallJournal,
+  type JournalEntry,
+  type JournalHeader,
+  type JournalOutcome,
+  type JournalProgramDigest,
+  type JournalRedactFn,
+  type JournalRequest,
+  type JournalValue,
   type Language,
   type LanguageCapability,
   type LanguageCheckResult,
@@ -39,4 +51,5 @@ export {
   type LanguageRunOptions,
   type LanguageRunResult,
   type OnHostCallHook,
+  type OnJournalEntryCallback,
 } from "@formalang/host";

@@ -89,6 +89,25 @@ export { findEditorTypeAtOffset } from "./editor.js";
 export { createDefaultLanguageHost, type DefaultLanguageHost } from "./default-host.js";
 export { TsLanguageHost } from "./ts-host.js";
 
+export {
+  JOURNAL_FORMAT,
+  REDACTED_JOURNAL_VALUE,
+  parseJournalJsonl,
+  serializeJournalEntry,
+  serializeJournalHeader,
+  serializeJournalJsonl,
+} from "./journal.js";
+export type {
+  HostCallJournal,
+  JournalEntry,
+  JournalHeader,
+  JournalOutcome,
+  JournalProgramDigest,
+  JournalRedactFn,
+  JournalRequest,
+  JournalValue,
+  OnJournalEntryCallback,
+} from "./journal.js";
 export { HOST_ABI_VERSION, HOST_CAPABILITIES, hostAbiSchema } from "./host-contract.js";
 export { createLanguage, LanguageInitializationError } from "./language.js";
 export type {

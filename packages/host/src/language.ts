@@ -7,6 +7,7 @@ import type {
   CapabilityManifest, Diagnostic, EmitRequest, HostBuiltinDescriptor, HostCall, LanguageHost,
   Span, TypeProjection, TypeSchemeExpr, ValueProjection,
 } from "./types.js";
+import type { HostCallJournal, JournalRequest, OnJournalEntryCallback } from "./journal.js";
 
 export type LanguageJson = null | boolean | number | string | readonly LanguageJson[] | { readonly [key: string]: LanguageJson };
 
@@ -67,6 +68,9 @@ export interface LanguageRunOptions extends LanguageSourceOptions {
   };
   /** Per-run policy hook overriding `LanguageOptions.onHostCall`. */
   readonly onHostCall?: OnHostCallHook | undefined;
+  /** Record or deterministically replay host calls. */
+  readonly journal?: JournalRequest | undefined;
+  readonly onJournalEntry?: OnJournalEntryCallback | undefined;
 }
 
 export interface LanguageCheckResult {
@@ -80,6 +84,7 @@ export interface LanguageRunResult extends LanguageCheckResult {
   /** The existing plain-json projection (keywords keep their colon). */
   readonly value?: unknown;
   readonly printed?: string;
+  readonly journal?: HostCallJournal | undefined;
 }
 
 export interface Language {
@@ -215,7 +220,9 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
       if (timedOut()) return timeout();
       let state = await host.evaluateInSession({ sessionId, source, sourceId: request.sourceId ?? defaultSourceId,
         stepLimit: request.limits?.steps,
-        ...(timeoutMs !== undefined ? { timeoutMs: Math.max(0, deadline - Date.now()) } : {}) });
+        ...(timeoutMs !== undefined ? { timeoutMs: Math.max(0, deadline - Date.now()) } : {}),
+        ...(request.journal ? { journal: request.journal } : {}),
+        ...(request.onJournalEntry ? { onJournalEntry: request.onJournalEntry } : {}) });
       while (state.status === "host-call") {
         const call = state.call;
         const abort = async () => {
@@ -282,10 +289,11 @@ export async function createLanguage(options: LanguageOptions = {}): Promise<Lan
         state = await host.resumeHostCall({ sessionId, evaluationId: call.evaluationId, callId: call.callId, result });
       }
       if (timedOut()) return timeout();
-      if (state.status === "failed") return { ok: false, manifest: checked.manifest, diagnostics: [...checked.diagnostics, ...state.diagnostics] };
+      if (state.status === "failed") return { ok: false, manifest: checked.manifest, diagnostics: [...checked.diagnostics, ...state.diagnostics], ...(state.journal ? { journal: state.journal } : {}) };
       return { ok: true, value: plainJsonFromValue(state.result.value),
         ...(state.result.printed !== undefined ? { printed: state.result.printed } : {}),
-        ...(checked.type ? { type: checked.type } : {}), manifest: checked.manifest, diagnostics: [...checked.diagnostics, ...state.result.diagnostics] };
+        ...(checked.type ? { type: checked.type } : {}), manifest: checked.manifest, diagnostics: [...checked.diagnostics, ...state.result.diagnostics],
+        ...(state.journal ? { journal: state.journal } : {}) };
     },
     async close() {
       if (!closed) { closed = true; await host.closeSession({ sessionId }); }
