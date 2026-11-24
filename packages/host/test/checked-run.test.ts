@@ -12,7 +12,13 @@ interface CheckedRunFixtureCase {
   readonly source: string;
   readonly grants: readonly { readonly name: string; readonly mode?: "ask" | "allow"; readonly maxCalls?: number }[];
   readonly expectedType?: string;
-  readonly limits?: { readonly steps?: number; readonly hostCalls?: number };
+  readonly limits?: {
+    readonly steps?: number;
+    readonly hostCalls?: number;
+    readonly timeoutMs?: number;
+    readonly maxExpansionSteps?: number;
+    readonly maxResultBytes?: number;
+  };
   readonly resume?: readonly HostCallResumeResult[];
   readonly expected: Record<string, unknown>;
 }

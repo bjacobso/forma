@@ -7,6 +7,8 @@
 export {
   evaluate,
   evaluateExprs,
+  expandExprs,
+  evaluateExpandedExprs,
   evaluateCompileTimeExprs,
   applyKFn,
   makePreludeLayer,

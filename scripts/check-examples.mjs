@@ -29,7 +29,7 @@ try {
     }
   };
   trees.forEach(collect);
-  for (const example of ["embed-node", "project"]) {
+  for (const example of ["embed-node", "project", "worker-isolation"]) {
     const cwd = join(temporary, example);
     await cp(join(root, "examples", example), cwd, { recursive: true, filter: path => !path.split(/[\\/]/).includes("node_modules") });
     const manifest = JSON.parse(await readFile(join(cwd, "package.json"), "utf8"));

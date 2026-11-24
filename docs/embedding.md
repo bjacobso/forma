@@ -105,13 +105,13 @@ text. An empty failure list also produces `host-effect/failed`.
 ## Limits and lifecycle
 
 `limits.steps` maps directly to the host evaluation step limit. `timeoutMs` is
-a cooperative deadline starting after checking, from 0 to 2147483647 milliseconds.
-While waiting for a capability it races the handler, calls `abortEvaluation`
-with the suspended evaluation ID, and returns `evaluation/aborted`. The handler
-itself is not canceled and may still finish or perform side effects. Synchronous
-engine work cannot be interrupted by a JavaScript timer; set a step limit as
-well. A result finishing after its deadline is reported as aborted. Limits do
-not apply to prelude initialization or checking.
+a deadline from 0 to 2147483647 milliseconds, starting after checking. The
+engine checks it inside the VM loop, so a pure computation that never calls a
+capability stops with `limit/time`. While waiting for a capability it races the
+handler, calls `abortEvaluation` with the suspended evaluation ID, and returns
+`evaluation/aborted`. The handler itself is not canceled and may still finish or
+perform side effects. A result finishing after its deadline is reported as
+aborted. Limits do not apply to prelude initialization or checking.
 
 `lang.describe()` returns `{ forms, functions, types, diagnostics }`, the same
 projection as the host's `describe` operation (JSON request: `{ op: "describe",
@@ -135,3 +135,103 @@ diagnostics. It does not run the program.
 Await active operations before `await lang.close()`. Closing is idempotent and
 releases the session; operations after close reject with an error. Invalid
 `timeoutMs` options reject with `RangeError`.
+
+## Resource budgets
+
+`checkedRun` (host operation and JSON ABI) runs accepted source under budgets.
+Each applies when `limits` omits it:
+
+| Limit | Default | Failure code | Meaning |
+| --- | --- | --- | --- |
+| `steps` | 50,000 | `limit/steps` | VM instructions |
+| `timeoutMs` | 5,000 | `limit/time` | Wall clock from the start of the run, covering checking-time expansion and evaluation. Time paused on a host call is not counted. |
+| `maxExpansionSteps` | 10,000 | `limit/expansion` | Compile-time evaluation steps summed across all macro calls and macro definitions in the source |
+| `maxResultBytes` | 1,048,576 | `limit/result-size` | UTF-8 bytes of the printed result and of its projection |
+| `hostCalls` | 1,000 | `limit/host-calls` | Capability calls; the run fails at the call that would exceed it, before the host sees it. A grant's `maxCalls` bounds one capability. |
+
+A limit failure is `{ status: "failed", stage: "limit" }` with the coded
+diagnostic first; `details.limit` records the configured value. A run stopped by
+`abortEvaluation` is `{ status: "failed", stage: "aborted" }` with
+`evaluation/aborted`.
+
+The deadline and abort flag are checked every 64 VM steps, and the VM yields to
+the event loop every 4,096 steps, so an `abortEvaluation` request that arrives
+while a pure loop runs is delivered. Pass your own `evaluationId` to `checkedRun`
+to know which evaluation to abort before it pauses:
+
+```ts
+const running = host.checkedRun({ sessionId, source, grants: [], evaluationId: "job-7" });
+// elsewhere, in the same JavaScript thread:
+await host.abortEvaluation({ sessionId, evaluationId: "job-7", reason: "user cancelled" });
+console.log(await running); // { status: "failed", stage: "aborted", ... }
+```
+
+`evaluateInSession` and `replSubmit` take the same `timeoutMs`,
+`maxExpansionSteps` and `maxResultBytes`, but have no defaults for them. Macro
+expansion and the result projection are bounded; the type checker is not, and
+neither is memory. Those need the isolation below.
+
+## Isolating untrusted source
+
+> [!WARNING]
+> The TypeScript engine is an interpreter inside your JavaScript realm. Grants,
+> the type check and budgets stop mistakes and runaway loops; they do not contain
+> hostile code. A defect in the reader, expander, evaluator or a builtin could
+> expose host objects or crash the process. Allocation is not bounded: a program
+> can build large values within its step limit and exhaust memory. Cooperative
+> budgets also cannot interrupt a hung host builtin or a defect that never reaches
+> the VM loop.
+
+For input you do not trust, run the engine somewhere you can kill it, and treat
+the boundary as a message channel. Whatever you place in the isolate, the
+capability handlers that answer host calls stay the trust boundary: validate their
+arguments and enforce policy (for example, confine paths to a directory).
+
+### `node:worker_threads`
+
+[`examples/worker-isolation`](https://github.com/bjacobso/forma/tree/main/examples/worker-isolation)
+runs `checkedRun` inside a Worker and ships a self-contained `node --test` suite.
+The parent posts `{ source, limits }`; the worker owns the session, answers each
+`host-call` itself, and posts back the final `CheckedRunState`.
+
+```ts
+const worker = new Worker(new URL("worker.mjs", import.meta.url), {
+  resourceLimits: { maxOldGenerationSizeMb: 128 },
+});
+const backstop = setTimeout(() => worker.terminate(), 10_000);
+```
+
+Use all three layers. Budgets give a precise, coded failure for ordinary
+runaways. `worker.terminate()` after your own deadline stops a worker that
+ignores them. `resourceLimits` turns a memory bomb into a worker crash instead of
+a parent crash. Create a fresh worker per untrusted job, or per tenant, and
+terminate it afterward; a worker shares the process, so this limits blast radius
+and does not provide a security boundary against engine defects. For that, use a
+child process with operating-system limits.
+
+### Cloudflare Workers
+
+Run each untrusted job in its own isolate. In a Worker, bind the Forma host in a
+separate Worker (or Durable Object) and call it through a service binding, so the
+caller keeps its secrets and bindings out of the isolate that runs untrusted
+source:
+
+```ts
+// runner Worker: owns the engine, has no bindings besides what it must answer
+export default {
+  async fetch(request: Request): Promise<Response> {
+    const { source, limits } = await request.json();
+    const host = createDefaultLanguageHost();
+    const { sessionId } = await host.openSession();
+    // checkedRun, answer host calls from an allow-list, return the final state
+  },
+};
+// caller Worker: env.RUNNER.fetch(...) with its own subrequest timeout
+```
+
+Cloudflare enforces CPU time and memory per isolate, which covers what cooperative
+budgets cannot; keep `timeoutMs` below the platform CPU limit so a run fails with
+`limit/time` rather than being cut off. The engine has no Node dependencies in the
+facade (`createLanguage`, `createDefaultLanguageHost`), but this repository does
+not yet ship a tested Cloudflare runner, so verify limits against your own plan
+before relying on it.
