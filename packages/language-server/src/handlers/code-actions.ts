@@ -7,7 +7,7 @@ import type { FormaWorkspace } from "../workspace.js";
 
 /** Each diagnostic's edits are one atomic quick fix against unchanged source. */
 export function getCodeActions(
-  _workspace: FormaWorkspace,
+  workspace: FormaWorkspace,
   document: TextDocument,
   params: CodeActionParams,
 ): CodeAction[] {
@@ -31,16 +31,25 @@ export function getCodeActions(
       continue;
     }
     if (!data || typeof data !== "object" || !("fix" in data) || !isFix(data.fix)) continue;
-    if (data.fix.some((edit) => edit.span.endOffset > document.getText().length)) continue;
-    // Request-context diagnostics and their fix offsets address this document.
-    const edits: TextEdit[] = data.fix.map((edit) => ({
-      range: spanToRange(document, edit.span), newText: edit.newText,
-    }));
+    const changes: Record<string, TextEdit[]> = {};
+    let valid = true;
+    for (const edit of data.fix) {
+      const target = workspace.document(edit.span.sourceId) ?? document;
+      if (edit.span.endOffset > target.getText().length) {
+        valid = false;
+        break;
+      }
+      (changes[target.uri] ??= []).push({
+        range: spanToRange(target, edit.span),
+        newText: edit.newText,
+      });
+    }
+    if (!valid || Object.keys(changes).length === 0) continue;
     actions.push({
       title: `Fix: ${diagnostic.message.split("\n")[0]}`,
       kind: CodeActionKind.QuickFix,
       diagnostics: [diagnostic],
-      edit: { changes: { [document.uri]: edits } },
+      edit: { changes },
     });
   }
   if (actions.length === 1) actions[0]!.isPreferred = true;

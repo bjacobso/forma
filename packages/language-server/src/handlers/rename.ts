@@ -17,7 +17,7 @@ export function prepareRename(
   document: TextDocument,
   params: PrepareRenameParams,
 ): Range | null {
-  const span = workspace.analysis.prepareRename(
+  const span = workspace.prepareRename(
     document.uri,
     positionToOffset(document, params.position),
   );
@@ -30,7 +30,7 @@ export function rename(
   document: TextDocument,
   params: RenameParams,
 ): WorkspaceEdit | ResponseError {
-  const result = workspace.analysis.rename(
+  const result = workspace.rename(
     document.uri,
     positionToOffset(document, params.position),
     params.newName,

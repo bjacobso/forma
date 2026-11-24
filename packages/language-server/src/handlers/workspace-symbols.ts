@@ -12,7 +12,7 @@ export function getWorkspaceSymbols(
   workspace: FormaWorkspace,
   params: WorkspaceSymbolParams,
 ): SymbolInformation[] {
-  return workspace.analysis.search(parseQuery(params.query)).flatMap((result) => {
+  return workspace.search(parseQuery(params.query)).flatMap((result) => {
     if (!result.sourceId || !result.span) return [];
     const location = spanToLocation(workspace, {
       sourceId: result.sourceId,
