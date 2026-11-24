@@ -401,8 +401,23 @@ you wrote. Common codes:
 | `module/private-type` | A public declaration exposes a type that is not exported. |
 | `module/unrepresentable-signature` | A definition's inferred type cannot be listed as a declaration. |
 | `elaborate/hook-failed` | A form hook raised an error while running. |
+| `capability/ungranted` | A checked run reached a capability not in its grant set. |
+| `journal/diverged` | A replayed run issued a different host call than recorded. |
 | Your own codes | Diagnostics returned by a form's `:check`. |
 | `internal/error` | An engine bug. Please report it with the input. |
+
+## Recording, replaying, and editor support
+
+- **Record and replay host calls:** `forma run entry.lisp --record trace.jsonl`
+  writes a `forma-journal/v1` JSON Lines trace of every host call and its outcome.
+  `forma run entry.lisp --replay trace.jsonl` replays the program deterministically
+  without invoking live host calls (pass `--allow-program-mismatch` to replay across
+  edits until the first `journal/diverged` call). See [Embedding](./embedding.md#host-call-journals-record-and-replay).
+- **Multi-file language server:** `forma lsp` (and the VS Code extension) resolves
+  `forma.json`/`forma.lock`, relative `.lisp` imports, and `forma:*` bundled
+  libraries with unsaved-file overlays, cross-file diagnostics, hover,
+  go-to-definition, references, and quick fixes, backed by per-form SCC memoization
+  for fast warm edits.
 
 ## Known gaps
 

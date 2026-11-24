@@ -29,8 +29,11 @@ try {
 } finally { await lang.close(); }
 ```
 
-`check` returns `{ ok, type?, diagnostics }` without evaluating the checked
-source. `run` checks first and returns `{ ok, value?, printed?, type?, diagnostics }`.
+`check` returns `{ ok, type?, manifest?, diagnostics }` without evaluating the checked
+source. `manifest` records SHA-256 digests of the checked source and loaded preludes
+alongside every reachable capability and its checked signature, so a host can audit or
+approve what a program can touch before running it. `run` checks first and returns
+`{ ok, value?, printed?, type?, manifest?, journal?, diagnostics }`.
 A failed check prevents evaluation and capability calls. Each operation uses the
 loaded preludes; program definitions are not retained between runs. Prelude
 initialization itself validates and evaluates declarations with `kind: "prelude"`.
@@ -38,8 +41,10 @@ Invalid preludes reject creation with `LanguageInitializationError`, whose
 `diagnostics` explain the failure; the session is released.
 
 See the [runnable Node example](https://github.com/bjacobso/forma/tree/main/examples/embed-node)
-for a prelude with a checked form, one granted capability, and `node:test` tests.
-For installation before publication, follow [Authoring](./authoring.md#setup).
+for a minimal setup, and the [flagship example](https://github.com/bjacobso/forma/tree/main/examples/flagship)
+for the complete loop: prelude vocabulary, `describe()`, capability manifest inspection,
+`node:worker_threads` execution with `onHostCall` span approval, and `forma-journal/v1`
+record/replay. For installation, follow [Authoring](./authoring.md#setup).
 
 ## File modules as vocabulary
 
@@ -74,15 +79,20 @@ Node applications can read their own source strings before creating it.
 
 ## Capabilities and values
 
-A capability declares its `arity` and a synchronous or asynchronous `handler`.
+A capability declares its `arity`, a `typeScheme`, and a synchronous or asynchronous `handler`.
 Only configured names become host builtins. A call to an ungranted name fails
-checking with an unbound-symbol diagnostic. Any unexpected suspended call without
+checking before evaluation with zero host calls. Any unexpected suspended call without
 a handler also fails with `host-effect/failed` instead of waiting indefinitely.
-A capability may supply the host's `typeScheme`; otherwise its parameters and
-result use the host's permissive `{ kind: "any" }` scheme, with its declared arity. A check then reports
-the call's result type as `Unknown` (`{"kind":"display","display":"Unknown"}`), and
-any argument is accepted. Use an explicit scheme, as in the example at the top of
-this page, for stronger checks. Handlers must honor that scheme; returned JSON is not checked against it.
+
+`typeScheme` is required by default so capability boundaries are statically checked.
+To opt into the permissive `{ kind: "any" }` scheme (where arguments are unchecked and
+results infer as `Unknown`), pass `untyped: true` explicitly on the capability descriptor.
+Handlers must honor their declared scheme; returned JSON is not re-validated against it.
+
+Every capability pause carries the author's source `span`. Pass an `onHostCall` policy
+hook on `createLanguage(...)` or `lang.run(source, { onHostCall })` to inspect `{ name,
+effect, args, span }` before a handler executes and return `{ allow: true }` or
+`{ allow: false, message? }` (which fails the run with `capability/denied` at that span).
 
 Handlers receive the existing plain-JSON value projection. Nil becomes `null`,
 lists and vectors become arrays, and maps become objects. Keywords keep their
@@ -170,6 +180,41 @@ console.log(await running); // { status: "failed", stage: "aborted", ... }
 `maxExpansionSteps` and `maxResultBytes`, but have no defaults for them. Macro
 expansion and the result projection are bounded; the type checker is not, and
 neither is memory. Those need the isolation below.
+
+## Host-call journals (record and replay)
+
+Because Forma's kernel builtins are pure and every external interaction pauses as a
+`HostCall`, recording host-call outcomes is enough to reproduce an evaluation
+deterministically (`forma-journal/v1`, JSON Lines).
+
+```ts
+// Record a live run:
+const recorded = await lang.run(source, {
+  journal: { mode: "record" },
+});
+// Replay later with zero live capability calls:
+const replayed = await lang.run(source, {
+  journal: { mode: "replay", journal: recorded.journal! },
+});
+```
+
+- **Exact matching:** Replay compares each call's `effect`, `name`, and lossless
+  `JournalValue` arguments (`Int` and `Float` stay distinct, map keys keep their
+  kind, functions match by ordinal). Changing an argument or call order fails with
+  `journal/diverged` at the exact `seq` and author `HostCall` span.
+- **Digest verification:** Replay checks the journal header's source and prelude
+  SHA-256 digests and rejects mismatches with `journal/program-mismatch` unless
+  `allowProgramMismatch: true` is passed (which emits a warning and replays until
+  the first divergence).
+- **Redaction and continuation:** Pass `redact(entry)` during recording to replace
+  sensitive fields with `{ kind: "redacted" }` (replay fails with `journal/redacted`
+  at that call). On a truncated journal, `onExhausted: "fail"` (default) stops with
+  `journal/exhausted`, while `onExhausted: "pause"` resumes live host calls.
+- **CLI:** `forma run entry.lisp --record trace.jsonl` and
+  `forma run entry.lisp --replay trace.jsonl` (with optional `--allow-program-mismatch`)
+  use the same `forma-journal/v1` format. See
+  [`examples/flagship`](https://github.com/bjacobso/forma/tree/main/examples/flagship)
+  for a complete record, replay, and divergence test suite.
 
 ## Isolating untrusted source
 

@@ -389,7 +389,6 @@ for contributor commands. The frozen install needs no sibling checkout or link s
 ## Runtime configuration
 
 - `FORMA_LANGUAGE_SERVER_PRELUDES` supplies comma-separated, consumer-owned prelude paths.
-- `FORMA_LANGUAGE_SERVER_ENABLE_FORMATTING` enables language-server formatting.
 - `FORMA_DISABLE_NATIVE_ELABORATION` selects the portable elaboration path.
 
 ## Project status
@@ -398,15 +397,21 @@ Forma is pre-alpha. Expect APIs, package boundaries, syntax, and artifact
 contracts to change while the language model is validated.
 
 Working today: the lossless reader and formatter, typed macros, Hindley–Milner
-and effect inference, refined contracts, canonical IR with payload contract
-identities, file modules and offline packages, Effect TypeScript and Effect
-Schema generation, the browser playground, the language server, and
-conformance goldens. Not built yet: a published CLI, a stable host ABI, a
+and effect inference, effect-polymorphic signatures ([RFC 0023](docs/rfcs/0023-effect-polymorphism.md)
+stages 1–3) with compile-time refinement literal checks, refined contracts,
+canonical IR with payload contract identities, file modules and offline packages,
+the output-neutral module linker (`LibraryAdapter`), Effect TypeScript and Effect
+Schema generation (`forma:effect`, `forma:effect/{rpc,http-api,cluster}`),
+`checkedRun` with capability manifests, `HostCall` source spans, resource budgets,
+and `forma-journal/v1` record/replay journals ([examples/flagship](examples/flagship/README.md)
+and [examples/worker-isolation](examples/worker-isolation/README.md)), the `forma` CLI
+(`check`, `run`, `test`, `fmt`, `repl`, `describe`, `explain`, `lsp`, `mcp`),
+the browser playground, the multi-file language server with per-form SCC memoization,
+and conformance goldens. Not built yet: a stable 1.0 host ABI, a
 consumer-prelude SDK, the trusted kernel and elaborators
 ([RFC 0022](docs/rfcs/0022-programmable-type-system.md)), Lisp dialect adapters
-and emitters ([RFC 0021](docs/rfcs/0021-languages-as-libraries.md)), Go and
-Rust Effect hosts ([Effect hosts](docs/rfcs/0022-effect-hosts.md)), and
-effect-polymorphic signatures ([RFC 0023](docs/rfcs/0023-effect-polymorphism.md)). The single public distribution is
+and emitters ([RFC 0021](docs/rfcs/0021-languages-as-libraries.md)), and Go and
+Rust Effect hosts ([Effect hosts](docs/rfcs/0022-effect-hosts.md)). The single public distribution is
 `@forma-language/forma`, on npm. Internal workspaces are
 private. Changesets manages version PRs and the Release workflow publishes the
 validated public package after maintainer authorization. Releases and npm

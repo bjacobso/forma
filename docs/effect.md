@@ -222,12 +222,12 @@ pageClass: forma-index forma-effect
 <div class="fh-list fh-list--no">
 <h3>Missing today</h3>
 <ul>
-<li><strong>Editor support for these forms.</strong> The language server runs the general HM typechecker, which doesn't understand layers, combinators, streams, or multi-clause <code>catch</code>, so editors show false errors on valid Effect programs. There is no go-to-definition from generated code back to Forma.</li>
+<li><strong>Full editor parity for Effect forms.</strong> Multi-file LSP resolves <code>forma:effect</code> and <code>forma:effect/*</code> imports, and the shared data-type relation aligns primitives, literals, brands, and <code>Option</code> across checkers, but some Effect-specific forms still lack full HM parity and there is no go-to-definition from generated TypeScript back to Forma.</li>
 <li><strong>Source maps.</strong> Stack traces and breakpoints point at the generated TypeScript, not at the Forma line.</li>
-<li><strong>Packages.</strong> Relative file modules with explicit imports, exports, and linked Effect TypeScript are implemented. Package manifests, registries, and compile-time library imports remain proposals. See <a href="/modules">File modules</a>.</li>
-<li><strong>Generics.</strong> Operations and functions have no type parameters.</li>
+<li><strong>Registry distribution.</strong> Relative file modules, <code>forma.json</code>/<code>forma.lock</code> offline packages, and bundled libraries (<code>forma:effect</code>, <code>forma:effect/{rpc,http-api,cluster}</code>) are shipped; remote package registries remain proposed. See <a href="/modules">File modules</a>.</li>
+<li><strong>Effect subtraction &amp; kernel set parity.</strong> Generic operations and effect-polymorphic error/requirement set variables (<code>[e]</code>/<code>[r]</code>), named callbacks, and compile-time literal refinement checks ship in the Effect checker; set subtraction (<code>without</code>) and kernel HM set-variable parity remain later stages of RFC 0023.</li>
 <li><strong>Parts of Effect.</strong> Recursion through brands and classes, <code>TaggedClass</code>, transformations, <code>Queue</code>, <code>PubSub</code>, <code>Deferred</code>, <code>Semaphore</code>, scoped forks, schedule composition, <code>Effect.fn</code>, spans and tracing, and most of <code>Stream</code>. The <a href="/effect/reference">reference</a> lists what exists.</li>
-<li><strong>Tooling.</strong> There is no CLI or watch mode; you call <code>generateEffectProgram</code> from your own build script. Packages are 0.x, and the output shape changed in this release.</li>
+<li><strong>Watch mode &amp; stability.</strong> The <code>forma</code> CLI ships <code>check</code>, <code>run</code>, <code>test</code>, <code>fmt</code>, <code>repl</code>, <code>describe</code>, <code>explain</code>, <code>lsp</code>, and <code>mcp</code>, while Effect TypeScript emission is called via <code>generateEffectProgram</code>/<code>generateEffectSystem</code> without a built-in watch mode. Packages are 0.x.</li>
 <li><strong>The hosted runtime.</strong> <code>makeMechanicsRuntime</code> interprets only the original operation forms. Run the generated TypeScript instead.</li>
 </ul>
 </div>
@@ -270,8 +270,8 @@ pageClass: forma-index forma-effect
 <ul>
 <li>An existing Effect codebase you can't partially redeclare.</li>
 <li>Code built on <code>@effect/platform</code>, SQL, RPC, or heavy npm use in business logic.</li>
-<li>Libraries that need generics or custom combinators.</li>
-<li>Teams that need stable tooling, editor support, and source maps today.</li>
+<li>Libraries that need effect subtraction (<code>without</code>) or higher-rank callbacks.</li>
+<li>Teams that need stable 1.0 tooling, full Effect-form editor parity, and source maps today.</li>
 </ul>
 </div>
 </div>
