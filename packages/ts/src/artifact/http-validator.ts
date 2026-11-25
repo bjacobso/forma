@@ -1,14 +1,14 @@
 /** Shared HTTP typing checks used by standalone generation and artifacts. */
 import type { JsonValue, PackageableDeclaration } from "./artifact.js";
 import type { Diagnostic } from "../diagnostic/diagnostic.js";
-import { checkMechanicsDeclarations } from "../mechanics/check.js";
+import { checkMechanicsProgram } from "../mechanics/checked.js";
 import { emissionSchema, emissionDatum } from "../descriptor/form-emitter.js";
 import { arrayItems, isRecord, isAssignable, typeFromJson, type MField, type MType } from "../mechanics/types.js";
 import { validatorDiagnostic, type ValidatorInput } from "./validator-registry.js";
 
 export type HttpDeclaration = PackageableDeclaration & { readonly formName?: string };
 export function checkHttpApiDeclarations(projected: readonly HttpDeclaration[], mechanics: readonly PackageableDeclaration[], report: (declaration: HttpDeclaration, code: string, message: string, operation?: string) => void): void {
-  const info = checkMechanicsDeclarations(mechanics).info;
+  const info = checkMechanicsProgram(mechanics).check;
   const type = (value: JsonValue, declaration: HttpDeclaration): MType =>
     typeFromJson(resolvedSchema(schemaProjection(value), declaration), info.env);
   const apis = projected.filter((d) => d.formName === "api");

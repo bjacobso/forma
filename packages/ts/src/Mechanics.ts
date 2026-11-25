@@ -5,7 +5,7 @@
  */
 
 import type { PackageableDeclaration } from "./artifact/artifact.js";
-import { checkMechanicsDeclarations } from "./mechanics/check.js";
+import { checkMechanicsProgram } from "./mechanics/checked.js";
 import {
   generateMechanicsEffectTypeScriptModule as generateMechanicsEffectTypeScriptModuleChecked,
   type MechanicsEffectTypeScriptModule,
@@ -68,7 +68,7 @@ export function generateMechanicsEffectTypeScriptModule(
   declarations: readonly PackageableDeclaration[],
   options: MechanicsEffectTypeScriptOptions = {},
 ): MechanicsEffectTypeScriptModule {
-  const check = options.check ?? checkMechanicsDeclarations(declarations).info;
+  const check = options.check ?? checkMechanicsProgram(declarations).check;
   return generateMechanicsEffectTypeScriptModuleChecked(declarations, { ...options, check });
 }
 

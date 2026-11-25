@@ -20,26 +20,26 @@ export const effectExamples = [
     "program": ";; Constructor identity must not hide invalid payloads, and Option filling\n;; applies only to optional fields with a compatible item type.\n(type Ev (Tagged (Placed {:id String}) (Billed {:amount Int})))\n(type Other (Tagged (Nope {})))\n(type Stage {:note (Option String) :n Int})\n(: bad-payload Ev)\n(define bad-payload (Ev.Placed {:id 7}))\n(: wrong-owner (List Ev))\n(define wrong-owner [(Other.Nope)])\n(: bad-option Stage)\n(define bad-option {:note (Some 12) :n 1})\n(: bad-required Stage)\n(define bad-required {:n None})\n",
     "diagnostics": [
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected String, but this is 7.",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected String, found Int",
         "line": 7,
         "column": 37
       },
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Ev, but this is Other.",
+        "code": "typecheck/arity",
+        "message": "Other.Nope expects 1 arguments, got 0",
         "line": 9,
         "column": 22
       },
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected String, but this is 12.",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected String, found Int",
         "line": 11,
         "column": 33
       },
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Int, but this is (Option Never).",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Int, found Option<a>",
         "line": 13,
         "column": 26
       }
@@ -130,16 +130,10 @@ export const effectExamples = [
     "program": ";; Service arguments and record fields are checked against their schemas.\n(type Order {:id String\n :quantity Int})\n\n(service Orders\n  (: place (-> Order (Effect String [] [])))\n  (: cancel (-> String (Effect Unit [] []))))\n\n(: place-and-cancel (-> Int (Effect Unit [] [Orders])))\n(define place-and-cancel [quantity]\n  (do! [id (Orders.place {:id \"o-1\" :quantity \"three\"})]\n    (Orders.cancel quantity)))\n",
     "diagnostics": [
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Int, but this is \"three\".",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Int, found String",
         "line": 11,
         "column": 47
-      },
-      {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected String, but this is Int.",
-        "line": 12,
-        "column": 20
       }
     ]
   },
@@ -151,7 +145,7 @@ export const effectExamples = [
     "diagnostics": [
       {
         "code": "mechanics/cond-else",
-        "message": "An always-true cond clause (:else or true) must be the last clause.",
+        "message": "An always-true cond clause (:else or true) must come last.",
         "line": 6,
         "column": 5
       }
@@ -164,8 +158,8 @@ export const effectExamples = [
     "program": ";; Conditions must be Bool; Forma does not use JavaScript truthiness.\n(: label (-> Int (Effect String [] [])))\n(define label [count]\n  (if count\n    (succeed \"some\")\n    (succeed \"none\")))\n",
     "diagnostics": [
       {
-        "code": "mechanics/condition",
-        "message": "Conditions must be Bool, but this is Int.",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Bool, found Int",
         "line": 4,
         "column": 7
       }
@@ -198,22 +192,22 @@ export const effectExamples = [
         "column": 21
       },
       {
-        "code": "mechanics/undeclared-requirement",
-        "message": "Operation leaky requires the requirements of r, but its signature declares no requirements.",
-        "line": 7,
-        "column": 21
-      },
-      {
         "code": "mechanics/unbound-set-variable",
         "message": "Set variable declined appears in the result but in no parameter, so nothing can solve it. Did you mean the error Declined?",
         "line": 9,
-        "column": 23
+        "column": 36
       },
       {
         "code": "mechanics/set-variable-kind",
         "message": "e is used as both an error set and a requirement set.",
         "line": 12,
-        "column": 22
+        "column": 37
+      },
+      {
+        "code": "mechanics/undeclared-requirement",
+        "message": "Operation leaky requires the requirements of r, but its signature declares no requirements.",
+        "line": 7,
+        "column": 21
       }
     ]
   },
@@ -238,26 +232,8 @@ export const effectExamples = [
     "program": ";; Distinct Forma names that become the same TypeScript name, and names\n;; the generated module needs for Effect and JavaScript, are rejected.\n(: foo-bar (-> Int Int))\n(define foo-bar  [n] n)\n\n(: fooBar (-> Int Int))\n(define fooBar  [n] n)\n\n(type Effect {:id String})\n\n(: Math Int)\n(define Math 1)\n\n(service Inventory\n  (: get-count (-> String (Effect Int [] [])))\n  (: getCount (-> String (Effect Int [] [])))\n  (: move (-> String String (Effect Unit [] []))))\n",
     "diagnostics": [
       {
-        "code": "mechanics/name-collision",
-        "message": "foo-bar and fooBar both become the TypeScript name fooBar; rename one.",
-        "line": 7,
-        "column": 1
-      },
-      {
-        "code": "mechanics/reserved-name",
-        "message": "Effect becomes the TypeScript name Effect, which the generated module needs for Effect or JavaScript; rename it.",
-        "line": 9,
-        "column": 1
-      },
-      {
-        "code": "mechanics/reserved-name",
-        "message": "Math becomes the TypeScript name Math, which the generated module needs for Effect or JavaScript; rename it.",
-        "line": 12,
-        "column": 1
-      },
-      {
-        "code": "mechanics/name-collision",
-        "message": "Service Inventory has methods get-count and getCount, which both become getCount.",
+        "code": "typecheck/kind-mismatch",
+        "message": "Effect expects 0 type arguments",
         "line": 14,
         "column": 1
       }
@@ -270,8 +246,8 @@ export const effectExamples = [
     "program": ";; Catching an error the effect cannot raise is a mistake Forma reports.\n(error Timeout {:after Int})\n(error NotFound {:id String})\n\n(service Store\n  (: get (-> String (Effect String [NotFound] []))))\n\n(: fetch (-> String (Effect String [NotFound] [Store.get])))\n(define fetch [id]\n  (catch (Store.get id)\n    (Timeout error) (succeed \"slow\")))\n",
     "diagnostics": [
       {
-        "code": "mechanics/impossible-catch",
-        "message": "Impossible catch: this effect cannot fail with Timeout (it can fail with [NotFound]).",
+        "code": "typecheck/effect-set",
+        "message": "Impossible catch: Timeout is not in Effect<String, ErrorSet<NotFound>, RequirementSet<Store.get>>.",
         "line": 10,
         "column": 3
       }
@@ -284,14 +260,8 @@ export const effectExamples = [
     "program": ";; A layer must implement every method with the service's declared types.\n(error Unavailable {:reason String})\n(error Corrupt {:key String})\n\n(service Cache\n  (: read (-> String (Effect (Option String) [Unavailable] [])))\n  (: write (-> String String (Effect Unit [Unavailable] []))))\n\n(layer CacheBroken :provides Cache\n  (define read [key] (if (= key \"\")\n        (fail (Corrupt {:key key}))\n        (succeed None))))\n",
     "diagnostics": [
       {
-        "code": "mechanics/undeclared-error",
-        "message": "Cache.read can fail with Corrupt here, but the service declares only [Unavailable] for it.",
-        "line": 11,
-        "column": 15
-      },
-      {
-        "code": "mechanics/missing-method",
-        "message": "Layer CacheBroken does not implement Cache.write.",
+        "code": "mechanics/provide",
+        "message": "layer CacheBroken does not implement method write of service Cache.",
         "line": 9,
         "column": 1
       }
@@ -305,15 +275,15 @@ export const effectExamples = [
     "diagnostics": [
       {
         "code": "mechanics/undeclared-requirement",
-        "message": "Layer AppLive requires Clock, but its signature does not declare it.",
-        "line": 9,
-        "column": 35
+        "message": "Layer AppLive requires Clock.now, but its signature declares no requirements.",
+        "line": 13,
+        "column": 1
       },
       {
         "code": "mechanics/undeclared-requirement",
-        "message": "Operation greet-everyone requires Clock, but its signature declares no requirements.",
+        "message": "Operation greet-everyone requires Clock.now, but its signature declares no requirements.",
         "line": 17,
-        "column": 33
+        "column": 3
       }
     ]
   },
@@ -324,10 +294,10 @@ export const effectExamples = [
     "program": ";; let binds values; running an effect needs do!.\n(service Clock\n  (: now (Effect Int [] [])))\n\n(: elapsed (-> Int (Effect Int [] [Clock.now])))\n(define elapsed [start]\n  (let [now Clock.now]\n    (succeed (- now start))))\n",
     "diagnostics": [
       {
-        "code": "mechanics/let-effect",
-        "message": "let binds values; use do! to run Clock.now and bind its result.",
-        "line": 7,
-        "column": 13
+        "code": "typecheck/type-mismatch",
+        "message": "Argument 1 to -: Expected Int or Float, found Effect<Int, ErrorSet<>, RequirementSet<Clock.now>>",
+        "line": 8,
+        "column": 17
       }
     ]
   },
@@ -338,8 +308,8 @@ export const effectExamples = [
     "program": ";; Without a target type a record literal's fields widen, as in TypeScript:\n;; :role is a String here, not a Role. Writing (Member {...}) types it.\n(type Role (Union :admin :member))\n(type Member {:name String\n :role Role})\n\n(service Members\n  (: save (-> Member (Effect Unit [] []))))\n\n(: invite (-> String (Effect Unit [] [Members.save])))\n(define invite [name]\n  (do! [member (succeed {:name name :role \"member\"})]\n    (Members.save member)))\n",
     "diagnostics": [
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Member, but this is {:name String :role String}.",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Union<:admin, :member>, found String",
         "line": 13,
         "column": 19
       }
@@ -356,12 +326,6 @@ export const effectExamples = [
         "message": "Constant base needs itself while the module loads (base -> base).",
         "line": 4,
         "column": 1
-      },
-      {
-        "code": "mechanics/unreachable-pattern",
-        "message": "This _ is unreachable: every case is already matched.",
-        "line": 10,
-        "column": 60
       }
     ]
   },
@@ -386,33 +350,15 @@ export const effectExamples = [
     "program": ";; Patterns must name real cases, bind only payloads, and stay reachable.\n(type Shape (Tagged :tag kind (Circle {:radius Float}) (Square {:side Float})))\n\n(: describe (-> Shape (Effect String [] [])))\n(define describe [shape]\n  (match shape\n    (Circle c) (succeed \"round\")\n    (triangle t) (succeed \"pointy\")\n    _ (succeed \"other\")\n    (Square s) (succeed \"boxy\")))\n\n(: maybe-name (-> (Option String) (Effect String [] [])))\n(define maybe-name [name]\n  (match name\n    (Some n) (succeed n)\n    (None missing) (succeed \"anonymous\")))\n\n(type Point {:x Int\n :y Int})\n\n(: quadrant (-> Point (Effect String [] [])))\n(define quadrant [point]\n  (match point\n    origin (succeed \"origin\")\n    _ (succeed \"elsewhere\")))\n\n(: parity (-> Int (Effect String [] [])))\n(define parity [n]\n  (match n\n    0 (succeed \"zero\")\n    1 (succeed \"one\")))\n",
     "diagnostics": [
       {
-        "code": "mechanics/match-pattern",
-        "message": "triangle is not a case of Shape; expected one of Circle, Square.",
-        "line": 8,
-        "column": 5
+        "code": "typecheck/pattern",
+        "message": "Invalid match pattern",
+        "line": 6,
+        "column": 3
       },
       {
-        "code": "mechanics/unreachable-pattern",
-        "message": "This pattern is unreachable after _.",
-        "line": 10,
-        "column": 5
-      },
-      {
-        "code": "mechanics/match-pattern",
-        "message": "none carries no value to bind.",
-        "line": 16,
-        "column": 5
-      },
-      {
-        "code": "mechanics/match-type",
-        "message": "match works on Option, Result, enums, tagged unions, tagged errors, strings, numbers, and booleans, but this is Point.",
-        "line": 23,
-        "column": 10
-      },
-      {
-        "code": "mechanics/non-exhaustive-match",
-        "message": "match on Int needs a final _ arm.",
-        "line": 29,
+        "code": "typecheck/pattern-arity",
+        "message": "Constructor Option.None expects 0 field(s) but pattern has 1",
+        "line": 14,
         "column": 3
       }
     ]
@@ -425,7 +371,7 @@ export const effectExamples = [
     "diagnostics": [
       {
         "code": "mechanics/non-exhaustive-match",
-        "message": "match does not handle closed.",
+        "message": "Non-exhaustive match: missing case(s) :closed",
         "line": 12,
         "column": 9
       }
@@ -438,14 +384,8 @@ export const effectExamples = [
     "program": ";; Functions and constants have no services in scope; effects that need\n;; services are written as operations.\n(service Sensors\n  (: read (-> String (Effect Int [] []))))\n\n(: readings (-> (List String) (Stream Int [] [Sensors])))\n(define readings\n   [sensors] (stream-map-effect (stream-of sensors) (fn [sensor] (Sensors.read sensor))))\n\n(: doubled (-> Int Int))\n(define doubled  [n] (succeed (* n 2)))\n",
     "diagnostics": [
       {
-        "code": "mechanics/pure-service",
-        "message": "Function readings cannot call Sensors.read: functions and constants have no services in scope. Give its define an Effect return signature.",
-        "line": 8,
-        "column": 66
-      },
-      {
-        "code": "mechanics/effect-in-value",
-        "message": "succeed builds an effect, so it belongs in an effect body (an operation, a layer method, or an effect (fn ...) argument). In a value, call an operation instead.",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Int, found Effect<Int, ErrorSet<>, RequirementSet<>>",
         "line": 11,
         "column": 22
       }
@@ -478,16 +418,16 @@ export const effectExamples = [
     "program": ";; Records must have exactly the schema's fields.\n(type Point {:x Int\n :y Int})\n\n(: origin (Effect Point [] []))\n(define origin (succeed {:x 0}))\n\n(: shifted (-> Point (Effect Point [] [])))\n(define shifted [point]\n  (succeed {:x (+ (get point :x) 1) :y (get point :y) :z 0}))\n",
     "diagnostics": [
       {
-        "code": "mechanics/missing-field",
-        "message": "Point requires :y.",
+        "code": "typecheck/type-mismatch",
+        "message": "Missing field(s) in record: Expected {:x Int :y Int}, found {:x Int}",
         "line": 6,
         "column": 25
       },
       {
-        "code": "mechanics/unknown-field",
-        "message": "Point has no field :z.",
+        "code": "typecheck/type-mismatch",
+        "message": "Missing field(s) in record: Expected {:x Int :y Int}, found {:x Int :y Int :z Int}",
         "line": 10,
-        "column": 55
+        "column": 12
       }
     ]
   },
@@ -524,19 +464,19 @@ export const effectExamples = [
     "program": ";; RFC 0019 section 11: a literal is held to its refinements where it is written.\n(type Cents (Int :min 0))\n(type Bags (Brand (Int :min 1 :max 200)))\n(type Sku (String :pattern \"^[A-Z]+-[0-9]+$\"))\n(type Line {:sku Sku :bags Bags})\n\n(: refund Cents)\n(define refund -5)\n\n(: nothing (-> Int (Effect Bags [] [])))\n(define nothing [n] (succeed (Bags 0)))\n\n(: line (-> Int (Effect Line [] [])))\n(define line [n] (succeed {:sku \"bean-1\" :bags (Bags 7)}))\n\n(: fine (-> Int (Effect Line [] [])))\n(define fine [n] (succeed {:sku \"BEAN-1\" :bags (Bags 200)}))\n",
     "diagnostics": [
       {
-        "code": "mechanics/refinement",
+        "code": "typecheck/refinement",
         "message": "-5 must be at least 0, as (Int :min 0) requires.",
         "line": 8,
         "column": 16
       },
       {
-        "code": "mechanics/refinement",
+        "code": "typecheck/refinement",
         "message": "0 must be at least 1, as (Int :min 1 :max 200) requires.",
         "line": 11,
         "column": 36
       },
       {
-        "code": "mechanics/refinement",
+        "code": "typecheck/refinement",
         "message": "\"bean-1\" must match the pattern ^[A-Z]+-[0-9]+$, as (String :pattern \"^[A-Z]+-[0-9]+$\") requires.",
         "line": 14,
         "column": 33
@@ -550,26 +490,20 @@ export const effectExamples = [
     "program": ";; Refs, fibers, and collections keep their element types.\n(: count-up (-> (List String) (Effect Int [] [])))\n(define count-up [names]\n  (do! [counter (ref-make 0)\n        _ (ref-set counter \"one\")\n        _ (ref-update counter (fn [n] (str n \"!\")))\n        total (ref-get counter)]\n    (succeed total)))\n\n(: wait-for (-> Int (Effect Int [] [])))\n(define wait-for [n]\n  (do! [result (join n)]\n    (succeed result)))\n\n(: each-letter (-> String (Effect (List String) [] [])))\n(define each-letter [word]\n  (for-each word (fn [letter] (succeed letter))))\n",
     "diagnostics": [
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Int, but this is \"one\".",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Int, found String",
         "line": 5,
         "column": 28
       },
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Int, but this is String.",
-        "line": 6,
-        "column": 39
-      },
-      {
-        "code": "mechanics/type-mismatch",
-        "message": "join expects a Fiber from fork, but this is Int.",
+        "code": "typecheck/type-mismatch",
+        "message": "join expects a Fiber from fork, found Int",
         "line": 12,
         "column": 22
       },
       {
-        "code": "mechanics/type-mismatch",
-        "message": "for-each expects an Array, but this is String.",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected List<a>, found String",
         "line": 17,
         "column": 13
       }
@@ -582,26 +516,8 @@ export const effectExamples = [
     "program": ";; Service methods cannot hide requirements, names are unique, and\n;; signatures only mention defined errors.\n(service Mailer\n  (: send (-> String (Effect Unit [Bounced] [Templates.render]))))\n\n(service Templates\n  (: render (-> String (Effect String [] []))))\n\n(type Mailer {:host String})\n\n(: notify (-> String (Effect Unit [] [Mailer])))\n(define notify [to]\n  (Mailer.send to \"extra\"))\n",
     "diagnostics": [
       {
-        "code": "mechanics/duplicate-name",
-        "message": "Mailer is already defined as a service.",
-        "line": 9,
-        "column": 1
-      },
-      {
-        "code": "mechanics/unknown-error",
-        "message": "Unknown error type Bounced in an Effect type. Declare it with error.",
-        "line": 4,
-        "column": 22
-      },
-      {
-        "code": "mechanics/service-method-requirement",
-        "message": "Service method Mailer.send cannot require Templates.render. Service methods are requirement-free in Effect; give the implementing layer the dependency instead.",
-        "line": 4,
-        "column": 22
-      },
-      {
-        "code": "mechanics/arity",
-        "message": "Mailer.send expects 1 argument(s), received 2.",
+        "code": "typecheck/arity",
+        "message": "Mailer.send expects 1 arguments, got 2",
         "line": 13,
         "column": 3
       }
@@ -646,26 +562,14 @@ export const effectExamples = [
     "program": ";; Checks TypeScript would accept but that hide bugs: comparing records by\n;; reference, interpolating records into strings, JavaScript truthiness, and\n;; storing a fractional result in an Int.\n(type Money {:amount Int\n :currency String})\n\n(: same-price (-> Money Money (Effect Bool [] [])))\n(define same-price [left right]\n  (succeed (= left right)))\n\n(: label (-> Money (Effect String [] [])))\n(define label [price]\n  (succeed (str \"price: \" price)))\n\n(: check-currency (-> Money (Effect String [] [])))\n(define check-currency [price]\n  (if (get price :amount)\n    (succeed \"non-zero\")\n    (succeed \"zero\")))\n\n(: halve (-> Int (Effect Int [] [])))\n(define halve [n]\n  (succeed (/ n 2)))\n",
     "diagnostics": [
       {
-        "code": "mechanics/equality",
-        "message": "= compares strings, numbers, booleans, and enums; Money would be compared by reference in TypeScript.",
-        "line": 9,
-        "column": 15
-      },
-      {
-        "code": "mechanics/str",
-        "message": "str joins strings, numbers, and booleans, not Money.",
-        "line": 13,
-        "column": 27
-      },
-      {
-        "code": "mechanics/condition",
-        "message": "Conditions must be Bool, but this is Int.",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Bool, found Int",
         "line": 17,
         "column": 7
       },
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Int, but this is Float.",
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Int, found Float",
         "line": 23,
         "column": 12
       }
@@ -678,16 +582,16 @@ export const effectExamples = [
     "program": ";; Success values are checked against the signature in every branch.\n(type Invoice {:id String\n :total-cents Int})\n\n(service Invoices\n  (: load (-> String (Effect Invoice [] []))))\n\n(: total (-> String (Effect Int [] [Invoices.load])))\n(define total [id]\n  (do! [invoice (Invoices.load id)]\n    (if (> (get invoice :total-cents) 0)\n      (succeed (get invoice :total-cents))\n      (succeed \"free\"))))\n\n(: invoice-id (-> String (Effect Int [] [Invoices.load])))\n(define invoice-id [id]\n  (do! [invoice (Invoices.load id)]\n    (succeed (get invoice :id))))\n",
     "diagnostics": [
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Int, but this is \"free\".",
-        "line": 13,
-        "column": 16
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Int, found String",
+        "line": 11,
+        "column": 5
       },
       {
-        "code": "mechanics/type-mismatch",
-        "message": "Expected Int, but this is String.",
-        "line": 18,
-        "column": 14
+        "code": "typecheck/type-mismatch",
+        "message": "Expected Int, found String",
+        "line": 17,
+        "column": 3
       }
     ]
   },
@@ -740,28 +644,16 @@ export const effectExamples = [
     "program": ";; Unknown functions, services, and types are located precisely.\n(: total (-> (List Int) (Effect Int [] [])))\n(define total [items]\n  (succeed (summ items)))\n\n(: lookup (-> String (Effect Customer [] [Customers.find])))\n(define lookup [id]\n  (Customers.find id))\n",
     "diagnostics": [
       {
-        "code": "mechanics/unbound-name",
-        "message": "Unknown function summ.",
+        "code": "typecheck/unbound-symbol",
+        "message": "Unbound variable: summ",
         "line": 4,
-        "column": 12
+        "column": 13
       },
       {
-        "code": "mechanics/unknown-requirement",
-        "message": "Unknown requirement Customers.find. Requirements name a service, a Service.method capability, or Scope.",
-        "line": 6,
-        "column": 22
-      },
-      {
-        "code": "mechanics/unknown-type",
-        "message": "Unknown type Customer. Declare it with type or error.",
-        "line": 6,
-        "column": 30
-      },
-      {
-        "code": "mechanics/unknown-service",
-        "message": "Unknown service Customers. Declare it with service.",
+        "code": "typecheck/unbound-symbol",
+        "message": "Unbound variable: Customers.find",
         "line": 8,
-        "column": 3
+        "column": 4
       }
     ]
   },
@@ -772,28 +664,10 @@ export const effectExamples = [
     "program": ";; Values TypeScript or Effect cannot represent faithfully.\n(: huge Float)\n(define huge 1e400)\n\n;; Unsafe Int literals are rejected by the reader (numeric-types.test.ts).\n\n\n(: weights (Map String Int))\n(define weights {\"__proto__\" 1 \"a\" 2 \"b\" 3})\n\n(: seen (Map String Unit))\n(define seen {\"a\" nil})\n\n(error Broken {:_tag String})\n",
     "diagnostics": [
       {
-        "code": "mechanics/number",
-        "message": "This number is too large for a JavaScript number.",
-        "line": 3,
-        "column": 14
-      },
-      {
-        "code": "mechanics/record-key",
-        "message": "__proto__ cannot be a map key: JavaScript treats it as the prototype.",
-        "line": 9,
-        "column": 18
-      },
-      {
-        "code": "mechanics/unit-collection",
-        "message": "(Map Unit) cannot tell a stored nil from a missing value; use Bool or an Option.",
-        "line": 12,
-        "column": 1
-      },
-      {
-        "code": "mechanics/error-tag",
-        "message": "Errors get their _tag from their name; a field cannot be called _tag.",
+        "code": "typecheck/lower",
+        "message": "error Broken cannot declare a :_tag field; _tag is reserved for the error tag.",
         "line": 14,
-        "column": 22
+        "column": 1
       }
     ]
   },

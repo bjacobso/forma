@@ -52,6 +52,13 @@ import { inferDef } from "./infer-binding.js";
 import { inferAscribe, inferDSLForm } from "./infer-dsl.js";
 import { inferTypeDef, inferDefClass, inferInstance, inferDefService } from "./infer-typedef.js";
 import { EFFECT_COMBINATORS, inferDefLayer, inferEffectCombinator } from "./infer-effect.js";
+import {
+  buildOperationalEffect,
+  emptyEffectSet,
+  extractOperationalEffect,
+  unionEffectSets,
+  type EffectProvenance,
+} from "./effect-sets.js";
 
 // ---------------------------------------------------------------------------
 // Origin helper
@@ -214,6 +221,8 @@ export const typeExprToType = (
 
         // Known type constants
         switch (name) {
+          case "__Infer":
+            return yield* ctx.freshTVar;
           case "Num":
           case "Number":
             return yield* ctx.fail(
@@ -260,6 +269,9 @@ export const typeExprToType = (
       }
 
       case "TEApp": {
+        if (texpr.con._tag === "TESym" && texpr.con.name === "Numeric" && texpr.args.length === 1) {
+          return yield* typeExprToType(texpr.args[0]!, tvarMap, rvarMap);
+        }
         const splitMeta = splitTypeExprMetadata(texpr);
         if (splitMeta) {
           const baseExpr: TypeExpr = splitMeta.args.length === 0
@@ -510,15 +522,15 @@ const inferEffectDo = (
   Effect.gen(function* () {
     const ctx = yield* InferContext;
     let currentEnv = new Map(env);
-    let accumulatedErrors: readonly Type[] = [];
-    let accumulatedRequirements: readonly Type[] = [];
+    let accumulatedErrors: EffectProvenance = emptyEffectSet;
+    let accumulatedRequirements: EffectProvenance = emptyEffectSet;
 
     for (const binding of expr.bindings) {
       const s = yield* Ref.get(ctx.subst);
       currentEnv = applyEnv(s, currentEnv);
       const bindingType = yield* inferExpr(currentEnv, binding.expr);
       const resolvedBindingType = applyType(yield* Ref.get(ctx.subst), bindingType);
-      const parts = operationalEffectParts(resolvedBindingType);
+      const parts = extractOperationalEffect(resolvedBindingType, binding.expr.span);
       if (!parts) {
         return yield* ctx.fail(
           {
@@ -530,22 +542,22 @@ const inferEffectDo = (
         );
       }
 
-      accumulatedErrors = mergeTypeSets(accumulatedErrors, parts.errors);
-      accumulatedRequirements = mergeTypeSets(accumulatedRequirements, parts.requirements);
+      accumulatedErrors = unionEffectSets(accumulatedErrors, parts.errors);
+      accumulatedRequirements = unionEffectSets(accumulatedRequirements, parts.requirements);
       currentEnv.set(binding.name, mono(parts.success));
     }
 
     const bodyType = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(currentEnv, expr.body));
-    const bodyParts = operationalEffectParts(bodyType);
+    const bodyParts = extractOperationalEffect(bodyType, expr.body.span);
     if (bodyParts) {
-      return operationalEffectType(
+      return buildOperationalEffect(
         bodyParts.success,
-        mergeTypeSets(accumulatedErrors, bodyParts.errors),
-        mergeTypeSets(accumulatedRequirements, bodyParts.requirements),
+        unionEffectSets(accumulatedErrors, bodyParts.errors),
+        unionEffectSets(accumulatedRequirements, bodyParts.requirements),
       );
     }
 
-    return operationalEffectType(bodyType, accumulatedErrors, accumulatedRequirements);
+    return buildOperationalEffect(bodyType, accumulatedErrors, accumulatedRequirements);
   });
 
 // ---------------------------------------------------------------------------
@@ -980,7 +992,9 @@ const inferApp = (
     }
     const sFinal = yield* Ref.get(ctx.subst);
     const resolved = applyType(sFinal, fnT);
-    return resolved._tag === "TVariadic" ? applyType(sFinal, resolved.res) : resolved;
+    const result = resolved._tag === "TVariadic" ? applyType(sFinal, resolved.res) : resolved;
+    const eff = extractOperationalEffect(result, expr.span);
+    return eff ? buildOperationalEffect(eff.success, eff.errors, eff.requirements) : result;
   });
 
 const inferVector = (

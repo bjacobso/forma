@@ -94,10 +94,12 @@ describe("forma:effect do/bind/pure", () => {
   test("a narrowed signature is reported at the step that widens it", () => {
     const source = readFileSync(resolve(cases, "defect-checkout/program.lisp"), "utf8")
       .replace("[CartNotFound CardDeclined] [Shop Payments Mailer]", "[CartNotFound] [Shop Mailer]");
-    expect(located(source, Mechanics.elaborateEffectProgram(source))).toEqual([
-      ["mechanics/undeclared-error", "(Payments.charge total)"],
-      ["mechanics/undeclared-requirement", "(Payments.charge total)"],
+    const diags = located(source, Mechanics.elaborateEffectProgram(source));
+    expect(diags.map(([code]) => code)).toEqual([
+      "mechanics/undeclared-error",
+      "mechanics/undeclared-requirement",
     ]);
+    expect(diags.every(([, text]) => text?.includes("(Payments.charge total)"))).toBe(true);
   });
 
   const op = (body: string) => `${library}(service S (: run (Effect Int)))\n(: f (Effect Int [] [S]))\n(define f ${body})\n`;

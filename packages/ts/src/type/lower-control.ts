@@ -117,14 +117,15 @@ export function lowerEffectFail(lower: LowerFn, span: Span, items: readonly SExp
     });
   }
   if (error._tag === "List" && error.items[0]?._tag === "Sym") {
+    const errorSpan = spanOf(error);
     if (error.items.length === 1) {
-      return CEffectFail(span, error.items[0].name, CRecord(spanOf(error), []));
+      return CEffectFail(span, error.items[0].name, CRecord(errorSpan, []), errorSpan);
     }
     if (error.items.length === 2) {
-      return CEffectFail(span, error.items[0].name, lower(error.items[1]!));
+      return CEffectFail(span, error.items[0].name, lower(error.items[1]!), errorSpan);
     }
   }
-  return CEffectFail(span, "", lower(error));
+  return CEffectFail(span, "", lower(error), spanOf(error));
 }
 
 export function lowerEffectCatch(lower: LowerFn, span: Span, items: readonly SExpr[]): CoreExpr {

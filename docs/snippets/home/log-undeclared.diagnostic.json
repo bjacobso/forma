@@ -3,6 +3,10 @@
   "severity": "error",
   "message": "Operation log requires Console.print, but its signature declares no requirements.",
   "phase": "typecheck",
+  "details": {
+    "code": "mechanics/undeclared-requirement",
+    "message": "Operation log requires Console.print, but its signature declares no requirements."
+  },
   "span": {
     "sourceId": "log.lisp",
     "startOffset": 217,

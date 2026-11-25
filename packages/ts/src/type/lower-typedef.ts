@@ -352,7 +352,8 @@ export function lowerDefineLayer(lower: LowerFn, span: Span, items: readonly SEx
         if (m._tag !== "List" || m.items.length < 2) {
           throw new InferenceError({ message: "layer method expects (name [params...] body...)." });
         }
-        const mName = asSym(m.items[0]!, "layer method name");
+        const rawMethodName = asSym(m.items[0]!, "layer method name");
+        const mName = rawMethodName === "__map-get" ? "get" : rawMethodName;
         const hasParams = m.items[1]!._tag === "Vector" && m.items.length >= 3;
         const params = hasParams
           ? (m.items[1] as Extract<SExpr, { _tag: "Vector" }>).items.map((p) => mkParam(spanOf(p), asSym(p, "layer method param")))

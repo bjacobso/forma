@@ -177,13 +177,16 @@ export function effectSetFromType(type: Type, span?: Span): EffectProvenance | u
   return effectSetFromArgs(type.args, span);
 }
 
+/** Preserves author provenance spans on `ErrorSet` / `RequirementSet` member `TCon`s. */
+const entryProvenance = new WeakMap<Type, Span>();
+
 /** Convert the argument list of an `ErrorSet` / `RequirementSet` `TApp` to `EffectProvenance`. */
 export function effectSetFromArgs(args: readonly Type[], span?: Span): EffectProvenance {
   const result = new Map<string, Span | undefined>();
   const add = (entry: Type): void => {
     if (entry._tag === "TCon") {
       const key = effectSetEntryKey(entry.name);
-      if (!result.has(key)) result.set(key, span);
+      if (!result.has(key)) result.set(key, entryProvenance.get(entry) ?? span);
       return;
     }
     if (isEffectSetType(entry)) {
@@ -198,8 +201,10 @@ export function effectSetFromArgs(args: readonly Type[], span?: Span): EffectPro
 export function effectSetToType(kind: EffectSetKind, set: EffectProvenance): Type {
   const conName = kind === "error" ? "ErrorSet" : "RequirementSet";
   const args: Type[] = [];
-  for (const key of set.keys()) {
-    args.push(TCon(setVariableName(key)));
+  for (const [key, span] of set) {
+    const con = TCon(setVariableName(key));
+    if (span) entryProvenance.set(con, span);
+    args.push(con);
   }
   return TApp(TCon(conName), args);
 }

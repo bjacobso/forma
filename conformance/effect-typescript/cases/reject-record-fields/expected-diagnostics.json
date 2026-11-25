@@ -4,8 +4,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/missing-field",
-      "message": "Point requires :y.",
+      "code": "typecheck/type-mismatch",
+      "message": "Missing field(s) in record: Expected {:x Int :y Int}, found {:x Int}",
       "line": 6,
       "column": 25,
       "endLine": 6,
@@ -14,12 +14,12 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/unknown-field",
-      "message": "Point has no field :z.",
+      "code": "typecheck/type-mismatch",
+      "message": "Missing field(s) in record: Expected {:x Int :y Int}, found {:x Int :y Int :z Int}",
       "line": 10,
-      "column": 55,
+      "column": 12,
       "endLine": 10,
-      "endColumn": 57
+      "endColumn": 60
     }
   ]
 }

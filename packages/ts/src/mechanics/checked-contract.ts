@@ -12,6 +12,11 @@ import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js"
 import {
   arrayItems,
   isRecord,
+  prim,
+  tBool,
+  tInt,
+  tNumber,
+  tString,
   type LayerType,
   type MField,
   type MType,
@@ -65,6 +70,213 @@ export interface BuiltinEmission {
 export function arrowBody(code: string): string {
   return code.startsWith("{") ? `(${code})` : code;
 }
+
+const emitArg = (value: BuiltinEmitArg | undefined): string => value?.code ?? "undefined";
+const emitOperand = (value: BuiltinEmitArg | undefined, prec: number): string =>
+  value === undefined ? "undefined" : value.prec < prec ? `(${value.code})` : value.code;
+const emitReceiver = (value: BuiltinEmitArg | undefined): string => emitOperand(value, Precedence.Postfix);
+const bVar = (id: number): MType => ({ kind: "var", id });
+const bArray = (item: MType): MType => ({ kind: "array", item });
+const bOption = (item: MType): MType => ({ kind: "option", item });
+const bMap = (value: MType): MType => ({ kind: "map", value });
+const bFn = (params: readonly MType[], result: MType): MType => ({ kind: "function", params, result });
+const emitCall = (callee: string, ...args: readonly (BuiltinEmitArg | undefined)[]): string =>
+  `${callee}(${args.map(emitArg).join(", ")})`;
+const optionFromUndefined = (expression: string, context: BuiltinEmitContext): string => {
+  context.use("Option");
+  return `Option.fromUndefinedOr(${expression})`;
+};
+const recordCall = (name: string) => (args: readonly BuiltinEmitArg[], context: BuiltinEmitContext): string => {
+  context.use("Record");
+  return emitCall(`Record.${name}`, ...args);
+};
+const binaryEmit = (operator: string, prec: number) => ([a, b]: readonly BuiltinEmitArg[]): string =>
+  `${emitOperand(a, prec)} ${operator} ${emitOperand(b, prec + 1)}`;
+
+/** Solver-neutral builtin emission overloads for Effect TypeScript codegen. */
+export const builtinEmissions: ReadonlyMap<string, readonly BuiltinEmission[]> = new Map<
+  string,
+  readonly BuiltinEmission[]
+>([
+  ["mod", [{ params: [tInt, tInt], result: tInt, emit: binaryEmit("%", Precedence.Multiplicative), prec: Precedence.Multiplicative }]],
+  ["/", [{ params: [tNumber, tNumber], result: tNumber, emit: binaryEmit("/", Precedence.Multiplicative), prec: Precedence.Multiplicative }]],
+  ["quot", [{ params: [tInt, tInt], result: tInt, emit: (args) => `Math.trunc(${binaryEmit("/", Precedence.Multiplicative)(args)})` }]],
+  ...(["<", "<=", ">", ">="] as const).map(
+    (op): [string, readonly BuiltinEmission[]] => [
+      op,
+      [{ params: [tNumber, tNumber], result: tBool, emit: binaryEmit(op, Precedence.Relational), prec: Precedence.Relational }],
+    ],
+  ),
+  ["not", [{ params: [tBool], result: tBool, emit: ([a]) => `!${emitOperand(a, Precedence.Unary)}`, prec: Precedence.Unary }]],
+  [
+    "count",
+    [
+      { params: [bArray(bVar(0))], result: tInt, emit: ([a]) => `${emitReceiver(a)}.length` },
+      { params: [tString], result: tInt, emit: ([a]) => `${emitReceiver(a)}.length` },
+    ],
+  ],
+  ["empty?", [{ params: [bArray(bVar(0))], result: tBool, emit: ([a]) => `${emitReceiver(a)}.length === 0`, prec: Precedence.Equality }]],
+  ["map", [{ params: [bFn([bVar(0)], bVar(1)), bArray(bVar(0))], result: bArray(bVar(1)), emit: ([f, xs]) => emitCall(`${emitReceiver(xs)}.map`, f) }]],
+  ["filter", [{ params: [bFn([bVar(0)], tBool), bArray(bVar(0))], result: bArray(bVar(0)), emit: ([f, xs]) => emitCall(`${emitReceiver(xs)}.filter`, f) }]],
+  ["reverse", [{ params: [bArray(bVar(0))], result: bArray(bVar(0)), emit: ([xs]) => `[...${emitReceiver(xs)}].reverse()` }]],
+  ["sqrt", [{ params: [tNumber], result: tNumber, emit: ([x]) => emitCall("Math.sqrt", x) }]],
+  [
+    "reduce",
+    [
+      {
+        params: [bFn([bVar(1), bVar(0)], bVar(1)), bVar(1), bArray(bVar(0))],
+        result: bVar(1),
+        emit: ([f, init, xs], context) => emitCall(`${emitReceiver(xs)}.reduce<${context.resultType()}>`, f, init),
+      },
+    ],
+  ],
+  [
+    "find",
+    [
+      {
+        params: [bFn([bVar(0)], tBool), bArray(bVar(0))],
+        result: bOption(bVar(0)),
+        emit: ([f, xs], context) => optionFromUndefined(emitCall(`${emitReceiver(xs)}.find`, f), context),
+      },
+    ],
+  ],
+  ["any?", [{ params: [bFn([bVar(0)], tBool), bArray(bVar(0))], result: tBool, emit: ([f, xs]) => emitCall(`${emitReceiver(xs)}.some`, f) }]],
+  ["every?", [{ params: [bFn([bVar(0)], tBool), bArray(bVar(0))], result: tBool, emit: ([f, xs]) => emitCall(`${emitReceiver(xs)}.every`, f) }]],
+  [
+    "concat",
+    [
+      { params: [bArray(bVar(0)), bArray(bVar(0))], result: bArray(bVar(0)), emit: ([a, b]) => `[...${emitReceiver(a)}, ...${emitReceiver(b)}]` },
+    ],
+  ],
+  ["conj", [{ params: [bArray(bVar(0)), bVar(0)], result: bArray(bVar(0)), emit: ([xs, x]) => `[...${emitReceiver(xs)}, ${emitArg(x)}]` }]],
+  [
+    "first",
+    [{ params: [bArray(bVar(0))], result: bOption(bVar(0)), emit: ([xs], context) => optionFromUndefined(`${emitReceiver(xs)}[0]`, context) }],
+  ],
+  ["keys", [{ params: [bMap(bVar(0))], result: bArray(tString), emit: recordCall("keys") }]],
+  ["vals", [{ params: [bMap(bVar(0))], result: bArray(bVar(0)), emit: recordCall("values") }]],
+  ["dissoc", [{ params: [bMap(bVar(0)), tString], result: bMap(bVar(0)), emit: recordCall("remove") }]],
+  ["has-key?", [{ params: [bMap(bVar(0)), tString], result: tBool, emit: recordCall("has") }]],
+  ["upcase", [{ params: [tString], result: tString, emit: ([s]) => `${emitReceiver(s)}.toUpperCase()` }]],
+  ["downcase", [{ params: [tString], result: tString, emit: ([s]) => `${emitReceiver(s)}.toLowerCase()` }]],
+  ["trim", [{ params: [tString], result: tString, emit: ([s]) => `${emitReceiver(s)}.trim()` }]],
+  ["starts-with?", [{ params: [tString, tString], result: tBool, emit: ([s, p]) => emitCall(`${emitReceiver(s)}.startsWith`, p) }]],
+  ["ends-with?", [{ params: [tString, tString], result: tBool, emit: ([s, p]) => emitCall(`${emitReceiver(s)}.endsWith`, p) }]],
+  [
+    "includes?",
+    [
+      { params: [tString, tString], result: tBool, emit: ([s, p]) => emitCall(`${emitReceiver(s)}.includes`, p) },
+      { params: [bArray(bVar(0)), bVar(0)], result: tBool, emit: ([xs, x]) => emitCall(`${emitReceiver(xs)}.includes`, x) },
+    ],
+  ],
+  ["split", [{ params: [tString, tString], result: bArray(tString), emit: ([s, sep]) => emitCall(`${emitReceiver(s)}.split`, sep) }]],
+  ["join", [{ params: [bArray(tString), tString], result: tString, emit: ([xs, sep]) => emitCall(`${emitReceiver(xs)}.join`, sep) }]],
+  [
+    "get-or-else",
+    [
+      {
+        params: [bOption(bVar(0)), bVar(0)],
+        result: bVar(0),
+        contextualArgs: [1],
+        emit: ([o, d], context) => {
+          context.use("Option");
+          return `Option.getOrElse(${emitArg(o)}, (): ${context.resultType()} => ${arrowBody(emitArg(d))})`;
+        },
+      },
+    ],
+  ],
+  ...(["is-some", "is-none"] as const).map(
+    (name): [string, readonly BuiltinEmission[]] => [
+      name,
+      [
+        {
+          params: [bOption(bVar(0))],
+          result: tBool,
+          emit: ([o], context) => {
+            context.use("Option");
+            return emitCall(name === "is-some" ? "Option.isSome" : "Option.isNone", o);
+          },
+        },
+      ],
+    ],
+  ),
+  ...(["millis", "seconds", "minutes"] as const).map(
+    (unit): [string, readonly BuiltinEmission[]] => [
+      unit,
+      [
+        {
+          params: [tNumber],
+          result: prim("Duration"),
+          emit: ([n], context) => {
+            context.use("Duration");
+            return emitCall(`Duration.${unit}`, n);
+          },
+        },
+      ],
+    ],
+  ),
+  ...(["spaced", "exponential", "fixed"] as const).map(
+    (name): [string, readonly BuiltinEmission[]] => [
+      name,
+      [tNumber, prim("Duration")].map((param) => ({
+        params: [param],
+        result: prim("Schedule"),
+        emit: ([duration]: readonly BuiltinEmitArg[], context: BuiltinEmitContext) => {
+          context.use("Schedule");
+          return emitCall(`Schedule.${name}`, duration);
+        },
+      })),
+    ],
+  ),
+  ...(["recurs", "jittered"] as const).map(
+    (name): [string, readonly BuiltinEmission[]] => [
+      name,
+      [
+        {
+          params: [name === "recurs" ? tInt : prim("Schedule")],
+          result: prim("Schedule"),
+          emit: ([value], context) => {
+            context.use("Schedule");
+            return emitCall(`Schedule.${name}`, value);
+          },
+        },
+      ],
+    ],
+  ),
+  ["to-string", [{ params: [bVar(0)], result: tString, emit: ([a]) => emitCall("String", a) }]],
+  [
+    "abs",
+    [
+      { params: [tInt], result: tInt, emit: ([a]) => emitCall("Math.abs", a) },
+      { params: [tNumber], result: tNumber, emit: ([a]) => emitCall("Math.abs", a) },
+    ],
+  ],
+  ["round", [{ params: [tNumber], result: tInt, emit: ([a]) => `Math.floor(${emitArg(a)} + 0.5)` }]],
+  ["ceil", [{ params: [tNumber], result: tInt, emit: ([a]) => emitCall("Math.ceil", a) }]],
+  ["floor", [{ params: [tNumber], result: tInt, emit: ([a]) => emitCall("Math.floor", a) }]],
+  [
+    "sum",
+    [tInt, tNumber].map((item) => ({
+      params: [bArray(item)],
+      result: item,
+      emit: ([xs]: readonly BuiltinEmitArg[], context: BuiltinEmitContext) => {
+        const total = context.fresh("total");
+        const value = context.fresh("item");
+        return `${emitReceiver(xs)}.reduce((${total}, ${value}) => ${total} + ${value}, 0)`;
+      },
+    })),
+  ],
+]);
+
+/** Variadic numeric operators: `Int` when every operand is `Int`. */
+export const builtinArithmeticOperators: ReadonlyMap<string, string> = new Map([
+  ["+", "+"],
+  ["-", "-"],
+  ["*", "*"],
+  ["/", "/"],
+  ["max", "max"],
+  ["min", "min"],
+]);
 
 /** Errors that Effect itself can raise from the combinators Forma exposes. */
 export const builtinErrors: ReadonlyMap<string, string> = new Map([
