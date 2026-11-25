@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none" role="img" aria-labelledby="forma-avatar-title forma-avatar-desc">
+  <title id="forma-avatar-title">Forma</title>
+  <desc id="forma-avatar-desc">Two ink Lisp parentheses framing a sharp cobalt square on warm paper.</desc>
+  <rect width="1024" height="1024" fill="#FAF8F3"/>
+  <path fill="#1D2621" d="
+    M 318 228
+    L 382 228
+    C 316 314 286 410 286 512
+    C 286 614 316 710 382 796
+    L 318 796
+    C 246 708 210 612 210 512
+    C 210 412 246 316 318 228
+    Z
+  "/>
+  <path fill="#1D2621" d="
+    M 706 228
+    L 642 228
+    C 708 314 738 410 738 512
+    C 738 614 708 710 642 796
+    L 706 796
+    C 778 708 814 612 814 512
+    C 814 412 778 316 706 228
+    Z
+  "/>
+  <rect x="400" y="400" width="224" height="224" fill="#1F5FD1"/>
+</svg>

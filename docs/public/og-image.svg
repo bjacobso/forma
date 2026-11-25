@@ -1,11 +1,16 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
   <rect width="1200" height="630" fill="#faf8f3"/>
   <path d="M72 92h1056" stroke="#d9d5cb"/>
-  <text x="72" y="160" fill="#2557a7" font-family="sans-serif" font-size="36">( forma )</text>
-  <g fill="#222620" font-family="sans-serif" font-size="68" font-weight="600">
+  <g transform="translate(72 118) scale(0.05859375)">
+    <path fill="#1D2621" d="M 318 228 L 382 228 C 316 314 286 410 286 512 C 286 614 316 710 382 796 L 318 796 C 246 708 210 612 210 512 C 210 412 246 316 318 228 Z"/>
+    <path fill="#1D2621" d="M 706 228 L 642 228 C 708 314 738 410 738 512 C 738 614 708 710 642 796 L 706 796 C 778 708 814 612 814 512 C 814 412 778 316 706 228 Z"/>
+    <rect x="400" y="400" width="224" height="224" fill="#1F5FD1"/>
+  </g>
+  <text x="144" y="160" fill="#1f5fd1" font-family="sans-serif" font-size="36">( forma )</text>
+  <g fill="#1d2621" font-family="sans-serif" font-size="68" font-weight="600">
     <text x="72" y="295">Define your domain.</text>
     <text x="72" y="380">Check its programs.</text>
   </g>
-  <text x="72" y="484" fill="#596057" font-family="sans-serif" font-size="28">A pre-alpha typed Lisp. Domain languages as preludes.</text>
-  <text x="72" y="558" fill="#2557a7" font-family="monospace" font-size="24">forma-lang.com</text>
+  <text x="72" y="484" fill="#4d5750" font-family="sans-serif" font-size="28">A pre-alpha typed Lisp. Domain languages as preludes.</text>
+  <text x="72" y="558" fill="#1f5fd1" font-family="monospace" font-size="24">forma-lang.com</text>
 </svg>

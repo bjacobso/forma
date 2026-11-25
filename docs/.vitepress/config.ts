@@ -120,6 +120,7 @@ export default defineConfig({
       ? [] : pageMetadata(pageData);
   },
   themeConfig: {
+    logo: "/mark.svg",
     siteTitle: "forma",
     nav: navigation.map(item => ({ ...item, target: "_self", rel: "" })),
     sidebar: {

@@ -126,7 +126,10 @@ body {
 }
 
 .VPNavBarTitle .logo {
-  display: none;
+  width: 24px;
+  height: 24px;
+  margin-right: 8px;
+  border-radius: 5px;
 }
 
 .VPNavBarTitle .title {
