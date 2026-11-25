@@ -3388,10 +3388,25 @@
                         "effect": {
                           "errors": [],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "UserRepo.find"
+                          ],
+                          "span": {
+                            "endOffset": 572,
+                            "sourceId": "surfaces/effect-typescript/crud-users",
+                            "startOffset": 550
+                          },
                           "success": {
-                            "kind": "Primitive",
-                            "name": "Unit"
+                            "item": {
+                              "kind": "Ref",
+                              "name": "User",
+                              "span": {
+                                "endOffset": 570,
+                                "sourceId": "surfaces/effect-typescript/crud-users",
+                                "startOffset": 566
+                              }
+                            },
+                            "kind": "Option"
                           }
                         },
                         "kind": "Combinator",
@@ -3408,10 +3423,25 @@
                     "effect": {
                       "errors": [],
                       "kind": "Effect",
-                      "requirements": [],
+                      "requirements": [
+                        "UserRepo.find"
+                      ],
+                      "span": {
+                        "endOffset": 572,
+                        "sourceId": "surfaces/effect-typescript/crud-users",
+                        "startOffset": 550
+                      },
                       "success": {
-                        "kind": "Primitive",
-                        "name": "Unit"
+                        "item": {
+                          "kind": "Ref",
+                          "name": "User",
+                          "span": {
+                            "endOffset": 570,
+                            "sourceId": "surfaces/effect-typescript/crud-users",
+                            "startOffset": 566
+                          }
+                        },
+                        "kind": "Option"
                       }
                     },
                     "kind": "Succeed",
@@ -3461,10 +3491,25 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "UserRepo.find"
+                    ],
+                    "span": {
+                      "endOffset": 572,
+                      "sourceId": "surfaces/effect-typescript/crud-users",
+                      "startOffset": 550
+                    },
                     "success": {
-                      "kind": "Primitive",
-                      "name": "Unit"
+                      "item": {
+                        "kind": "Ref",
+                        "name": "User",
+                        "span": {
+                          "endOffset": 570,
+                          "sourceId": "surfaces/effect-typescript/crud-users",
+                          "startOffset": 566
+                        }
+                      },
+                      "kind": "Option"
                     }
                   },
                   "kind": "Do",
@@ -3509,10 +3554,25 @@
                         "effect": {
                           "errors": [],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "UserRepo.find-by-email"
+                          ],
+                          "span": {
+                            "endOffset": 627,
+                            "sourceId": "surfaces/effect-typescript/crud-users",
+                            "startOffset": 605
+                          },
                           "success": {
-                            "kind": "Primitive",
-                            "name": "Unit"
+                            "item": {
+                              "kind": "Ref",
+                              "name": "User",
+                              "span": {
+                                "endOffset": 625,
+                                "sourceId": "surfaces/effect-typescript/crud-users",
+                                "startOffset": 621
+                              }
+                            },
+                            "kind": "Option"
                           }
                         },
                         "kind": "Combinator",
@@ -3529,10 +3589,25 @@
                     "effect": {
                       "errors": [],
                       "kind": "Effect",
-                      "requirements": [],
+                      "requirements": [
+                        "UserRepo.find-by-email"
+                      ],
+                      "span": {
+                        "endOffset": 627,
+                        "sourceId": "surfaces/effect-typescript/crud-users",
+                        "startOffset": 605
+                      },
                       "success": {
-                        "kind": "Primitive",
-                        "name": "Unit"
+                        "item": {
+                          "kind": "Ref",
+                          "name": "User",
+                          "span": {
+                            "endOffset": 625,
+                            "sourceId": "surfaces/effect-typescript/crud-users",
+                            "startOffset": 621
+                          }
+                        },
+                        "kind": "Option"
                       }
                     },
                     "kind": "Succeed",
@@ -3698,10 +3773,25 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "UserRepo.find-by-email"
+                    ],
+                    "span": {
+                      "endOffset": 627,
+                      "sourceId": "surfaces/effect-typescript/crud-users",
+                      "startOffset": 605
+                    },
                     "success": {
-                      "kind": "Primitive",
-                      "name": "Unit"
+                      "item": {
+                        "kind": "Ref",
+                        "name": "User",
+                        "span": {
+                          "endOffset": 625,
+                          "sourceId": "surfaces/effect-typescript/crud-users",
+                          "startOffset": 621
+                        }
+                      },
+                      "kind": "Option"
                     }
                   },
                   "kind": "Do",
@@ -3852,10 +3942,22 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "UserRepo.save"
+                    ],
+                    "span": {
+                      "endOffset": 662,
+                      "sourceId": "surfaces/effect-typescript/crud-users",
+                      "startOffset": 649
+                    },
                     "success": {
                       "kind": "Primitive",
-                      "name": "Unit"
+                      "name": "Unit",
+                      "span": {
+                        "endOffset": 661,
+                        "sourceId": "surfaces/effect-typescript/crud-users",
+                        "startOffset": 657
+                      }
                     }
                   },
                   "kind": "Combinator",
@@ -3901,10 +4003,22 @@
                         "effect": {
                           "errors": [],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "UserRepo.remove"
+                          ],
+                          "span": {
+                            "endOffset": 701,
+                            "sourceId": "surfaces/effect-typescript/crud-users",
+                            "startOffset": 688
+                          },
                           "success": {
                             "kind": "Primitive",
-                            "name": "Unit"
+                            "name": "Bool",
+                            "span": {
+                              "endOffset": 700,
+                              "sourceId": "surfaces/effect-typescript/crud-users",
+                              "startOffset": 696
+                            }
                           }
                         },
                         "kind": "Combinator",
@@ -3975,10 +4089,22 @@
                         "effect": {
                           "errors": [],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "UserRepo.remove"
+                          ],
+                          "span": {
+                            "endOffset": 701,
+                            "sourceId": "surfaces/effect-typescript/crud-users",
+                            "startOffset": 688
+                          },
                           "success": {
                             "kind": "Primitive",
-                            "name": "Unit"
+                            "name": "Bool",
+                            "span": {
+                              "endOffset": 700,
+                              "sourceId": "surfaces/effect-typescript/crud-users",
+                              "startOffset": 696
+                            }
                           }
                         },
                         "kind": "Combinator",
@@ -3995,10 +4121,22 @@
                     "effect": {
                       "errors": [],
                       "kind": "Effect",
-                      "requirements": [],
+                      "requirements": [
+                        "UserRepo.remove"
+                      ],
+                      "span": {
+                        "endOffset": 701,
+                        "sourceId": "surfaces/effect-typescript/crud-users",
+                        "startOffset": 688
+                      },
                       "success": {
                         "kind": "Primitive",
-                        "name": "Unit"
+                        "name": "Bool",
+                        "span": {
+                          "endOffset": 700,
+                          "sourceId": "surfaces/effect-typescript/crud-users",
+                          "startOffset": 696
+                        }
                       }
                     },
                     "kind": "Succeed",
@@ -4048,10 +4186,22 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "UserRepo.remove"
+                    ],
+                    "span": {
+                      "endOffset": 701,
+                      "sourceId": "surfaces/effect-typescript/crud-users",
+                      "startOffset": 688
+                    },
                     "success": {
                       "kind": "Primitive",
-                      "name": "Unit"
+                      "name": "Bool",
+                      "span": {
+                        "endOffset": 700,
+                        "sourceId": "surfaces/effect-typescript/crud-users",
+                        "startOffset": 696
+                      }
                     }
                   },
                   "kind": "Do",
@@ -4096,10 +4246,25 @@
                         "effect": {
                           "errors": [],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "UserRepo.all"
+                          ],
+                          "span": {
+                            "endOffset": 733,
+                            "sourceId": "surfaces/effect-typescript/crud-users",
+                            "startOffset": 713
+                          },
                           "success": {
-                            "kind": "Primitive",
-                            "name": "Unit"
+                            "item": {
+                              "kind": "Ref",
+                              "name": "User",
+                              "span": {
+                                "endOffset": 731,
+                                "sourceId": "surfaces/effect-typescript/crud-users",
+                                "startOffset": 727
+                              }
+                            },
+                            "kind": "Array"
                           }
                         },
                         "kind": "Combinator",
@@ -4116,10 +4281,25 @@
                     "effect": {
                       "errors": [],
                       "kind": "Effect",
-                      "requirements": [],
+                      "requirements": [
+                        "UserRepo.all"
+                      ],
+                      "span": {
+                        "endOffset": 733,
+                        "sourceId": "surfaces/effect-typescript/crud-users",
+                        "startOffset": 713
+                      },
                       "success": {
-                        "kind": "Primitive",
-                        "name": "Unit"
+                        "item": {
+                          "kind": "Ref",
+                          "name": "User",
+                          "span": {
+                            "endOffset": 731,
+                            "sourceId": "surfaces/effect-typescript/crud-users",
+                            "startOffset": 727
+                          }
+                        },
+                        "kind": "Array"
                       }
                     },
                     "kind": "Succeed",
@@ -4160,10 +4340,25 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "UserRepo.all"
+                    ],
+                    "span": {
+                      "endOffset": 733,
+                      "sourceId": "surfaces/effect-typescript/crud-users",
+                      "startOffset": 713
+                    },
                     "success": {
-                      "kind": "Primitive",
-                      "name": "Unit"
+                      "item": {
+                        "kind": "Ref",
+                        "name": "User",
+                        "span": {
+                          "endOffset": 731,
+                          "sourceId": "surfaces/effect-typescript/crud-users",
+                          "startOffset": 727
+                        }
+                      },
+                      "kind": "Array"
                     }
                   },
                   "kind": "Do",

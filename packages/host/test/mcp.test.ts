@@ -353,15 +353,19 @@ test("every Effect keyword, builtin and bundled macro has a :doc example that ch
 test("repl pages long results and outlines large sources", async () => {
   const ontology = preludeSources["ontology.lisp"];
   const first = await repl(":source ontology.lisp", "pages");
-  expect(first).toMatchObject({ ok: true, kind: "source", name: "ontology.lisp", page: { page: 1, more: ":more", omitted: ["source"] } });
+  expect(first).toMatchObject({ ok: true, kind: "source", name: "ontology.lisp", page: { page: 1, more: ":more", omitted: ["source"], content: expect.any(String) } });
   expect(first.source).toBeUndefined();
+  expect(first.page.content.length).toBeGreaterThan(0);
+  expect(first.page.lines[0]).toBe(1);
+  expect(first.page.totalLines).toBe(ontology.split("\n").length);
   expect(first.text.length).toBeLessThan(8_400);
   expect(first.text).toMatch(/\[:source ontology\.lisp: page 1 of \d+, lines 1-\d+ of \d+\. :more shows the next page/u);
-  // Following :more to the end returns every line exactly once.
+  // Following :more to the end returns every line exactly once in both text and structured page.content.
   const pages = [first];
   while (pages.at(-1)!.page?.more) pages.push(await repl(":more", "pages"));
   expect(pages.length).toBe(first.page.pages);
   expect(pages.map(p => p.text.slice(0, p.text.lastIndexOf("\n["))).join("\n")).toBe(ontology);
+  expect(pages.map(p => p.page.content).join("\n")).toBe(ontology);
   expect(await repl(":more", "pages")).toMatchObject({ ok: false, diagnostics: [{ code: "repl/no-more" }] });
   await repl(":source ontology.lisp", "pages");
   await repl(":more", "pages");
@@ -390,12 +394,48 @@ test("repl :ir exports every declaration in the session as one document", async 
   await repl("(entity Team {})\n(relation Member Person Team {})", "ir");
   // Redeclaring a name replaces it in place.
   await repl("(entity Person {:name String :age Int})", "ir");
-  await repl(":effect (error NotFound {:id String})", "ir");
+  expect(await repl(':effect (type User {:id String :name String})\n(error NotFound {:id String})\n(service Users (: find (-> String (Effect User [NotFound]))))\n(layer UsersLive :provides Users (define find [id] (if (= id "u-1") (succeed {:id id :name "Ada"}) (fail (NotFound {:id id})))))', "ir")).toMatchObject({ ok: true });
   const { ir, text } = await repl(":export", "ir");
   expect(ir.preludes).toEqual(["ontology.lisp"]);
   expect(ir.declarations.map((d: { id: string }) => d.id)).toEqual(["Entity:Person", "Entity:Team", "Relation:Member"]);
   expect(ir.declarations[0]).toMatchObject({ form: "entity", payload: { fields: [{ name: "person/name" }, { name: "person/age", type: "Int" }] } });
-  expect(ir.effect).toMatchObject([{ id: "ErrorDef:NotFound", payload: { kind: "ErrorDef", name: "NotFound" } }]);
+  expect(ir.effect).toMatchObject([
+    { id: "SchemaDef:User", payload: { kind: "SchemaDef", name: "User" } },
+    { id: "ErrorDef:NotFound", payload: { kind: "ErrorDef", name: "NotFound" } },
+    { id: "ServiceDef:Users", payload: { kind: "ServiceDef", name: "Users" } },
+    {
+      id: "LayerDef:UsersLive",
+      payload: {
+        kind: "LayerDef",
+        name: "UsersLive",
+        implementation: {
+          methods: [
+            {
+              name: "find",
+              body: {
+                then: {
+                  kind: "Succeed",
+                  effect: {
+                    kind: "Effect",
+                    success: { kind: "Ref", name: "User" },
+                    errors: ["NotFound"],
+                  },
+                },
+                else: {
+                  kind: "Fail",
+                  effect: {
+                    kind: "Effect",
+                    success: { kind: "Ref", name: "User" },
+                    errors: ["NotFound"],
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+    },
+  ]);
   expect(JSON.stringify(ir)).not.toContain('"span"');
   expect(JSON.parse(text)).toEqual(ir);
 }, 30_000);

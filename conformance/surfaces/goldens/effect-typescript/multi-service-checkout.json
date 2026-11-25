@@ -1696,10 +1696,25 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "Catalog.price"
+                    ],
+                    "span": {
+                      "endOffset": 606,
+                      "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                      "startOffset": 585
+                    },
                     "success": {
-                      "kind": "Primitive",
-                      "name": "Unit"
+                      "item": {
+                        "kind": "Primitive",
+                        "name": "Int",
+                        "span": {
+                          "endOffset": 604,
+                          "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                          "startOffset": 601
+                        }
+                      },
+                      "kind": "Option"
                     }
                   },
                   "kind": "Succeed",
@@ -1789,12 +1804,28 @@
                       "value": {
                         "body": {
                           "effect": {
-                            "errors": [],
+                            "errors": [
+                              "InvalidOrder",
+                              "OutOfStock",
+                              "PaymentDeclined"
+                            ],
                             "kind": "Effect",
-                            "requirements": [],
+                            "requirements": [
+                              "Checkout.place"
+                            ],
+                            "span": {
+                              "endOffset": 1007,
+                              "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                              "startOffset": 946
+                            },
                             "success": {
-                              "kind": "Primitive",
-                              "name": "Unit"
+                              "kind": "Ref",
+                              "name": "Receipt",
+                              "span": {
+                                "endOffset": 961,
+                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                "startOffset": 954
+                              }
                             }
                           },
                           "error": {
@@ -1906,12 +1937,28 @@
                           }
                         },
                         "effect": {
-                          "errors": [],
+                          "errors": [
+                            "InvalidOrder",
+                            "OutOfStock",
+                            "PaymentDeclined"
+                          ],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "Checkout.place"
+                          ],
+                          "span": {
+                            "endOffset": 1007,
+                            "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                            "startOffset": 946
+                          },
                           "success": {
-                            "kind": "Primitive",
-                            "name": "Unit"
+                            "kind": "Ref",
+                            "name": "Receipt",
+                            "span": {
+                              "endOffset": 961,
+                              "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                              "startOffset": 954
+                            }
                           }
                         },
                         "kind": "When",
@@ -2180,12 +2227,28 @@
                           }
                         },
                         "effect": {
-                          "errors": [],
+                          "errors": [
+                            "InvalidOrder",
+                            "OutOfStock",
+                            "PaymentDeclined"
+                          ],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "Checkout.place"
+                          ],
+                          "span": {
+                            "endOffset": 1007,
+                            "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                            "startOffset": 946
+                          },
                           "success": {
-                            "kind": "Primitive",
-                            "name": "Unit"
+                            "kind": "Ref",
+                            "name": "Receipt",
+                            "span": {
+                              "endOffset": 961,
+                              "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                              "startOffset": 954
+                            }
                           }
                         },
                         "errorType": "PaymentDeclined",
@@ -2274,12 +2337,28 @@
                           ],
                           "body": {
                             "effect": {
-                              "errors": [],
+                              "errors": [
+                                "InvalidOrder",
+                                "OutOfStock",
+                                "PaymentDeclined"
+                              ],
                               "kind": "Effect",
-                              "requirements": [],
+                              "requirements": [
+                                "Checkout.place"
+                              ],
+                              "span": {
+                                "endOffset": 1007,
+                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                "startOffset": 946
+                              },
                               "success": {
-                                "kind": "Primitive",
-                                "name": "Unit"
+                                "kind": "Ref",
+                                "name": "Receipt",
+                                "span": {
+                                  "endOffset": 961,
+                                  "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                  "startOffset": 954
+                                }
                               }
                             },
                             "error": {
@@ -2299,12 +2378,28 @@
                             }
                           },
                           "effect": {
-                            "errors": [],
+                            "errors": [
+                              "InvalidOrder",
+                              "OutOfStock",
+                              "PaymentDeclined"
+                            ],
                             "kind": "Effect",
-                            "requirements": [],
+                            "requirements": [
+                              "Checkout.place"
+                            ],
+                            "span": {
+                              "endOffset": 1007,
+                              "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                              "startOffset": 946
+                            },
                             "success": {
-                              "kind": "Primitive",
-                              "name": "Unit"
+                              "kind": "Ref",
+                              "name": "Receipt",
+                              "span": {
+                                "endOffset": 961,
+                                "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                                "startOffset": 954
+                              }
                             }
                           },
                           "kind": "Do",
@@ -2493,12 +2588,28 @@
                   ],
                   "body": {
                     "effect": {
-                      "errors": [],
+                      "errors": [
+                        "InvalidOrder",
+                        "OutOfStock",
+                        "PaymentDeclined"
+                      ],
                       "kind": "Effect",
-                      "requirements": [],
+                      "requirements": [
+                        "Checkout.place"
+                      ],
+                      "span": {
+                        "endOffset": 1007,
+                        "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                        "startOffset": 946
+                      },
                       "success": {
-                        "kind": "Primitive",
-                        "name": "Unit"
+                        "kind": "Ref",
+                        "name": "Receipt",
+                        "span": {
+                          "endOffset": 961,
+                          "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                          "startOffset": 954
+                        }
                       }
                     },
                     "kind": "Succeed",
@@ -2588,12 +2699,28 @@
                     }
                   },
                   "effect": {
-                    "errors": [],
+                    "errors": [
+                      "InvalidOrder",
+                      "OutOfStock",
+                      "PaymentDeclined"
+                    ],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "Checkout.place"
+                    ],
+                    "span": {
+                      "endOffset": 1007,
+                      "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                      "startOffset": 946
+                    },
                     "success": {
-                      "kind": "Primitive",
-                      "name": "Unit"
+                      "kind": "Ref",
+                      "name": "Receipt",
+                      "span": {
+                        "endOffset": 961,
+                        "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                        "startOffset": 954
+                      }
                     }
                   },
                   "kind": "Do",
@@ -2667,10 +2794,22 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "Notifier.send"
+                    ],
+                    "span": {
+                      "endOffset": 874,
+                      "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                      "startOffset": 861
+                    },
                     "success": {
                       "kind": "Primitive",
-                      "name": "Unit"
+                      "name": "Unit",
+                      "span": {
+                        "endOffset": 873,
+                        "sourceId": "surfaces/effect-typescript/multi-service-checkout",
+                        "startOffset": 869
+                      }
                     }
                   },
                   "kind": "Combinator",
