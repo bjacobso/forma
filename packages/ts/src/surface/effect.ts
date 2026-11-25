@@ -48,10 +48,7 @@ export function normalizeEffectTypes(e: SExpr, schema = false, brandName?: SExpr
     return call(e, "Map", normalizeEffectTypes(args[1]!, schema), sym(args[0]!, ":key"), normalizeEffectTypes(args[0]!, true));
   }
   if (h === "Effect" || h === "Stream" || h === "Fiber" || h === "Layer") {
-    const required = h === "Fiber" ? 2 : 3;
-    const result = args.map((a, i) => i === 0 && h !== "Layer" ? normalizeEffectTypes(a) : a);
-    while (result.length > 0 && result.length < required) result.push(vector(e, []));
-    return call(e, h, ...result);
+    return call(e, h, ...args.map((a, i) => i === 0 && h !== "Layer" ? normalizeEffectTypes(a) : a));
   }
   if (h === "->") return call(e, h, ...args.map(a => normalizeEffectTypes(a)));
   if (h === "Struct" || h === ":fields") return call(e, h, ...args.map(f => {
@@ -182,7 +179,6 @@ export function normalizeEffectProgram(exprs: readonly SExpr[], validate = true,
         return call(e, "__service", n!, ...args.map(a => a._tag === "List" ? list(a, a.items.map((m, i) => i === 0 || m._tag !== "List" ? m : normalizeMethod(m))) : a));
       case "__layer": {
         if (!n) return e;
-        if (args.length === 2 && args[1]?._tag === "Map" && name(args[0]) && !name(args[0])!.startsWith(":")) throw layerMapError(e, args[0]!, args[1]);
         if (args.length === 1) return call(e, "__layer", n, normalizeBody(args[0]!));
         const provides = args.find(a => a._tag === "List" && head(a) === ":provides");
         const serviceName = provides?._tag === "List" ? name(provides.items[1]) : undefined;

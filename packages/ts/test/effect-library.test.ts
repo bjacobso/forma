@@ -208,4 +208,72 @@ describe("forma:effect do/bind/pure", () => {
     expect(located(source, Mechanics.elaborateEffectProgram(source))).toEqual([[code, text]]);
     expect(located(source, checkModule(source))[0]).toEqual([code, text]);
   });
+
+  // Stage 4: forma:effect lowers Effect/Stream/Fiber/Layer type shorthands and validates error/class names.
+  test("Effect, Stream, Fiber, and Layer shorthands lower identically to explicit forms", () => {
+    const shorthand = [
+      "(error Failed {:reason String})",
+      "(service Store (: get (-> String (Effect String))))",
+      "(service Jobs (: start (-> String (Effect (Fiber Int)))))",
+      "(: StoreLive (Layer [Store]))",
+      "(layer StoreLive :provides Store (define get [k] (succeed k)))",
+      "(: items (-> String (Stream String)))",
+      "(define items [s] (stream-of [s]))",
+      "(: run (-> String (Effect String [Failed])))",
+      "(define run [s] (fail (Failed {:reason s})))",
+      "",
+    ].join("\n");
+    const explicit = [
+      "(error Failed {:reason String})",
+      "(service Store (: get (-> String (Effect String [] []))))",
+      "(service Jobs (: start (-> String (Effect (Fiber Int []) [] []))))",
+      "(: StoreLive (Layer [Store] [] []))",
+      "(layer StoreLive :provides Store (define get [k] (succeed k)))",
+      "(: items (-> String (Stream String [] [])))",
+      "(define items [s] (stream-of [s]))",
+      "(: run (-> String (Effect String [Failed] [])))",
+      "(define run [s] (fail (Failed {:reason s})))",
+      "",
+    ].join("\n");
+    const a = Mechanics.generateEffectProgram(shorthand);
+    const b = Mechanics.generateEffectProgram(explicit);
+    expect(a.diagnostics).toEqual([]);
+    expect(b.diagnostics).toEqual([]);
+    expect(a.code).toBe(b.code);
+    expect(checkModule(shorthand).diagnostics).toEqual([]);
+  });
+
+  test.each([
+    ["(: f (Effect))", "(Effect)"],
+    ["(: f (Effect Int [] [] []))", "(Effect Int [] [] [])"],
+    ["(: f (Stream))", "(Stream)"],
+    ["(: f (Stream Int [] [] []))", "(Stream Int [] [] [])"],
+    ["(: f (Effect (Fiber)))", "(Fiber)"],
+    ["(: f (Effect (Fiber Int [] [])))", "(Fiber Int [] [])"],
+    ["(: L (Layer))", "(Layer)"],
+    ["(: L (Layer [S] [] [] []))", "(Layer [S] [] [] [])"],
+  ])("malformed type shorthand %s reports surface/invalid-form at %s", (sig, text) => {
+    const source = `(service S (: run (Effect Int)))\n${sig}\n`;
+    expect(located(source, Mechanics.elaborateEffectProgram(source))).toEqual([["surface/invalid-form", text]]);
+    expect(located(source, checkModule(source))[0]).toEqual(["surface/invalid-form", text]);
+  });
+
+  test.each([
+    ["(error)", "(error)"],
+    ["(class)", "(class)"],
+  ])("empty %s reports surface/invalid-form at %s", (form, text) => {
+    const source = `(service S (: run (Effect Int)))\n${form}\n`;
+    expect(located(source, Mechanics.elaborateEffectProgram(source))).toEqual([["surface/invalid-form", text]]);
+  });
+
+  test.each([
+    ["(error 123 {})", "123"],
+    ["(error :bad {})", ":bad"],
+    ["(class 123 {})", "123"],
+    ["(class :bad {})", ":bad"],
+  ])("malformed %s reports surface/invalid-form at %s", (form, text) => {
+    const source = `(service S (: run (Effect Int)))\n${form}\n`;
+    expect(located(source, Mechanics.elaborateEffectProgram(source))).toEqual([["surface/invalid-form", text]]);
+    expect(located(source, checkModule(source))[0]).toEqual(["surface/invalid-form", text]);
+  });
 });
