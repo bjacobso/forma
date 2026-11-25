@@ -96,17 +96,17 @@ Its proposed changes are not implemented or scheduled.
 
 [RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) collects gaps found while writing the
 [SICP-style guide](./structure-and-interpretation.md) and the
-[domain modeling guide](./domain-modeling.md). The evaluator, kernel
-typechecker, and Effect checker now share checked contracts and cross-pass
+[domain modeling guide](./domain-modeling.md). The evaluator and the unified Hindley–Milner typechecker (which now checks pure, DSL, and Effect programs) share checked contracts and cross-pass
 fixtures for `reverse`, `sqrt`, `reduce`, `conj`, list `concat`, and `quot`.
 The builtin inventory records remaining pass-specific names and legacy gaps;
 it does not claim complete builtin parity. Stage 2 is also implemented:
-non-exhaustive closed-constructor matches are errors in both checkers (PR #141).
+non-exhaustive closed-constructor matches are errors across pure and Effect code (PR #141).
 Stage 3 preserves qualified constructor types through local bindings and
 collection joins, and lets optional record fields accept existing options.
-Local definitions and zero-argument functions still have gaps. Unannotated
-arithmetic infers `Float`. The Effect checker still requires literal callbacks
-and accepts out-of-range literals. The guides document today's workarounds. The fixes are
+Named callbacks and compile-time literal refinement checks are now implemented in
+the unified checker, and the legacy `mechanics/check.ts` solver has been retired.
+Local definitions and zero-argument functions still have gaps, and unannotated
+arithmetic infers `Float`. The guides document today's workarounds. The remaining fixes are
 otherwise proposed, not implemented or scheduled.
 
 ## Languages as libraries
@@ -205,7 +205,7 @@ on 2026-11-11, not open PRs or another thread's local edits:
 
 | Review claim | Verified disposition and owner |
 | --- | --- |
-| Two checker representations remain | Yes: `type/types.ts` and `mechanics/types.ts`; RFC 0004 owns convergence, while RFC 0022 owns independent checking. |
+| Two checker representations remain | Resolved for solving: pure, DSL, and Effect programs now check through the single HM checker (`packages/ts/src/type/`), and `mechanics/check.ts` is retired. `mechanics/types.ts` remains only as the IR/codegen projection representation; RFC 0022 owns independent core re-checking. |
 | Hooks can supply unjustified types/scope | Yes: `surface/form.ts` resolves hook-returned type syntax and scope; no independent core re-checker validates the claimed term. Projection IR is validated separately. RFC 0008 adds proposed static hook contracts. |
 | Optional hook inputs are raw, not Options | Yes: the current hook ABI is documented in Writing a form; do not silently change it. |
 | Numeric, generic-row and Effect-wrapper gaps remain | Numeric argument inference in `type/infer-core.ts` can widen unannotated arguments to Float; RFCs 0018/0019 own that choice. Existing open record inference is not RFC 0006's qualified operations. Mechanics operation signatures still use closed sets; RFC 0023 owns polymorphism. |

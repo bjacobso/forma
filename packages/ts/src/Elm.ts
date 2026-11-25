@@ -11,7 +11,7 @@ import type { SExpr } from "./reader/types.js";
 import { head, name, list, sym, vector, normalizeEffectProgram } from "./surface/effect.js";
 import { mechanicsPackageableDeclarations } from "./mechanics/artifact.js";
 import { effectProgramStrayForms } from "./mechanics/elaborate.js";
-import { checkMechanicsDeclarations } from "./mechanics/check.js";
+import { checkMechanicsProgram } from "./mechanics/checked.js";
 import { generateMechanicsEffectTypeScriptModule } from "./mechanics/effect-typescript.js";
 import { camelIdentifier, typeName } from "./mechanics/naming.js";
 
@@ -91,7 +91,7 @@ export function generateElmProgram(source: string, options: { readonly sourceId?
       for (const { expr, message } of effectProgramStrayForms(normalized)) report(expr, "top-level-form", message);
       if (diagnostics.some(d => d.severity === "error")) return undefined;
       const projected = mechanicsPackageableDeclarations(normalized, sourceId, true);
-      const issues = (ds: readonly { code: string; message: string; severity?: "error" | "warning"; span?: { startOffset: number; endOffset: number } }[]) => {
+      const issues = (ds: readonly { code: string; message: string; severity?: "error" | "warning" | "info" | undefined; span?: { startOffset: number; endOffset: number } | undefined }[]) => {
         for (const d of ds) diagnostics.push({ code: d.code, message: d.message
           .replace(/Function elm-view-\d+/, "View expression")
           .replace(/Function elm-update/, "Update")
@@ -100,9 +100,9 @@ export function generateElmProgram(source: string, options: { readonly sourceId?
           ...(d.span ? { span: locate({ start: d.span.startOffset, end: d.span.endOffset, line: 1, col: 1 }) } : {}) });
       };
       if (!projected.ok) { issues(projected.diagnostics); return undefined; }
-      const checked = checkMechanicsDeclarations(projected.declarations);
+      const checked = checkMechanicsProgram(projected.declarations);
       issues(checked.diagnostics);
-      return { ...checked, declarations: projected.declarations };
+      return { ...checked, info: checked.check, declarations: projected.declarations };
     };
     const base = check(lowered);
     if (!base?.ok) return result();

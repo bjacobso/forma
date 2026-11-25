@@ -12,16 +12,17 @@ tools and language server. The earlier OCaml engine was removed.
 Conformance fixtures and reviewed stored goldens pin implemented behavior.
 The TypeScript engine distinguishes Int and Float, including integral Float
 literals and results; Int arithmetic checks the JavaScript safe integer range.
-Effect generation, canonical artifact validation, host/CLI checks, and workspace
-analysis share mechanics semantic checks for supported explicit Effect
-declarations, including Effect signature polymorphism (RFC 0023 stages 1–3).
+One Hindley–Milner type checker (`packages/ts/src/type/`) checks pure, DSL, and
+Effect programs, including Effect signature polymorphism (RFC 0023 stages 1–3
+and 5); Effect generation, canonical artifact validation, host/CLI checks, and
+workspace analysis all consume it, and the legacy `mechanics/check.ts` solver
+has been retired.
 The host layer ships `checkedRun`, `CapabilityManifest` pre-execution inspection,
 typed `createLanguage` capabilities with `onHostCall` author-span hooks,
 cooperative resource budgets, and `forma-journal/v1` host-call record and
 deterministic replay. The language server resolves multi-file local imports,
 `forma:*` libraries, and `forma.json` packages; workspace analysis memoizes
-closed HM SCCs per document. Complete mechanics editor parity and an
-independent trusted kernel remain unfinished.
+closed HM SCCs per document. An independent trusted kernel remains unfinished.
 A fresh clone uses
 `pnpm install --frozen-lockfile` without a sibling checkout or link step.
 

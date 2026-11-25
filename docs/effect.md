@@ -246,7 +246,7 @@ pageClass: forma-index forma-effect
 <article><h3>The Effect version</h3><p>The target is exactly <code>effect@4.1.1</code>, a stable release. Following Effect's releases means re-validating the generator, and supporting two Effect versions at once has not been considered.</p></article>
 <article><h3>The platform layer</h3><p>HTTP APIs, SQL, RPC, workers, and observability are where most Effect applications spend their code. A <a href="/effect/http-api">prelude-defined HttpApi spike</a> generates endpoints, groups, checked handlers, and a TypeScript builder DSL for Effect 4. A separate <a href="/elm">Foldkit app prototype</a> checks frontend commands, messages, update, and view; shared API client generation remains proposed. Middleware and the broader platform surface still sit behind hand-written service layers.</p></article>
 <article><h3>Testing in Forma</h3><p>Tests are TypeScript harnesses written against the generated module. Forma has no way to write tests, test layers, or property checks in Forma itself.</p></article>
-<article><h3>Two checkers</h3><p>The general HM checker and the Effect checker disagree on these programs. The live embeds on this page use the Effect checker for diagnostics, body types, and generation. Convergence and language-server routing are still open.</p></article>
+<article><h3>One unified checker</h3><p>Pure, DSL, and Effect programs now check through the single Hindley–Milner type checker (<code>packages/ts/src/type/</code>), which powers the live embeds, CLI, and language server; the legacy <code>mechanics/check.ts</code> solver has been retired. An independent trusted kernel for re-checking elaborated core terms remains proposed.</p></article>
 </div>
 </section>
 

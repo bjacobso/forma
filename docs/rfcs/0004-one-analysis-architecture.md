@@ -2,9 +2,9 @@
 
 | | |
 | --- | --- |
-| Status | Accepted; stages 1–4 implemented, stage 4b (LSP file-module resolution) and T5 stages 2–3 queued, stages 5–8 proposed; decision 2 superseded (the OCaml engine was removed) |
+| Status | Accepted; stages 1–5 (including 4b, 4c, and T5 stage 4 single-checker retirement) implemented; stages 6–8 proposed; decision 2 superseded (the OCaml engine was removed) |
 | Created | 2026-10-07 |
-| Updated | 2026-11-24 |
+| Updated | 2026-11-25 |
 | Scope | Engine roles, language services, the TypeScript compiler's internal structure |
 | Direction | Language services live in one TypeScript analysis workspace; TypeScript is the only engine |
 
@@ -153,9 +153,9 @@ queries   parse(id)            lossless tree and errors; never fails
 | 2 | Language server on the workspace; OCaml bridge and bundled artifact removed; rename, document symbols, semantic tokens, and slot completion added | Implemented |
 | 3 | Remove the `elaboration/` and `form/` frameworks, the registry type-provider bridge, and unused reader combinators | Implemented |
 | 4 | `Diagnostic` and `Span` in `diagnostic/`; symbol indexing reuses unchanged documents and prelude expansion; `DocumentAnalysis` moved off raw HM `TypeEnv` (`T5` stage 1) and env-substitution caching (`A6b`) landed | Implemented |
-| 4b | LSP `FormaWorkspace` resolves file-module `import` graphs, `forma:*` libraries, and `forma.json`/`forma.lock` packages with unsaved-file overlays and cross-file diagnostics/definitions | Accepted (queued) |
-| 4c | Checker boundary convergence (`docs/proposals/one-checker.md` stages 2–3): cross-pass contract parity and shared primitive/literal/brand/Option data-type relation between HM and mechanics | Accepted (queued) |
-| 5 | Per-form SCC memoization of expansion, lowering, and inference with early cutoff (`docs/proposals/memoization.md`) | Designed; queued after 4b |
+| 4b | LSP `FormaWorkspace` resolves file-module `import` graphs, `forma:*` libraries, and `forma.json`/`forma.lock` packages with unsaved-file overlays and cross-file diagnostics/definitions | Implemented |
+| 4c | Single-checker convergence (`docs/proposals/one-checker.md` stages 2–4): shared data-type relation, unified HM Effect checking (`packages/ts/src/type/effect-check.ts`), solver-neutral codegen contract (`mechanics/checked-contract.ts`), and retirement of `mechanics/check.ts` and `mechanics/builtins.ts` | Implemented |
+| 5 | Per-form SCC memoization of expansion, lowering, and inference with early cutoff (`docs/proposals/memoization.md`) | Implemented |
 | 6 | Spans and origins on syntax nodes; remove the provenance `WeakMap`s and the global node-id counter | Proposed |
 | 7 | IR defined with Effect Schema; one combinator table; mechanics checker over the typed IR | Proposed |
 | 8 | Union-find inference with levels producing a typed core tree | Proposed |
@@ -184,15 +184,15 @@ queries   parse(id)            lossless tree and errors; never fails
 - **Inference snapshots.** Prelude and REPL scopes now retain alias, record,
   ADT, typeclass, and instance registries with their fresh-variable supply.
   Per-form memoization must include this state among its query inputs.
-- **The mechanics checker.** Implemented routing now sends explicit Effect
-  declarations, signed helpers, and referenced schema metadata through the
-  existing mechanics checker. Canonical artifact emission, host/CLI checks and
-  workspace language services share its checked-declaration result, including
-  source diagnostics and recorded expression types. Kernel and descriptor forms
-  retain their own checks. Module checking uses resolved lexical identities and
-  checks dependencies before emission selection. This is not stage 7's proposed
-  IR redesign or full checker unification: the low-level HM API remains separate,
-  mechanics types are not fabricated as HM types, and the language-server
-  workspace does not yet resolve file imports into a module graph.
+- **The mechanics checker.** Resolved: the legacy `mechanics/check.ts` and
+  `mechanics/builtins.ts` solver has been retired and deleted. Pure, DSL, and
+  Effect programs now all check through the single Hindley–Milner type checker
+  (`packages/ts/src/type/`, including `type/effect-check.ts`, `infer-effect.ts`,
+  and `effect-sets.ts`). Canonical artifact emission, Effect TypeScript/Schema
+  generation, host/CLI checks, and workspace/LSP language services all consume
+  this single checker via `mechanics/checked.ts` and the solver-neutral
+  `CheckedEffectProgram` contract (`mechanics/checked-contract.ts`). Independent
+  core re-checking remains separate work in
+  [RFC 0022](./0022-programmable-type-system.md).
 - **OCaml editor operations.** Resolved: they were deleted with the OCaml
   engine.

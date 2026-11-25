@@ -1,10 +1,7 @@
 /**
- * Solver-neutral contract between an Effect program typechecker (legacy
- * `mechanics/check.ts` or unified HM `type/infer-program.ts`) and downstream
- * IR projection / Effect TypeScript / Effect Schema code generation.
- *
- * This module intentionally has zero dependency on `mechanics/check.ts` or
- * `mechanics/builtins.ts`.
+ * Solver-neutral contract between the unified HM Effect checker
+ * (`type/effect-check.ts`) and downstream IR projection / Effect TypeScript /
+ * Effect Schema code generation.
  *
  * @module
  */
@@ -407,8 +404,8 @@ export function createCheckedEffectInfo(overrides: Partial<CheckedEffectInfo> = 
 }
 
 /**
- * Adapts a checker output (either `{ info }` from `checkMechanicsDeclarations`
- * or `{ check }` from `checkMechanicsProgram`) into a `CheckedEffectProgram`.
+ * Adapts a checker output (`{ info }` or `{ check }` from `checkMechanicsProgram`)
+ * into a `CheckedEffectProgram`.
  */
 export function toCheckedEffectProgram(
   input:

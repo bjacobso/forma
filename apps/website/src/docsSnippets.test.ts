@@ -147,7 +147,7 @@ describe("docs /email page snippets", () => {
     expect(generateEmailProgram(warmupSource).diagnostics).toEqual([]);
     const result = generateEmailProgram(warmupLaneTypoSource);
     expect(result.diagnostics).toHaveLength(1);
-    expect(result.diagnostics[0]).toMatchObject({ code: "mechanics/type-mismatch", span: { startLine: 8 } });
+    expect(result.diagnostics[0]).toMatchObject({ code: "typecheck/type-mismatch", span: { startLine: 8 } });
   });
   const snippets = emailPageSnippets();
   const dir = resolve(repoRoot, emailSnippetDir);

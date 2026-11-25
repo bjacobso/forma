@@ -32,6 +32,7 @@ import {
   type ResolvedCall,
   type ServiceMethodSignature,
 } from "./checked-contract.js";
+import { isEffectFormName } from "./artifact.js";
 import { inlineBrands, recursiveSchemaNames, schemaReferences } from "./effect-schema.js";
 import {
   applySubstitution,
@@ -1756,6 +1757,14 @@ class IrAnnotator {
       return this.resolveBuiltinCall(node, name, overloads, args, scope, expected);
     }
 
+    if (isEffectFormName(name) && !expected) {
+      this.error(
+        node["span"],
+        "mechanics/effect-in-value",
+        `${name} builds an effect, so it belongs in an effect body (an operation, a layer method, or an effect (fn ...) argument). In a value, call an operation instead.`,
+      );
+    }
+
     for (const arg of args) this.value(arg, scope);
     return tUnknown;
   }
@@ -2208,8 +2217,13 @@ export function declarationsToSExprs(declarations: readonly PackageableDeclarati
     if (payload["kind"] === "SchemaDef") declaredTypes.add(payload["name"]);
     if (payload["kind"] === "EffectDef") effectValueNames.add(payload["name"]);
   }
+  const isTypeLike = (decl: PackageableDeclaration): boolean => {
+    const kind = isRecord(decl.payload) ? decl.payload["kind"] : undefined;
+    return kind === "SchemaDef" || kind === "ErrorDef" || kind === "ClassDef" || kind === "ServiceDef";
+  };
+  const orderedDeclarations = [...declarations.filter(isTypeLike), ...declarations.filter((decl) => !isTypeLike(decl))];
   const emittedBrands = new Set<string>(declaredTypes);
-  for (const decl of declarations) {
+  for (const decl of orderedDeclarations) {
     const payload = decl.payload;
     if (!isRecord(payload) || typeof payload["name"] !== "string") continue;
     const loc = locOf(declarationSpan(decl), decl.sourceId);

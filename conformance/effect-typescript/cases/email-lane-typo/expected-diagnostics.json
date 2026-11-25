@@ -4,8 +4,8 @@
     {
       "phase": "typecheck",
       "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "Expected EmailLane, but this is \"gmial\".",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Union<\"gmail\", \"default\">, found \"gmial\"",
       "line": 8,
       "column": 37,
       "endLine": 8,
