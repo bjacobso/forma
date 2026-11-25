@@ -12,7 +12,7 @@
 import { useState, type ReactNode } from "react";
 import { ChevronDown } from "lucide-react";
 import { ReaderRoot, useReader } from "./model";
-import { CheckStatus, QuickOpen, ReaderEditor, ReaderInspector, ReaderPanel, ReaderSidebar, ReaderStatus, ReaderTabs, ReaderToolbar, RenameBar, TypeLine } from "./parts";
+import { CheckStatus, QuickOpen, ReaderEditor, ReaderInspector, ReaderPanel, ReaderScope, ReaderSidebar, ReaderStatus, ReaderTabs, ReaderToolbar, RenameBar, TypeLine } from "./parts";
 import type { PreludeStack, SourceFile } from "./protocol";
 import "./reading.css";
 
@@ -46,6 +46,7 @@ export function ReaderWorkspace({ inspector }: { readonly inspector?: ReactNode 
     {reader.sidebar ? <ReaderSidebar /> : null}
     <section className="rd-editor-pane">
       <ReaderTabs />
+      <ReaderScope />
       <ReaderToolbar />
       <RenameBar />
       <ReaderEditor />

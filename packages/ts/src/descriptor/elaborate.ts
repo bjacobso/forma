@@ -320,7 +320,9 @@ export function elaborateSources(
     if (form.descriptor.surface && form.descriptor.validation.kind === "hook") {
       const checked = Effect.runSyncExit(elaboration.validate(form.descriptor.validation.fn, input));
       if (Exit.isFailure(checked)) { at("elaborate/validation-failed", failureMessage(checked), loc, details); continue; }
-      for (const problem of checked.value) diagnostics.push({code:problem.code ?? "elaborate/hole-type",severity:problem.severity,message:problem.message,phase:"elaborate",span:locate(problem.loc ?? loc),details:{...details,...problem.details},...(problem.help ? {help:problem.help} : {}),...(problem.fix ? {fix:problem.fix.map(edit=>({span:locate(edit.loc),newText:edit.newText}))} : {})});
+      // A macro-produced form is reported at the call, and its repairs, which edit author source, are dropped.
+      const authoredForm = origin.kind === "authored";
+      for (const problem of checked.value) diagnostics.push({code:problem.code ?? "elaborate/hole-type",severity:problem.severity,message:problem.message,phase:"elaborate",span:locate(authoredForm ? problem.loc ?? loc : loc),details:{...details,...problem.details},...(problem.help ? {help:problem.help} : {}),...(problem.fix && authoredForm ? {fix:problem.fix.map(edit=>({span:locate(edit.loc),newText:edit.newText}))} : {})});
       if (checked.value.some(p => p.severity === "error")) continue;
     }
     let computedResultType: string | undefined;

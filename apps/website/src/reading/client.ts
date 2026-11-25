@@ -24,6 +24,16 @@ function worker(): Worker {
       shared.pending.delete(event.data.id);
       resolve?.(event.data);
     };
+    // A worker that fails to load or crashes answers nothing more: fail what is waiting, and start another for the next request.
+    shared.worker.onerror = (event: ErrorEvent) => {
+      event.preventDefault();
+      const failed = shared.worker;
+      failed?.terminate();
+      if (shared.worker === failed) shared.worker = null;
+      const message = `The checker stopped: ${event.message || "its worker failed"}`;
+      for (const [id, resolve] of shared.pending) resolve({ id, kind: "error", message });
+      shared.pending.clear();
+    };
   }
   return shared.worker;
 }

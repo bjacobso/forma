@@ -53,7 +53,16 @@ export interface Analysis {
   readonly source: string;
   readonly typed: readonly TypedForm[];
   readonly diagnostics: readonly ReadingDiagnostic[];
+  /** What the file's declarations elaborate to, in source order, such as a prelude form's IR record. */
+  readonly declarations: readonly CheckedDeclaration[];
   readonly durationMs: number;
+}
+
+export interface CheckedDeclaration {
+  /** The declared name, or the form's name when it declares none. */
+  readonly name: string;
+  readonly resultType?: string | undefined;
+  readonly payload: unknown;
 }
 
 export interface SlotInfo {

@@ -5,6 +5,7 @@ import { TargetCodeView } from "../components/TargetCodeView";
 import { passOf, type SpanRange } from "../lib/artifacts";
 import { EngineClient } from "../engine/client";
 import type { RunResult } from "../engine/protocol";
+import type { Analysis } from "../reading/protocol";
 import { useDocumentMeta } from "../lib/documentMeta";
 import { decodePreludeDemo, defaultPreludeDemo, type PreludeDemo } from "../lib/preludeShare";
 import { MAX_SNAPSHOT_BYTES, readSnapshot } from "../lib/playgroundSnapshot";
@@ -51,9 +52,10 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   const [initialHash] = useState(() => window.location.hash);
   const [original] = useState(() => initialDemo ?? decodePreludeDemo(initialHash) ?? defaultPreludeDemo);
   const [demo, setDemo] = useState(original);
-  const [result, setResult] = useState<RunResult | null>(null);
-  const [validating, setValidating] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // Result, JSON, and the reader's status all show the reader's one analysis of the program.
+  const [check, setCheck] = useState<ProgramCheck>({ analysis: null, checking: true, failure: null, preludeErrors: 0 });
+  // The compiler internals come from the engine's own run, made only while one of them is shown.
+  const [internalRun, setInternalRun] = useState<RunResult | null>(null);
   const [shareStatus, setShareStatus] = useState("");
   const [saving, setSaving] = useState(false);
   const [confirmShare, setConfirmShare] = useState(false);
@@ -67,12 +69,16 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   // The reader reads its files when it mounts, so text it did not write (Reset, Introduce error) mounts a fresh one.
   const fromReader = useRef({ prelude: original.prelude, source: original.source });
   const [revision, setRevision] = useState(0);
-  const debug = result?.preludeDebug;
+  const debug = internalRun?.preludeDebug;
+  const result = check.analysis;
+  const validating = check.checking;
+  const error = check.failure;
   const diagnostics = result?.diagnostics ?? [];
-  const errors = diagnostics.filter(d => d.severity === "error").length;
+  const errors = diagnostics.filter(d => d.severity === "error").length + check.preludeErrors;
   const unshared = sharedDemo !== JSON.stringify(demo);
   const tabs = sideTabs.filter(item => !item.internal || (!embedded && internals));
-  const payloads: readonly unknown[] = Array.isArray(result?.declarations) ? result.declarations : [];
+  const payloads = result?.declarations.map(declaration => declaration.payload) ?? [];
+  const internalTab = Boolean(sideTabs.find(item => item.id === tab)?.internal);
   useDocumentMeta({ title: `${demo.title || "Your DSL"} - Forma`, description: "Define a prelude, try an example, and share your language." });
 
   useEffect(() => {
@@ -92,18 +98,17 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   }, [embedded]);
 
   useEffect(() => {
+    if (!internalTab) return;
     // Each edit cancels the previous worker, including a nonterminating hook.
     const client = new EngineClient();
     let active = true;
-    setValidating(true);
-    setError(null);
     const timer = window.setTimeout(() => {
       void client.run(demo.source, ["typecheck"], PROGRAM_FILE, undefined, demo.prelude)
-        .then(value => { if (active) { setResult(value); setValidating(false); } })
-        .catch((reason: unknown) => { if (active) { setError(reason instanceof Error ? reason.message : String(reason)); setValidating(false); } });
+        .then(value => { if (active) setInternalRun(value); })
+        .catch(() => { if (active) setInternalRun(null); });
     }, 300);
     return () => { active = false; window.clearTimeout(timer); client.dispose(); };
-  }, [demo.prelude, demo.source]);
+  }, [demo.prelude, demo.source, internalTab]);
 
   useEffect(() => {
     if (demo.prelude === fromReader.current.prelude && demo.source === fromReader.current.source) return;
@@ -112,7 +117,6 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   }, [demo.prelude, demo.source]);
 
   const edit = (next: PreludeDemo) => {
-    if (next.source !== demo.source || next.prelude !== demo.prelude) { setValidating(true); setError(null); }
     setDemo(next); setShareStatus(""); setReveal(null); setConfirmShare(false);
   };
   const copyLink = async (url: string) => {
@@ -138,11 +142,18 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
   const revealSpan = (span: NonNullable<RunResult["diagnostics"][number]["span"]>) => {
     setReveal({ file: span.sourceId === PRELUDE_FILE ? PRELUDE_FILE : PROGRAM_FILE, span: [span.startOffset, span.endOffset] });
   };
-  const syntax = activeFile === PRELUDE_FILE ? debug?.preludeSyntax : passOf(result?.passResults ?? [], "parse");
-  const problemRows = diagnostics.map((diagnostic, index) => <div className={`rd-problem rd-problem-${diagnostic.severity}`} key={index}>
-    <button className="rd-problem-message" disabled={!diagnostic.span || validating || Boolean(error)} onClick={() => revealSpan(diagnostic.span!)} title={diagnostic.span ? "Select it in the code" : undefined} type="button">{diagnostic.message}</button>
-    <code className="rd-problem-code">{diagnostic.code}{diagnostic.span ? ` · ${diagnostic.span.sourceId}:${diagnostic.span.startOffset}` : ""}</code>
-  </div>);
+  const syntax = activeFile === PRELUDE_FILE ? debug?.preludeSyntax : passOf(internalRun?.passResults ?? [], "parse");
+  const stale = validating || Boolean(error);
+  const problemRows = <>
+    {check.preludeErrors ? <div className="rd-problem rd-problem-error">
+      <button className="rd-problem-message" disabled={stale} onClick={() => setReveal({ file: PRELUDE_FILE, span: [0, 0] })} title="Open the language definition" type="button">The language definition has {check.preludeErrors} {check.preludeErrors === 1 ? "problem" : "problems"}.</button>
+      <code className="rd-problem-code">{PRELUDE_FILE}</code>
+    </div> : null}
+    {diagnostics.map((diagnostic, index) => <div className={`rd-problem rd-problem-${diagnostic.severity}`} key={index}>
+      <button className="rd-problem-message" disabled={stale} onClick={() => setReveal({ file: PROGRAM_FILE, span: [diagnostic.from, diagnostic.to] })} title="Select it in the code" type="button">{diagnostic.message}</button>
+      <code className="rd-problem-code">{diagnostic.code} · {PROGRAM_FILE}:{diagnostic.from}</code>
+    </div>)}
+  </>;
 
   /** The reader's right sidebar: the selected form's definition, then the checked data and compiler views. */
   const side = <section className="studio-side" aria-label="Compiler output">
@@ -157,14 +168,15 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
     <div className="studio-validation" data-validating={validating} data-error={Boolean(error || errors)} role="status">{validating ? `Validating…${result ? " showing previous result" : ""}` : error ? `Validation failed${result ? " · previous result shown" : ""}` : errors ? "Check failed · fix the problems below" : "Program checks · results match the current source"}</div>
     {error ? <p className="studio-validation-error" role="alert">{error}</p> : null}
     <div className="studio-output" id="studio-output" role="tabpanel" aria-busy={validating} aria-labelledby={`inspector-${tab}`}>
-      <div className="studio-output-snapshot" data-stale={Boolean(result && (validating || error))} inert={Boolean(result && (validating || error))}>
-      {!result ? <p className="workbench-empty">{error ? "No previous result is available." : "Checking prelude and example…"}</p>
+      <div className="studio-output-snapshot" data-stale={Boolean(result && stale)} inert={Boolean(result && stale)}>
+      {internalTab && !internalRun ? <p className="workbench-empty">Running the compiler…</p>
+        : !result && !internalTab ? <p className="workbench-empty">{error ? "No previous result is available." : "Checking prelude and example…"}</p>
         : tab === "result" ? errors ? <><p className="studio-output-note">Fix the diagnostics to inspect checked data. The JSON view keeps any partial compiler output available.</p><div className="studio-problems-list">{problemRows}</div></> : <>
           <p className="studio-output-note">Data checked against your prelude. Your application interprets it; nothing is executed here.</p>
-          {debug?.declarations.map((declaration, index) => <article className="studio-result" key={index}><h2>{declaration.name}<code>{declaration.resultType}</code></h2><CheckedData value={payloads[index]} /></article>)}
+          {result!.declarations.map((declaration, index) => <article className="studio-result" key={index}><h2>{declaration.name}<code>{declaration.resultType}</code></h2><CheckedData value={declaration.payload} /></article>)}
           {!payloads.length ? <p className="workbench-empty">No declarations yet. Define a form in the language definition and use it in your program.</p> : null}
         </>
-        : tab === "ir" ? <><p className="studio-output-note">{errors ? "Partial output. Fix the problems in the Result tab." : "No diagnostics. Typed output from your example."}</p><TargetCodeView code={JSON.stringify(result.declarations ?? [], null, 2)} language="json" mode={theme} /></>
+        : tab === "ir" ? <><p className="studio-output-note">{errors ? "Partial output. Fix the problems in the Result tab." : "No diagnostics. Typed output from your example."}</p><TargetCodeView code={JSON.stringify(payloads, null, 2)} language="json" mode={theme} /></>
         : tab === "syntax" ? <><p className="studio-output-note">Reading {activeFile}. Select a node to reveal its source.</p><SExprTree ast={syntax?.ast ?? []} selectedSpan={reveal?.file === activeFile ? reveal.span : null} onSelectSpan={span => { if (span) setReveal({ file: activeFile, span }); }} /></>
         : tab === "forms" ? <><p className="studio-output-note">Form definitions loaded from your prelude.</p>{debug?.forms.map(form => <details className="studio-form" key={form.name}><summary>{form.name}</summary><TargetCodeView code={JSON.stringify(form.definition, null, 2)} language="json" mode={theme} /></details>)}</>
         : tab === "maps" ? <><p className="studio-output-note">Select a payload path to reveal the authored source.</p>{debug?.declarations.map((declaration, index) => <article className="studio-mapping" key={index}><h2>{declaration.name} <code>{declaration.resultType}</code></h2>{declaration.sourceMap.map((entry, entryIndex) => <button type="button" key={entryIndex} onClick={() => revealSpan(entry.span)}><code>{entry.path || "/"}</code><span>{entry.span.startOffset}:{entry.span.endOffset}</span></button>)}</article>)}{!debug?.declarations.length ? <p className="workbench-empty">No declarations to map.</p> : null}</>
@@ -217,6 +229,7 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
         <ReaderWorkspace inspector={side} />
         <QuickOpen />
         <FollowActive onActive={setActiveFile} />
+        <FollowProgram onCheck={setCheck} />
         <Reveal target={reveal} />
       </ReaderRoot>
     </HostThemeProvider>
@@ -227,6 +240,42 @@ function PreludeEditor({ initialDemo, saved, embedded }: { readonly initialDemo?
 function FollowActive({ onActive }: { readonly onActive: (file: string) => void }) {
   const { active } = useReader();
   useEffect(() => { if (active === PRELUDE_FILE || active === PROGRAM_FILE) onActive(active); }, [active]);
+  return null;
+}
+
+interface ProgramCheck {
+  /** The latest analysis of the program, kept while the next one runs. */
+  readonly analysis: Analysis | null;
+  readonly checking: boolean;
+  readonly failure: string | null;
+  readonly preludeErrors: number;
+}
+
+/**
+ * Reports the reader's check of the program. While the program is shown, that is the reader's own
+ * analysis; while the language definition is shown, the program is analyzed after it, in the same
+ * workspace and from the same files.
+ */
+function FollowProgram({ onCheck }: { readonly onCheck: (check: ProgramCheck) => void }) {
+  const reader = useReader();
+  const shown = reader.active === PROGRAM_FILE;
+  const [other, setOther] = useState<Omit<ProgramCheck, "preludeErrors">>({ analysis: null, checking: true, failure: null });
+  const last = useRef<Analysis | null>(null);
+  useEffect(() => {
+    if (shown || reader.checking) { setOther(current => ({ ...current, checking: true })); return; }
+    let live = true;
+    reader.client.analyze(reader.files(), PROGRAM_FILE).then(
+      analysis => { if (live) setOther({ analysis, checking: false, failure: null }); },
+      (reason: unknown) => { if (live) setOther(current => ({ ...current, checking: false, failure: reason instanceof Error ? reason.message : String(reason) })); },
+    );
+    return () => { live = false; };
+  }, [shown, reader.checking, reader.analysis, reader.failure]);
+  const current = shown ? { analysis: reader.analysis, checking: reader.checking, failure: reader.failure } : other;
+  if (current.analysis) last.current = current.analysis;
+  const preludeErrors = reader.problems[PRELUDE_FILE]?.errors ?? 0;
+  useEffect(() => {
+    onCheck({ analysis: current.analysis ?? last.current, checking: current.checking, failure: current.failure, preludeErrors });
+  }, [current.analysis, current.checking, current.failure, preludeErrors]);
   return null;
 }
 

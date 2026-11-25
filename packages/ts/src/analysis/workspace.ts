@@ -11,7 +11,7 @@ import { diagnosticLocator, type LocatedDiagnostic } from "../diagnostic/locatio
  */
 
 import { Effect } from "effect";
-import { elaborateSources } from "../descriptor/elaborate.js";
+import { elaborateSources, type ElaboratedDeclaration } from "../descriptor/elaborate.js";
 import type { FormDescriptor } from "../descriptor/FormDescriptor.js";
 import type { Diagnostic, Span } from "../diagnostic/diagnostic.js";
 import { formSlots } from "../editor/slots.js";
@@ -68,6 +68,12 @@ export interface DocumentAnalysis extends BindingQueries {
   /** Typed expressions in document order. */
   readonly typedSpans: readonly TypedSpan[];
   readonly diagnostics: readonly LocatedDiagnostic[];
+  /**
+   * What the document's applications of described forms elaborate to, such as
+   * a prelude form's IR record, in source order. Forms that do not elaborate
+   * are left out and reported in `diagnostics`.
+   */
+  readonly declarations: readonly ElaboratedDeclaration[];
 }
 
 export interface Hover {
@@ -503,7 +509,8 @@ function analyzeDocument(
       },
     });
   }
-  const describedDiagnostics = parsed.errors.length === 0 ? formDiagnostics(sourceId, text, scope).filter(diagnostic => {
+  const described = parsed.errors.length === 0 ? describedForms(sourceId, text, scope) : { diagnostics: [], declarations: [] };
+  const describedDiagnostics = described.diagnostics.filter(diagnostic => {
     // Ordinary calls are checked above. Only an unbound form spelling
     // suggestion adds useful information (and an editor quick fix).
     if (diagnostic.code === "elaborate/unknown-form") {
@@ -515,7 +522,7 @@ function analyzeDocument(
       existing.span && diagnostic.span && existing.span.startOffset >= diagnostic.span.startOffset &&
       existing.span.endOffset <= diagnostic.span.endOffset &&
       ["elaborate/form-check", "typecheck/type-mismatch", "typecheck/unbound-symbol"].includes(existing.code));
-  }) : [];
+  });
   for (const diagnostic of describedDiagnostics) {
     if (diagnostic.code !== "elaborate/unknown-form") continue;
     const headSpan = diagnostic.fix![0]!.span;
@@ -540,20 +547,25 @@ function analyzeDocument(
       exprTag: span.exprTag,
     }))],
     diagnostics: dedupe(diagnostics).map(diagnosticLocator(() => text)),
+    declarations: described.declarations,
     ...bindings,
   };
 }
 
-/** Slot and identifier diagnostics for applications of described forms. */
-function formDiagnostics(sourceId: string, text: string, scope: Scope): readonly Diagnostic[] {
+/** Applications of described forms: what they elaborate to, and their slot and identifier diagnostics. */
+function describedForms(sourceId: string, text: string, scope: Scope): Pick<DocumentAnalysis, "declarations"> & { readonly diagnostics: readonly Diagnostic[] } {
   const prelude = scope.prelude;
-  if (!prelude) return [];
+  if (!prelude) return { diagnostics: [], declarations: [] };
   try {
-    return elaborateSources([{ sourceId, source: text }], { prelude }).diagnostics.filter(
-      (diagnostic) => diagnostic.span?.sourceId === sourceId && diagnostic.code !== "elaborate/no-construct-hook",
-    );
+    const elaborated = elaborateSources([{ sourceId, source: text }], { prelude });
+    return {
+      declarations: elaborated.declarations,
+      diagnostics: elaborated.diagnostics.filter(
+        (diagnostic) => diagnostic.span?.sourceId === sourceId && diagnostic.code !== "elaborate/no-construct-hook",
+      ),
+    };
   } catch {
-    return [];
+    return { diagnostics: [], declarations: [] };
   }
 }
 

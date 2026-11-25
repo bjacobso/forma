@@ -49,6 +49,16 @@ export function ReaderTabs() {
   </div>;
 }
 
+/** Says which files are in scope for the active file without an import, such as a playground's language definition. */
+export function ReaderScope() {
+  const reader = useReader();
+  const files = reader.implicit.filter(id => id !== reader.active && reader.fileIds.includes(id));
+  if (!files.length || reader.implicit.includes(reader.active) || isPreludeFile(reader.active)) return null;
+  return <p className="rd-scope">
+    Everything {files.map((id, index) => <span key={id}>{index ? ", " : ""}<button onClick={() => void reader.openFile(id)} type="button">{id}</button></span>)} defines is in scope here, without an import.
+  </p>;
+}
+
 /** The selected form's ancestry. One line high whatever it shows, so the code below never moves. */
 export function Breadcrumbs() {
   const reader = useReader();
@@ -110,7 +120,11 @@ export function ReaderToolbar({ edits = true }: { readonly edits?: boolean }) {
 }
 
 export function CheckStatus() {
-  const { analysis, checking } = useReader();
+  const { analysis, checking, failure } = useReader();
+  if (failure && !checking) return <span className="rd-check bad" role="alert" title={failure}>
+    <span className="rd-dot" />
+    Could not check <span className="rd-check-failure">{failure}</span>
+  </span>;
   const errors = analysis?.diagnostics.filter(d => d.severity === "error").length ?? 0;
   const warnings = analysis?.diagnostics.filter(d => d.severity === "warning").length ?? 0;
   return <span className={`rd-check ${checking ? "busy" : errors ? "bad" : "good"}`}>
