@@ -1,5 +1,5 @@
 import { describe, expect, test } from "vitest";
-import { analyze, definition, inspect, references, rename, symbols } from "./analysis";
+import { analyze, definition, inScope, inspect, references, rename, symbols } from "./analysis";
 
 const domain = `(export Order Missing)
 (type Order {:id String})
@@ -55,6 +55,23 @@ describe("reading editor analysis across files", () => {
   test("lists each file's definitions with how often they are used", () => {
     const found = symbols(files).map(s => `${s.file}:${s.form}:${s.name}:${s.uses}`);
     expect(found).toEqual(["rpc.lisp:rpc-group:Orders:0", "domain.lisp:type:Order:1", "domain.lisp:error:Missing:1"]);
+  });
+});
+
+describe("a playground's language definition and program", () => {
+  const prelude = `(type ResearchIR {:kind "Research" :name Symbol :title String :cost Int})
+(form (research name {:keys [title cost]})
+  :types {:name (Declares Research) :title String :cost Int}
+  :ir ResearchIR
+  {:kind "Research" :name name :title title :cost cost})`;
+  const program = "(macro (quick-research n)\n  `(research ~n :title \"x\" :cost 1))\n(quick-research foo)";
+
+  test("checks a declaration the program's own macro produces, and keeps what it elaborates to", () => {
+    inScope("playground", { preludes: "core", implicit: ["prelude.lisp"] });
+    const analysis = analyze([{ id: "prelude.lisp", source: prelude }, { id: "example.lisp", source: program }], "example.lisp");
+    inScope("");
+    expect(analysis.diagnostics).toEqual([]);
+    expect(analysis.declarations).toEqual([{ name: "foo", resultType: "Research", payload: { kind: "Research", name: "foo", title: "x", cost: 1 } }]);
   });
 });
 

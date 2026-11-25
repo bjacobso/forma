@@ -48,15 +48,17 @@ export function findRawExprBySpan(
 // ---------------------------------------------------------------------------
 
 /**
- * Find the raw SExpr corresponding to a DSLForm node.
- * Uses span matching to locate the original SExpr.
+ * Find the raw SExpr corresponding to a DSLForm node: the form it was lowered
+ * from, else the authored form at its span. A macro call that expands to a
+ * declaration keeps the call's span, so only the lowered form has the
+ * declaration's own head and slots.
  */
 export function findRawExprForDSLForm(
   dslForm: CoreExpr & { _tag: "DSLForm" },
   rawExprs: readonly SExpr[],
   _hintIndex: number,
 ): SExpr | undefined {
-  // Match by span position
+  if (dslForm.rawExpr) return dslForm.rawExpr;
   for (const raw of rawExprs) {
     if (raw.loc.start === dslForm.span.start && raw.loc.end === dslForm.span.end) {
       return raw;
@@ -115,7 +117,7 @@ export const inferDSLForm = (
     // Must search recursively since DSL forms can be nested inside (define ...) etc.
     let rawExpr: SExpr | undefined;
     if (_inferDslProvider && _inferRawExprs) {
-      rawExpr = findRawExprBySpan(_inferRawExprs, expr.span.start, expr.span.end);
+      rawExpr = expr.rawExpr ?? findRawExprBySpan(_inferRawExprs, expr.span.start, expr.span.end);
     }
 
     // Inject type bindings from the DSL provider into the environment

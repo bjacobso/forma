@@ -4,6 +4,13 @@ import type {
 
 type Request = ReadingRequest extends infer R ? R extends ReadingRequest ? Omit<R, "id" | "scope" | "setup"> : never : never;
 
+const DEFAULT_REQUEST_TIMEOUT_MS = 10_000;
+
+interface PendingRequest {
+  readonly resolve: (response: ReadingResponse) => void;
+  readonly timer: ReturnType<typeof setTimeout> | null;
+}
+
 /**
  * Every reader on a page shares one analysis worker, so a blog post with many
  * snippets loads the checker and preludes once. The worker stops when the last
@@ -11,18 +18,44 @@ type Request = ReadingRequest extends infer R ? R extends ReadingRequest ? Omit<
  */
 const shared = {
   worker: null as Worker | null,
-  pending: new Map<number, (response: ReadingResponse) => void>(),
+  pending: new Map<number, PendingRequest>(),
   nextId: 1,
   readers: 0,
 };
+
+function requestTimeoutMs(): number {
+  const override = typeof window !== "undefined"
+    ? (window as unknown as { __formaReadingTimeoutMs?: number }).__formaReadingTimeoutMs
+    : undefined;
+  return typeof override === "number" && Number.isFinite(override) && override > 0
+    ? override
+    : DEFAULT_REQUEST_TIMEOUT_MS;
+}
+
+function failWorker(failed: Worker | null, message: string): void {
+  failed?.terminate();
+  if (shared.worker === failed) shared.worker = null;
+  for (const [id, entry] of shared.pending) {
+    if (entry.timer !== null) clearTimeout(entry.timer);
+    entry.resolve({ id, kind: "error", message });
+  }
+  shared.pending.clear();
+}
 
 function worker(): Worker {
   if (!shared.worker) {
     shared.worker = new Worker(new URL("./worker.ts", import.meta.url), { type: "module" });
     shared.worker.onmessage = (event: MessageEvent<ReadingResponse>) => {
-      const resolve = shared.pending.get(event.data.id);
+      const entry = shared.pending.get(event.data.id);
+      if (!entry) return;
       shared.pending.delete(event.data.id);
-      resolve?.(event.data);
+      if (entry.timer !== null) clearTimeout(entry.timer);
+      entry.resolve(event.data);
+    };
+    // A worker that fails to load or crashes answers nothing more: fail what is waiting, and start another for the next request.
+    shared.worker.onerror = (event: ErrorEvent) => {
+      event.preventDefault();
+      failWorker(shared.worker, `The checker stopped: ${event.message || "its worker failed"}`);
     };
   }
   return shared.worker;
@@ -43,9 +76,16 @@ export class ReadingClient {
 
   private send(request: Request): Promise<ReadingResponse> {
     const id = shared.nextId++;
+    const current = worker();
     return new Promise(resolve => {
-      shared.pending.set(id, resolve);
-      worker().postMessage({ ...request, id, scope: this.scope, setup: this.setup });
+      const timer = request.kind === "dispose"
+        ? null
+        : setTimeout(() => {
+            if (!shared.pending.has(id)) return;
+            failWorker(current, "The checker timed out and was restarted.");
+          }, requestTimeoutMs());
+      shared.pending.set(id, { resolve, timer });
+      current.postMessage({ ...request, id, scope: this.scope, setup: this.setup });
     });
   }
 
@@ -116,6 +156,9 @@ export class ReadingClient {
       if (shared.readers > 0 || shared.worker !== stopping) return;
       stopping?.terminate();
       shared.worker = null;
+      for (const entry of shared.pending.values()) {
+        if (entry.timer !== null) clearTimeout(entry.timer);
+      }
       shared.pending.clear();
     }, 1000);
   }

@@ -1,3 +1,7 @@
+<p>
+  <img src="docs/public/mark.svg" alt="Forma logo" width="64" height="64" />
+</p>
+
 # Forma
 
 Forma is a programmable type system for Lisp. Preludes define typed forms

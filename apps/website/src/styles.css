@@ -668,7 +668,8 @@ a:focus-visible, button:focus-visible { outline: 3px solid var(--forma-blue); ou
   background: color-mix(in srgb, var(--forma-paper) 90%, transparent);
   backdrop-filter: blur(16px);
 }
-.site-brand { display: inline-flex; align-items: baseline; color: var(--forma-ink); font-size: 23px; font-weight: 620; letter-spacing: -.035em; text-decoration: none; }
+.site-brand { display: inline-flex; align-items: center; color: var(--forma-ink); font-size: 23px; font-weight: 620; letter-spacing: -.035em; text-decoration: none; }
+.site-brand-mark { width: 24px; height: 24px; margin-right: 8px; border-radius: 5px; flex: 0 0 auto; }
 .site-brand-paren { color: var(--forma-muted); font-weight: 400; }
 .site-nav { display: flex; align-items: center; gap: clamp(16px, 2.8vw, 34px); margin-left: auto; padding-right: 104px; }
 .site-nav a { color: var(--forma-ink); font-size: 15px; font-weight: 520; text-decoration: none; }

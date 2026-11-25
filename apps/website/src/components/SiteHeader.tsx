@@ -5,6 +5,7 @@ export function SiteHeader() {
   return (
     <header className="site-header">
       <a className="site-brand" href="/" aria-label="Forma home">
+        <img className="site-brand-mark" src="/mark.svg" alt="" width={24} height={24} />
         <span className="site-brand-paren" aria-hidden="true">(</span>
         <span>forma</span>
         <span className="site-brand-paren" aria-hidden="true">)</span>

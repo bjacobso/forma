@@ -183,6 +183,11 @@ export function analyze(files: readonly SourceFile[], file: string): Analysis {
     source: text,
     typed: analysis.typedSpans.map(span => ({ from: span.start, to: span.end, type: span.type, tag: span.exprTag })),
     diagnostics,
+    declarations: isPrelude(file) ? [] : analysis.declarations.map(d => ({
+      name: d.summary.name ?? d.formName,
+      ...(d.summary.resultType ? { resultType: d.summary.resultType } : {}),
+      payload: d.payload,
+    })),
     durationMs: performance.now() - started,
   };
 }
