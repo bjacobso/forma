@@ -203,6 +203,7 @@ function evalAuthorityExpr(expr: CoreExpr, env: AbsEnv, depth = 0): AbsValue {
     case "DefClass":
     case "Instance":
     case "DefService":
+    case "DefLayer":
       return Unknown;
   }
 }

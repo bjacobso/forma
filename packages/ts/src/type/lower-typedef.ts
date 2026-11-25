@@ -10,18 +10,24 @@ import type {
   ClassTypeParam,
   ClassConstraint,
   ClassMethod,
+  LayerMethodDef,
+  LayerSetupStep,
   TypeExpr,
 } from "./core-expr.js";
 import {
   CTypeDef,
   CDefClass,
   CDefService,
+  CDefLayer,
   CInstance,
   TEApp,
   TERow,
   TESym,
   TEFun,
+  mkBinding,
+  mkParam,
 } from "./core-expr.js";
+import { lowerDoBody } from "./lower-binding.js";
 import { InferenceError } from "./errors.js";
 import { spanOf } from "./lower-core.js";
 import type { LowerFn } from "./lower-core.js";
@@ -48,6 +54,13 @@ export function lowerTypeDef(span: Span, items: readonly SExpr[]): CoreExpr {
       return CTypeDef(span, typeName, parseTypeExpr(items[2]!), typeParams);
     }
 
+    const tagItem = items.slice(2).find(con => headSym(con) === ":tag");
+    let tagField: string | undefined;
+    if (tagItem && tagItem._tag === "List" && tagItem.items[1]?._tag === "Sym") {
+      const rawTag = tagItem.items[1].name;
+      tagField = rawTag.startsWith(":") ? rawTag : `:${rawTag}`;
+    }
+
     const constructors = items.slice(2).filter(con=>headSym(con) !== ":tag").map((con) => {
       const conName = headSym(con);
       if (!conName) {
@@ -63,7 +76,7 @@ export function lowerTypeDef(span: Span, items: readonly SExpr[]): CoreExpr {
       throw new InferenceError({ message: "type requires at least one constructor" });
     }
 
-    return CTypeDef(span, typeName, undefined, typeParams, constructors);
+    return CTypeDef(span, typeName, undefined, typeParams, constructors, undefined, tagField);
   }
 
   // Alias: (__sum-type Name TypeExpr)
@@ -111,18 +124,30 @@ function parseServiceMethods(
   return items.slice(1).map((method) => parseServiceMethod(serviceName, method));
 }
 
+function normalizeServiceMethodName(raw: string): string {
+  return raw === "__map-get" ? "get" : raw;
+}
+
 function parseServiceMethod(
   serviceName: string,
   expr: SExpr,
 ): { readonly name: string; readonly typeExpr: TypeExpr } {
   const items = asList(expr, "service method");
+  if (items.length === 2) {
+    const methodName = normalizeServiceMethodName(asSym(items[0]!, "service method name"));
+    const returnType = appendServiceRequirement(
+      `${serviceName}.${methodName}`,
+      parseTypeExpr(items[1]!),
+    );
+    return { name: methodName, typeExpr: returnType };
+  }
   if (items.length !== 3) {
     throw new InferenceError({
-      message: "service methods must be (name [param Type ...] ReturnEffect).",
+      message: "service methods must be (name [param Type ...] ReturnEffect) or (name ReturnEffect).",
     });
   }
 
-  const methodName = asSym(items[0]!, "service method name");
+  const methodName = normalizeServiceMethodName(asSym(items[0]!, "service method name"));
   const paramTypes = parseServiceMethodParamTypes(items[1]!);
   const returnType = appendServiceRequirement(
     `${serviceName}.${methodName}`,
@@ -214,16 +239,138 @@ export function lowerDefineSchema(span: Span, items: readonly SExpr[]): CoreExpr
   return CTypeDef(span, schemaName, typeExpr, undefined, undefined, "schema");
 }
 
-export function lowerDefineError(span: Span, items: readonly SExpr[]): CoreExpr {
-  if (items.length !== 3) {
+function parseNamedRecordType(
+  span: Span,
+  items: readonly SExpr[],
+  kind: "error" | "class",
+): CoreExpr {
+  if (items.length < 2) {
     throw new InferenceError({
-      message: "(error Name {...}) requires a name and field record",
+      message: `(${kind} Name {...}) requires a name`,
     });
   }
+  const typeName = asSym(items[1]!, `${kind} name`);
+  const rawFields = items[2];
+  let typeExpr: TypeExpr;
+  let optionsStart = 2;
+  if (!rawFields || (rawFields._tag === "Sym" && rawFields.name.startsWith(":"))) {
+    typeExpr = TERow(span, []);
+  } else if (rawFields._tag === "Map") {
+    typeExpr = parseTypeExpr(rawFields);
+    optionsStart = 3;
+  } else if (rawFields._tag === "List" && trySym(rawFields.items[0]!) === ":fields") {
+    typeExpr = TERow(spanOf(rawFields), parseErrorFields(rawFields));
+    optionsStart = 3;
+  } else {
+    throw new InferenceError({
+      message: `${kind} expects a field record.`,
+    });
+  }
+  const options = items.slice(optionsStart);
+  if (options.length % 2 !== 0) {
+    throw new InferenceError({ message: `${kind} options must be keyword/value pairs.` });
+  }
+  for (let i = 0; i < options.length; i += 2) {
+    const key = trySym(options[i]!);
+    const val = options[i + 1];
+    if (kind !== "error" || key !== ":status" || val?._tag !== "Num" || !Number.isInteger(val.value) || val.value < 400 || val.value > 599) {
+      throw new InferenceError({
+        message: "error options support :status with an HTTP error status (400–599)",
+      });
+    }
+  }
+  if (kind === "error" && typeExpr._tag === "TERow" && typeExpr.fields.some((f) => f.label === ":_tag")) {
+    throw new InferenceError({
+      message: `error ${typeName} cannot declare a :_tag field; _tag is reserved for the error tag.`,
+    });
+  }
+  return CTypeDef(span, typeName, typeExpr, undefined, undefined, kind);
+}
 
-  const errorName = asSym(items[1]!, "error name");
-  const fields = parseErrorFields(items[2]!);
-  return CTypeDef(span, errorName, TERow(spanOf(items[2]!), fields), undefined, undefined, "error");
+export function lowerDefineError(span: Span, items: readonly SExpr[]): CoreExpr {
+  return parseNamedRecordType(span, items, "error");
+}
+
+export function lowerDefineClass(span: Span, items: readonly SExpr[]): CoreExpr {
+  return parseNamedRecordType(span, items, "class");
+}
+
+export function lowerDefineLayer(lower: LowerFn, span: Span, items: readonly SExpr[]): CoreExpr {
+  if (items.length < 3) {
+    throw new InferenceError({
+      message: "__layer expects a name and either a layer expression or :provides section.",
+    });
+  }
+  const layerName = asSym(items[1]!, "layer name");
+  const args = items.slice(2);
+  if (args.length === 1 && !(args[0]!._tag === "List" && trySym(args[0]!.items[0]!)?.startsWith(":"))) {
+    return CDefLayer(span, layerName, { kind: "compose", expr: lower(args[0]!) });
+  }
+
+  let serviceName: string | undefined;
+  let serviceSpan: Span = span;
+  const setup: LayerSetupStep[] = [];
+  const methods: LayerMethodDef[] = [];
+
+  for (const section of args) {
+    if (section._tag !== "List" || section.items.length === 0) {
+      throw new InferenceError({ message: "layer expects :provides, :setup, or :methods sections." });
+    }
+    const sectionTag = trySym(section.items[0]!);
+    if (sectionTag === ":provides") {
+      if (section.items.length !== 2) {
+        throw new InferenceError({ message: "layer :provides expects a single service name." });
+      }
+      serviceName = asSym(section.items[1]!, "layer service name");
+      serviceSpan = spanOf(section.items[1]!);
+    } else if (sectionTag === ":setup") {
+      if (section.items.length !== 2 || section.items[1]!._tag !== "Vector") {
+        throw new InferenceError({ message: "layer :setup expects a vector of binding/value pairs." });
+      }
+      const vec = section.items[1]!.items;
+      if (vec.length % 2 !== 0) {
+        throw new InferenceError({ message: "layer :setup expects an even number of binding/value pairs." });
+      }
+      for (let i = 0; i < vec.length; i += 2) {
+        const key = vec[i]!;
+        const val = vec[i + 1]!;
+        if (key._tag === "Sym" && key.name === ":let") {
+          if (val._tag !== "Vector" || val.items.length % 2 !== 0) {
+            throw new InferenceError({ message: ":let in layer :setup expects a vector of binding/value pairs." });
+          }
+          for (let j = 0; j < val.items.length; j += 2) {
+            const name = asSym(val.items[j]!, "setup :let binding name");
+            setup.push({ kind: "let", binding: mkBinding(spanOf(val.items[j]!), name, lower(val.items[j + 1]!)) });
+          }
+        } else {
+          const name = asSym(key, "setup binding name");
+          setup.push({ kind: "bind", binding: mkBinding(spanOf(key), name, lower(val)) });
+        }
+      }
+    } else if (sectionTag === ":methods") {
+      for (const m of section.items.slice(1)) {
+        if (m._tag !== "List" || m.items.length < 2) {
+          throw new InferenceError({ message: "layer method expects (name [params...] body...)." });
+        }
+        const mName = asSym(m.items[0]!, "layer method name");
+        const hasParams = m.items[1]!._tag === "Vector" && m.items.length >= 3;
+        const params = hasParams
+          ? (m.items[1] as Extract<SExpr, { _tag: "Vector" }>).items.map((p) => mkParam(spanOf(p), asSym(p, "layer method param")))
+          : undefined;
+        const bodyItems = hasParams ? m.items.slice(2) : m.items.slice(1);
+        const body = bodyItems.length === 1 ? lower(bodyItems[0]!) : lowerDoBody(lower, spanOf(m), bodyItems);
+        methods.push({ name: mName, span: spanOf(m), ...(params ? { params } : {}), body });
+      }
+    } else {
+      throw new InferenceError({ message: `Unknown layer section ${sectionTag ?? ""}` });
+    }
+  }
+
+  if (!serviceName) {
+    throw new InferenceError({ message: `layer ${layerName} requires :provides Service.` });
+  }
+
+  return CDefLayer(span, layerName, { kind: "provide", service: serviceName, serviceSpan, setup, methods });
 }
 
 export function isDefineSchemaProjection(items: readonly SExpr[]): boolean {

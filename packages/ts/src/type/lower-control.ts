@@ -11,6 +11,7 @@ import {
   CGet,
   CAscribe,
   CMatch,
+  CRecord,
   CEffectFail,
   CEffectCatch,
   LNil,
@@ -110,37 +111,60 @@ export function lowerAscribe(lower: LowerFn, span: Span, items: readonly SExpr[]
 
 export function lowerEffectFail(lower: LowerFn, span: Span, items: readonly SExpr[]): CoreExpr {
   const error = items[1];
-  if (
-    items.length !== 2 ||
-    error?._tag !== "List" ||
-    error.items.length !== 2 ||
-    error.items[0]?._tag !== "Sym"
-  ) {
+  if (items.length !== 2 || !error) {
     throw new InferenceError({
       message: "fail expects a constructed error value: (fail (ErrorName payload)).",
     });
   }
-  return CEffectFail(span, error.items[0].name, lower(error.items[1]!));
+  if (error._tag === "List" && error.items[0]?._tag === "Sym") {
+    if (error.items.length === 1) {
+      return CEffectFail(span, error.items[0].name, CRecord(spanOf(error), []));
+    }
+    if (error.items.length === 2) {
+      return CEffectFail(span, error.items[0].name, lower(error.items[1]!));
+    }
+  }
+  return CEffectFail(span, "", lower(error));
 }
 
 export function lowerEffectCatch(lower: LowerFn, span: Span, items: readonly SExpr[]): CoreExpr {
-  const pattern = items[2];
-  if (
-    items.length !== 4 ||
-    pattern?._tag !== "List" ||
-    pattern.items.length !== 2 ||
-    pattern.items[0]?._tag !== "Sym" ||
-    pattern.items[1]?._tag !== "Sym"
-  ) {
+  if (items.length < 4 || (items.length - 2) % 2 !== 0) {
     throw new InferenceError({
-      message: "catch expects (catch effect (ErrorName binding) handler).",
+      message: "catch expects (catch effect (ErrorName binding) handler ...).",
     });
   }
-  return CEffectCatch(
-    span,
-    lower(items[1]!),
-    pattern.items[0].name,
-    mkParam(spanOf(pattern.items[1]), pattern.items[1].name),
-    lower(items[3]!),
-  );
+  const arms: Array<{
+    readonly errorName: string;
+    readonly binding: ReturnType<typeof mkParam>;
+    readonly handler: CoreExpr;
+  }> = [];
+  for (let i = 2; i < items.length; i += 2) {
+    const pattern = items[i]!;
+    const handler = items[i + 1]!;
+    if (pattern._tag === "Sym" && /^[a-z_]/.test(pattern.name)) {
+      arms.push({
+        errorName: "_",
+        binding: mkParam(spanOf(pattern), pattern.name),
+        handler: lower(handler),
+      });
+      continue;
+    }
+    if (
+      pattern._tag !== "List" ||
+      pattern.items.length !== 2 ||
+      pattern.items[0]?._tag !== "Sym" ||
+      pattern.items[1]?._tag !== "Sym"
+    ) {
+      throw new InferenceError({
+        message: "catch expects (catch effect (ErrorName binding) handler ...).",
+      });
+    }
+    arms.push({
+      errorName: pattern.items[0].name,
+      binding: mkParam(spanOf(pattern.items[1]), pattern.items[1].name),
+      handler: lower(handler),
+    });
+  }
+  const first = arms[0]!;
+  return CEffectCatch(span, lower(items[1]!), first.errorName, first.binding, first.handler, arms);
 }

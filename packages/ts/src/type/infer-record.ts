@@ -105,6 +105,18 @@ export const inferGet = (
     if (resolved._tag === "TCon" && resolved.name === "Unknown") {
       return tUnknown;
     }
+    if (resolved._tag === "TCon") {
+      const adtInfo = (yield* Ref.get(ctx.adtRegistry)).get(resolved.name);
+      if (adtInfo?.tagField && expr.label === adtInfo.tagField) {
+        return TCon("String");
+      }
+    }
+    if (resolved._tag === "TApp" && resolved.con._tag === "TCon" && resolved.con.name === "Union") {
+      const nominals = yield* Ref.get(ctx.nominalRecords);
+      if (expr.label === ":_tag" && resolved.args.every((m) => m._tag === "TCon" && nominals.has(m.name))) {
+        return TCon("String");
+      }
+    }
 
     if (resolved._tag === "TApp" && resolved.con._tag === "TCon" && resolved.con.name === "Map") {
       const key = TCon(expr.label.startsWith(":") ? expr.label : JSON.stringify(expr.label.startsWith("\0str:") ? expr.label.slice(5) : expr.label));

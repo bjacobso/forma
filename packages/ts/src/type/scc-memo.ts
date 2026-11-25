@@ -545,6 +545,7 @@ function encodeCoreExpr(
     case "DefClass":
     case "Instance":
     case "DefService":
+    case "DefLayer":
       return null;
   }
 }

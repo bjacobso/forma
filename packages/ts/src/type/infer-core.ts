@@ -51,6 +51,7 @@ import { inferRecord, inferGet } from "./infer-record.js";
 import { inferDef } from "./infer-binding.js";
 import { inferAscribe, inferDSLForm } from "./infer-dsl.js";
 import { inferTypeDef, inferDefClass, inferInstance, inferDefService } from "./infer-typedef.js";
+import { EFFECT_COMBINATORS, inferDefLayer, inferEffectCombinator } from "./infer-effect.js";
 
 // ---------------------------------------------------------------------------
 // Origin helper
@@ -428,6 +429,8 @@ const inferExprInner = (
       return inferInstance(env, expr, inferExpr);
     case "DefService":
       return inferDefService(expr);
+    case "DefLayer":
+      return inferDefLayer(env, expr, inferExpr);
   }
 };
 
@@ -592,6 +595,25 @@ const inferVar = (
       return t;
     }
 
+    // Chained member access like cfg.inner.port when cfg is in scope.
+    if (expr.name.includes(".")) {
+      const segments = expr.name.split(".");
+      const root = segments[0]!;
+      if (env.has(root)) {
+        let current: CoreExpr = { ...expr, name: root };
+        for (let i = 1; i < segments.length; i++) {
+          current = {
+            _tag: "Get",
+            id: `${expr.id}:dot:${i}`,
+            span: expr.span,
+            record: current,
+            label: `:${segments[i]!}`,
+          };
+        }
+        return yield* inferGet(env, current as CoreExpr & { _tag: "Get" }, inferExpr);
+      }
+    }
+
     const bt = ctx.builtinScheme(expr.name);
     if (bt) return yield* instantiateWithConstraints(bt, originOf(expr, "var"));
 
@@ -674,6 +696,12 @@ const literalName = (e: CoreExpr): string | undefined =>
   : e.lit._tag === "LInt" || e.lit._tag === "LFloat" || e.lit._tag === "LBool" ? String(e.lit.value) : undefined;
 const sameLiteral = (member: string, literal: string): boolean => {
   if (member === literal) return true;
+  if (member.startsWith(":") && literal.startsWith("\"")) {
+    try { return member.slice(1) === JSON.parse(literal); } catch { return false; }
+  }
+  if (literal.startsWith(":") && member.startsWith("\"")) {
+    try { return literal.slice(1) === JSON.parse(member); } catch { return false; }
+  }
   try { return !member.startsWith(":") && JSON.parse(member) === JSON.parse(literal); } catch { return false; }
 };
 
@@ -704,6 +732,30 @@ const inferApp = (
         ? new InferenceError({...error,message:error.message,related:[...(error.related ?? []),{message:"Expected type declared here",span:{sourceId:annotation.sourceId ?? "",startOffset:annotation.start,endOffset:annotation.end}}]})
         : error));
     const known = named ? env.get(named)?.type ?? ctx.builtinScheme(named)?.type : undefined;
+    if (named && !env.has(named) && EFFECT_COMBINATORS.has(named)) {
+      const combResult = yield* inferEffectCombinator(env, expr, named, inferExpr);
+      if (combResult !== undefined) return combResult;
+    }
+    if (named === "assoc" && !env.has(named) && expr.args.length === 3) {
+      const targetT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
+      const keyArg = expr.args[1]!;
+      const valArg = expr.args[2]!;
+      if (targetT._tag === "TApp" && targetT.con._tag === "TCon" && targetT.con.name === "Map" && targetT.args.length === 2) {
+        yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), keyArg, targetT.args[0]!);
+        yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), valArg, targetT.args[1]!);
+        return targetT;
+      }
+      const nominalShape = targetT._tag === "TCon" ? (yield* Ref.get(ctx.nominalRecords)).get(targetT.name) : undefined;
+      const rowTarget = nominalShape?._tag === "TRow" ? nominalShape : targetT._tag === "TRow" ? targetT : undefined;
+      if (rowTarget && keyArg._tag === "Lit" && keyArg.lit._tag === "LKeyword") {
+        const fields = flattenRow(rowTarget.row).fields;
+        const fieldT = fields.get(keyArg.lit.value);
+        if (fieldT) {
+          yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), valArg, fieldT);
+          return targetT;
+        }
+      }
+    }
     const variadicHead = named && !env.has(named) && ["+", "-", "*", "/", "min", "max"].includes(named);
     let expected = lambda._tag === "Lam" && !lambda.restParam ? lambda.params.length : known?.arity;
     if (expected === undefined && known?._tag === "TFun") {

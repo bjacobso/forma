@@ -5,7 +5,8 @@ import { isFloatLiteral } from "../reader/types.js";
  */
 import { Effect, Ref } from "effect";
 import type { Type, Scheme } from "./types.js";
-import { TApp, TCon, TRow, RExtend, tNil, tStr, tNum, tBool, mono, showType } from "./types.js";
+import { TApp, TCon, TRow, REmpty, RExtend, tNil, tStr, tNum, tBool, mono, showType } from "./types.js";
+import { BUILTIN_EFFECT_ERRORS } from "./infer-effect.js";
 import { applyType, applyEnv, type TypeEnv } from "./substitution.js";
 import { assignType, joinType } from "./assign.js";
 import { unify } from "./unify.js";
@@ -149,6 +150,16 @@ export const inferEffectFail = (
   Effect.gen(function* () {
     const ctx = yield* InferContext;
     const errorTypes = yield* Ref.get(ctx.errorTypes);
+    if (expr.errorName === "") {
+      const valT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.payload));
+      if (valT._tag === "TCon" && (errorTypes.has(valT.name) || BUILTIN_EFFECT_ERRORS.has(valT.name))) {
+        return operationalEffectType(yield* ctx.freshTVar, [valT], []);
+      }
+      return yield* ctx.fail(originOf(expr, "effect-fail"), {
+        code: "mechanics/fail-value",
+        message: `fail expects an error declared with error, found ${showDiagnosticType(valT)}.`,
+      });
+    }
     if (!errorTypes.has(expr.errorName)) {
       return yield* ctx.fail(originOf(expr, "effect-fail"), {
         code: "typecheck/unknown-type", message: `Unknown error type ${expr.errorName}. Define it with error before using fail.`,
@@ -160,9 +171,9 @@ export const inferEffectFail = (
     const expectedPayload = shape?._tag === "TRow" && shape.row._tag === "RExtend" && shape.row.label === ":_tag"
       ? { ...shape, row: shape.row.tail }
       : yield* typeExprToType(TESym(expr.span, expr.errorName), new Map<string, Type>(), new Map());
-    yield* unify(
-      applyType(yield* Ref.get(ctx.subst), expectedPayload),
+    yield* assignType(
       applyType(yield* Ref.get(ctx.subst), payloadType),
+      applyType(yield* Ref.get(ctx.subst), expectedPayload),
       originOf(expr, "effect-fail-payload"),
     );
     return operationalEffectType(yield* ctx.freshTVar, [TCon(expr.errorName)], []);
@@ -176,53 +187,99 @@ export const inferEffectCatch = (
   Effect.gen(function* () {
     const ctx = yield* InferContext;
     const errorTypes = yield* Ref.get(ctx.errorTypes);
-    if (!errorTypes.has(expr.errorName)) {
-      return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        code: "typecheck/unknown-type", message: `Unknown error type ${expr.errorName}. Define it with error before using catch.`,
-      });
-    }
     const bodyType = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.body));
     const bodyEffect = operationalEffectParts(bodyType);
     if (!bodyEffect) {
       return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        ...typeMismatch(TCon("Effect"),bodyType),
+        ...typeMismatch(TCon("Effect"), bodyType),
       });
     }
 
-    const handled = bodyEffect.errors.find(
-      (error) => error._tag === "TCon" && error.name === expr.errorName,
-    );
-    if (!handled) {
-      return yield* ctx.fail(originOf(expr, "effect-catch"), {
-        code: "typecheck/effect-set", message: `Impossible catch: ${expr.errorName} is not in ${showDiagnosticType(bodyType)}.`,
-      });
-    }
+    let remainingErrors: readonly Type[] = bodyEffect.errors;
+    let addedErrors: readonly Type[] = [];
+    let accumulatedRequirements: readonly Type[] = bodyEffect.requirements;
+    let resultSuccess: Type = bodyEffect.success;
 
-    const payloadType = yield* typeExprToType(
-      TESym(expr.binding.span, expr.errorName),
-      new Map<string, Type>(),
-      new Map(),
-    );
-    const handlerEnv = applyEnv(yield* Ref.get(ctx.subst), env);
-    handlerEnv.set(expr.binding.name, mono(payloadType));
-    const handlerType = applyType(
-      yield* Ref.get(ctx.subst),
-      yield* inferExpr(handlerEnv, expr.handler),
-    );
-    const handlerEffect = operationalEffectParts(handlerType);
-    const handlerSuccess = handlerEffect?.success ?? handlerType;
-    yield* unify(bodyEffect.success, handlerSuccess, originOf(expr, "effect-catch-result"));
+    for (const arm of expr.arms) {
+      if (arm.errorName === "_") {
+        if (remainingErrors.length === 0) {
+          return yield* ctx.fail(originOf(expr, "effect-catch"), {
+            code: "typecheck/effect-set",
+            message: `Impossible catch: ${showDiagnosticType(bodyType)} has no remaining errors to catch.`,
+          });
+        }
+        const errBindingType =
+          remainingErrors.length === 1
+            ? remainingErrors[0]!
+            : TApp(TCon("Union"), remainingErrors);
+        const handlerEnv = applyEnv(yield* Ref.get(ctx.subst), env);
+        handlerEnv.set(arm.binding.name, mono(errBindingType));
+        const handlerType = applyType(
+          yield* Ref.get(ctx.subst),
+          yield* inferExpr(handlerEnv, arm.handler),
+        );
+        const handlerEffect = operationalEffectParts(handlerType);
+        const handlerSuccess = handlerEffect?.success ?? handlerType;
+        resultSuccess = yield* joinType(
+          applyType(yield* Ref.get(ctx.subst), resultSuccess),
+          handlerSuccess,
+          originOf(expr, "effect-catch-result"),
+        );
+        remainingErrors = [];
+        addedErrors = mergeTypeSets(addedErrors, handlerEffect?.errors ?? []);
+        accumulatedRequirements = mergeTypeSets(accumulatedRequirements, handlerEffect?.requirements ?? []);
+        continue;
+      }
+
+      if (!errorTypes.has(arm.errorName) && !BUILTIN_EFFECT_ERRORS.has(arm.errorName)) {
+        return yield* ctx.fail(originOf(expr, "effect-catch"), {
+          code: "typecheck/unknown-type",
+          message: `Unknown error type ${arm.errorName}. Define it with error before using catch.`,
+        });
+      }
+
+      const handled = remainingErrors.find(
+        (error) => error._tag === "TCon" && error.name === arm.errorName,
+      );
+      if (!handled) {
+        return yield* ctx.fail(originOf(expr, "effect-catch"), {
+          code: "typecheck/effect-set",
+          message: `Impossible catch: ${arm.errorName} is not in ${showDiagnosticType(bodyType)}.`,
+        });
+      }
+
+      const payloadType = BUILTIN_EFFECT_ERRORS.has(arm.errorName)
+        ? TRow(RExtend(":_tag", TCon(JSON.stringify(arm.errorName)), REmpty))
+        : yield* typeExprToType(
+            TESym(arm.binding.span, arm.errorName),
+            new Map<string, Type>(),
+            new Map(),
+          );
+      const handlerEnv = applyEnv(yield* Ref.get(ctx.subst), env);
+      handlerEnv.set(arm.binding.name, mono(payloadType));
+      const handlerType = applyType(
+        yield* Ref.get(ctx.subst),
+        yield* inferExpr(handlerEnv, arm.handler),
+      );
+      const handlerEffect = operationalEffectParts(handlerType);
+      const handlerSuccess = handlerEffect?.success ?? handlerType;
+      resultSuccess = yield* joinType(
+        applyType(yield* Ref.get(ctx.subst), resultSuccess),
+        handlerSuccess,
+        originOf(expr, "effect-catch-result"),
+      );
+      remainingErrors = remainingErrors.filter(
+        (error) => !(error._tag === "TCon" && error.name === arm.errorName),
+      );
+      addedErrors = mergeTypeSets(addedErrors, handlerEffect?.errors ?? []);
+      accumulatedRequirements = mergeTypeSets(accumulatedRequirements, handlerEffect?.requirements ?? []);
+    }
 
     const subst = yield* Ref.get(ctx.subst);
     return operationalEffectType(
-      applyType(subst, bodyEffect.success),
-      mergeTypeSets(
-        bodyEffect.errors.filter(
-          (error) => !(error._tag === "TCon" && error.name === expr.errorName),
-        ),
-        handlerEffect?.errors ?? [],
-      ),
-      mergeTypeSets(bodyEffect.requirements, handlerEffect?.requirements ?? []),
+      applyType(subst, resultSuccess),
+      mergeTypeSets(remainingErrors, addedErrors),
+      accumulatedRequirements,
     );
   });
 
@@ -364,8 +421,36 @@ export const inferMatch = (
         // Constructor pattern
         const conName = arm.pattern.name;
 
-        // Look up constructor scheme in the environment
-        const conScheme = envN.get(conName) ?? ctx.builtinScheme(conName);
+        // Matching on a union of error/nominal types: (NotFound missing)
+        if (
+          scrut._tag === "TApp" &&
+          scrut.con._tag === "TCon" &&
+          scrut.con.name === "Union" &&
+          scrut.args.some((m) => m._tag === "TCon" && m.name === conName)
+        ) {
+          armEnv = applyEnv(yield* Ref.get(ctx.subst), envN);
+          if (arm.pattern.vars.length === 1) {
+            armEnv.set(arm.pattern.vars[0]!, mono(TCon(conName)));
+          } else if (arm.pattern.vars.length > 1) {
+            return yield* ctx.fail(originOf(expr, "match"), {
+              code: "typecheck/pattern-arity",
+              message: `Error pattern ${conName} expects at most 1 binding, got ${arm.pattern.vars.length}`,
+            });
+          }
+        } else {
+        // Look up constructor scheme in the environment, preferring the scrutinee's own qualified constructor
+        const scrutTypeName =
+          scrut._tag === "TCon"
+            ? scrut.name
+            : scrut._tag === "TApp" && scrut.con._tag === "TCon"
+              ? scrut.con.name
+              : undefined;
+        const bareConName = conName.includes(".") ? conName.slice(conName.lastIndexOf(".") + 1) : conName;
+        const qualifiedName = scrutTypeName ? `${scrutTypeName}.${bareConName}` : undefined;
+        const conScheme =
+          (qualifiedName ? envN.get(qualifiedName) ?? ctx.builtinScheme(qualifiedName) : undefined) ??
+          envN.get(conName) ??
+          ctx.builtinScheme(conName);
         if (!conScheme) {
           return yield* ctx.fail(originOf(expr, "match"), {
             message: `Unknown constructor: ${conName}`,
@@ -377,8 +462,12 @@ export const inferMatch = (
         const conT = yield* instantiate(conScheme);
 
         if (arm.pattern.vars.length === 0) {
-          // Nullary constructor: conT should unify with scrutinee
-          yield* unify(conT, scrut, originOf(expr, "match-pattern"));
+          // Nullary constructor (or empty-record variant matched without payload binder)
+          const nullaryTarget =
+            conT._tag === "TFun" && conT.arg._tag === "TRow" && conT.arg.row._tag === "REmpty"
+              ? conT.res
+              : conT;
+          yield* unify(nullaryTarget, scrut, originOf(expr, "match-pattern"));
           armEnv = envN;
         } else {
           // Constructor with fields: conT is field1 -> field2 -> ... -> ResultType
@@ -408,6 +497,7 @@ export const inferMatch = (
             const fieldT = applyType(yield* Ref.get(ctx.subst), fieldTypes[i]!);
             armEnv.set(varName, mono(fieldT));
           }
+        }
         }
       }
 
@@ -524,6 +614,49 @@ export const inferMatch = (
               source: "hm",
             });
           }
+        }
+      }
+    }
+
+    // Exhaustiveness for finite literal Union enums (e.g. (Union :active :suspended :closed))
+    if (
+      resolvedScrut._tag === "TApp" &&
+      resolvedScrut.con._tag === "TCon" &&
+      resolvedScrut.con.name === "Union" &&
+      resolvedScrut.args.length > 0 &&
+      resolvedScrut.args.every((m) => m._tag === "TCon" && (m.name.startsWith(":") || m.name.startsWith("\"")))
+    ) {
+      const hasWild = expr.arms.some((arm) => catchAllPattern(arm.pattern));
+      if (!hasWild) {
+        const canonical = (raw: string): string => {
+          if (raw.startsWith(":")) return raw.slice(1);
+          try {
+            const parsed: unknown = JSON.parse(raw);
+            return typeof parsed === "string" ? parsed : raw;
+          } catch {
+            return raw;
+          }
+        };
+        const matched = new Set<string>();
+        for (const arm of expr.arms) {
+          if (arm.pattern._tag === "PData") {
+            const syn = arm.pattern.syntax;
+            if (syn._tag === "Str") matched.add(syn.value);
+            else if (syn._tag === "Sym" && syn.name.startsWith(":")) matched.add(syn.name.slice(1));
+          } else if (arm.pattern._tag === "PCon" && arm.pattern.name.startsWith(":")) {
+            matched.add(arm.pattern.name.slice(1));
+          }
+        }
+        const missing = resolvedScrut.args
+          .map((m) => (m as Type & { _tag: "TCon" }).name)
+          .filter((name) => !matched.has(canonical(name)));
+        if (missing.length > 0) {
+          yield* ctx.addDiagnostic({
+            message: `Non-exhaustive match: missing case(s) ${missing.join(", ")}`,
+            span: expr.span,
+            severity: "error",
+            source: "hm",
+          });
         }
       }
     }

@@ -66,6 +66,10 @@ export interface ADTInfo {
   readonly typeParams: readonly string[];
   /** Constructor names with their arities */
   readonly constructors: ReadonlyMap<string, number>;
+  /** Tag field label for Tagged unions (e.g., ":_tag" or ":kind") */
+  readonly tagField?: string | undefined;
+  /** Payload type per constructor for Tagged unions */
+  readonly variantPayloads?: ReadonlyMap<string, Type | undefined> | undefined;
 }
 
 /** Information about a type class */
@@ -108,6 +112,8 @@ export interface InferContextService {
   readonly globalNames: Ref.Ref<ReadonlySet<string>>;
   /** Freeze the state after an operation; callers commit it only on success. */
   readonly snapshot: Effect.Effect<InferenceSnapshot>;
+  /** Enable Effect-program checking rules (e.g. schema record/tagged constructors). */
+  readonly effectMode: boolean;
   /** Resolve a built-in type scheme for the active inference host. */
   readonly builtinScheme: BuiltinSchemeProvider;
   /** Resolve a host-owned unbound symbol as a literal type, if applicable. */
@@ -126,6 +132,8 @@ export interface InferContextService {
   readonly typeAliasParams: Ref.Ref<Map<string, readonly string[]>>;
   /** Schema-backed error names that may appear in Effect error sets. */
   readonly errorTypes: Ref.Ref<Set<string>>;
+  /** Service registry: maps service name to its declared method/value types. */
+  readonly serviceRegistry: Ref.Ref<Map<string, Map<string, Type>>>;
   /** ADT registry: maps type name to its constructor info */
   readonly adtRegistry: Ref.Ref<Map<string, ADTInfo>>;
   /** Maps constructor name → type name for pattern matching */
@@ -167,6 +175,7 @@ export interface MakeInferContextOptions {
   readonly initialState?: InferenceSnapshot | undefined;
   readonly builtinScheme?: BuiltinSchemeProvider;
   readonly unboundSymbolType?: (name: string) => Type | undefined;
+  readonly effectMode?: boolean | undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -209,6 +218,9 @@ function makeContext(
     const typeAliases = yield* Ref.make<Map<string, TypeExpr>>(new Map(options.initialState?.typeAliases));
     const typeAliasParams = yield* Ref.make<Map<string, readonly string[]>>(new Map(options.initialState?.typeAliasParams));
     const errorTypes = yield* Ref.make<Set<string>>(new Set(options.initialState?.errorTypes));
+    const serviceRegistry = yield* Ref.make<Map<string, Map<string, Type>>>(
+      new Map([...(options.initialState?.serviceRegistry ?? [])].map(([name, methods]) => [name, new Map(methods)])),
+    );
     const adtRegistry = yield* Ref.make<Map<string, ADTInfo>>(new Map(options.initialState?.adtRegistry ?? [["Option",{typeParams:["a"],constructors:new Map([["Some",1],["None",0]])}],["Result",{typeParams:["a","e"],constructors:new Map([["Ok",1],["Err",1]])}]]));
     const constructorToType = yield* Ref.make<Map<string, string>>(new Map(options.initialState?.constructorToType));
     const classRegistry = yield* Ref.make<Map<string, ClassInfo>>(new Map(options.initialState?.classRegistry));
@@ -223,6 +235,7 @@ function makeContext(
 
     const service: InferContextService = InferContext.of({
       snapshot: Effect.suspend(() => captureInferenceSnapshot(service, { nextTypeVariable: tvarCounter, nextRowVariable: rvarCounter, nextEffectVariable: evarCounter })),
+      effectMode: Boolean(options.effectMode),
       builtinScheme: options.builtinScheme ?? builtinScheme,
       unboundSymbolType: options.unboundSymbolType ?? (() => undefined),
       subst,
@@ -235,6 +248,7 @@ function makeContext(
       nominalRecords,
       typeAliasParams,
       errorTypes,
+      serviceRegistry,
       adtRegistry,
       constructorToType,
       classRegistry,
