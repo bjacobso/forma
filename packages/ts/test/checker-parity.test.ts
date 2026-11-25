@@ -55,7 +55,7 @@ function mechanicsVerdict(source: string, sourceId: string): { ok: boolean; decl
 }
 
 describe("checker parity contracts (conformance/checker-parity)", () => {
-  test("manifest covers all six required contract categories with positive and negative cases", () => {
+  test("manifest covers all seven required contract categories with positive and negative cases", () => {
     const categories = new Set(manifest.cases.map((c) => c.category));
     expect([...categories].sort()).toEqual([
       "brands",
@@ -63,6 +63,7 @@ describe("checker parity contracts (conformance/checker-parity)", () => {
       "literal-constraints",
       "numeric",
       "option-fields",
+      "refinements",
       "shadowed-effect",
     ]);
     for (const category of categories) {
@@ -166,5 +167,56 @@ describe("checker parity across named callbacks, Effect shadowing, and imported-
     const errors = checked.diagnostics.filter((d) => d.severity === "error");
     expect(errors.length).toBeGreaterThan(0);
     expect(errors.some((d) => d.span?.sourceId === "dep.lisp")).toBe(true);
+  });
+
+  test("HM refinement diagnostics locate exact author literal spans and agree with mechanics", () => {
+    const header = [
+      "(type Cents (Int :min 0))",
+      "(type Bags (Brand (Int :min 1 :max 200)))",
+      '(type Sku (String :pattern "^[A-Z]+-[0-9]+$"))',
+      "(type Code (String :min-length 2 :max-length 3))",
+      "(type Line {:sku Sku :bags Bags})",
+    ].join("\n");
+
+    const cases = [
+      {
+        body: "(: refund Cents)\n(define refund -5)",
+        text: "-5",
+        message: "-5 must be at least 0, as (Int :min 0) requires.",
+      },
+      {
+        body: "(: nothing (-> Int (Effect Bags [] [])))\n(define nothing [n] (succeed (Bags 0)))",
+        text: "0",
+        message: "0 must be at least 1, as (Int :min 1 :max 200) requires.",
+      },
+      {
+        body: '(: bad-line (-> Int (Effect Line [] [])))\n(define bad-line [n] (succeed {:sku "bean-1" :bags (Bags 7)}))',
+        text: '"bean-1"',
+        message: '"bean-1" must match the pattern ^[A-Z]+-[0-9]+$, as (String :pattern "^[A-Z]+-[0-9]+$") requires.',
+      },
+      {
+        body: '(: use-code (-> Code String))\n(define use-code [c] c)\n(: bad-code String)\n(define bad-code (use-code "abcd"))',
+        text: '"abcd"',
+        message: '"abcd" must have at most 3 characters, as (String :min-length 2 :max-length 3) requires.',
+      },
+      {
+        body: '(: maybe-code (Option Code))\n(define maybe-code (Some "x"))',
+        text: '"x"',
+        message: '"x" must have at least 2 characters, as (String :min-length 2 :max-length 3) requires.',
+      },
+    ];
+
+    for (const entry of cases) {
+      const source = `${header}\n\n${entry.body}`;
+      const result = Effect.runSync(Effect.result(Type.inferSource(source)));
+      expect(result._tag, `Expected HM failure for ${entry.text}`).toBe("Failure");
+      if (result._tag === "Failure") {
+        const failure = result.failure as Type.InferenceError;
+        expect(failure.details["code"]).toBe("typecheck/refinement");
+        expect(failure.message).toBe(entry.message);
+        const span = failure.origin?.span;
+        expect(span ? source.slice(span.start, span.end) : undefined).toBe(entry.text);
+      }
+    }
   });
 });

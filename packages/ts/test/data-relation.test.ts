@@ -1,6 +1,10 @@
 import { describe, expect, test } from "vitest";
 import {
+  attachRefinement,
+  checkLiteralRefinement,
   decideDataRelation,
+  formatDataLiteral,
+  getRefinement,
   isLiteralAssignableToLiteral,
   isLiteralAssignableToPrimitive,
   isNumericPrimitive,
@@ -10,11 +14,14 @@ import {
   literalBaseName,
   literalBasePrimitive,
   parseLiteralTypeName,
+  showDataRefinement,
   type DataLiteral,
   type DataNode,
+  type DataRefinement,
 } from "../src/type/data-relation.js";
 
-const prim = (name: string): DataNode<string> => ({ kind: "prim", name, raw: name });
+const prim = (name: string, refine?: DataRefinement): DataNode<string> =>
+  refine ? { kind: "prim", name, refine, raw: name } : { kind: "prim", name, raw: name };
 const lit = (literal: DataLiteral, raw = JSON.stringify(literal.value)): DataNode<string> => ({
   kind: "literal",
   literal,
@@ -142,5 +149,46 @@ describe("shared data-type relation", () => {
     expect(decideDataRelation(prim("Int"), neverNode)).toEqual({ verdict: "reject" });
     expect(decideDataRelation(other("RecordA"), other("RecordB"))).toEqual({ verdict: "defer" });
     expect(decideDataRelation(other("RecordA"), prim("Int"))).toEqual({ verdict: "reject" });
+  });
+
+  test("refinements check literals against bounds, lengths, patterns, and finiteness without blocking computed primitives", () => {
+    expect(showDataRefinement("Int", { min: 1, max: 200 })).toBe("(Int :min 1 :max 200)");
+    expect(showDataRefinement("String", { minLength: 2, maxLength: 5, pattern: "^[A-Z]+$" })).toBe(
+      '(String :min-length 2 :max-length 5 :pattern "^[A-Z]+$")',
+    );
+    expect(showDataRefinement("Float", { finite: true })).toBe("(Float :finite true)");
+    expect(formatDataLiteral({ kind: "string", value: "ab" })).toBe('"ab"');
+    expect(formatDataLiteral({ kind: "int", value: -5 })).toBe("-5");
+
+    expect(checkLiteralRefinement({ kind: "int", value: 0 }, { min: 1, max: 200 })).toBe("must be at least 1");
+    expect(checkLiteralRefinement({ kind: "int", value: 201 }, { min: 1, max: 200 })).toBe("must be at most 200");
+    expect(checkLiteralRefinement({ kind: "int", value: 1 }, { min: 1, max: 200 })).toBeUndefined();
+    expect(checkLiteralRefinement({ kind: "float", value: Number.POSITIVE_INFINITY }, { finite: true })).toBe("must be finite");
+    expect(checkLiteralRefinement({ kind: "float", value: 0.5 }, { min: 0, max: 1, finite: true })).toBeUndefined();
+    expect(checkLiteralRefinement({ kind: "string", value: "" }, { minLength: 1 })).toBe("must have at least 1 character");
+    expect(checkLiteralRefinement({ kind: "string", value: "a" }, { minLength: 2 })).toBe("must have at least 2 characters");
+    expect(checkLiteralRefinement({ kind: "string", value: "abcd" }, { maxLength: 3 })).toBe("must have at most 3 characters");
+    expect(checkLiteralRefinement({ kind: "string", value: "bean-1" }, { pattern: "^[A-Z]+-[0-9]+$" })).toBe(
+      "must match the pattern ^[A-Z]+-[0-9]+$",
+    );
+    expect(checkLiteralRefinement({ kind: "string", value: "BEAN-1" }, { pattern: "^[A-Z]+-[0-9]+$" })).toBeUndefined();
+
+    const refinedInt = prim("Int", { min: 0 });
+    expect(decideDataRelation(lit({ kind: "int", value: 0 }), refinedInt)).toEqual({ verdict: "accept" });
+    expect(decideDataRelation(lit({ kind: "int", value: -5 }), refinedInt)).toEqual({
+      verdict: "refinement-error",
+      literal: { kind: "int", value: -5 },
+      primitive: "Int",
+      refine: { min: 0 },
+      problem: "must be at least 0",
+    });
+    expect(decideDataRelation(lit({ kind: "string", value: "x" }), refinedInt)).toEqual({ verdict: "reject" });
+    // Computed primitives remain runtime-checked.
+    expect(decideDataRelation(prim("Int"), refinedInt)).toEqual({ verdict: "accept" });
+
+    const target = { _tag: "TCon", name: "Int" };
+    attachRefinement(target, { min: 1 });
+    attachRefinement(target, { max: 10 });
+    expect(getRefinement(target)).toEqual({ min: 1, max: 10 });
   });
 });
