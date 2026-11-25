@@ -1,6 +1,6 @@
 # T5: converge checker boundaries before replacing rules
 
-Status: stage 1 boundary implemented under RFC 0004; checker rules remain unchanged.
+Status: stages 1–4 implemented under RFC 0004; pure, DSL, and Effect programs now check through the single HM checker (`packages/ts/src/type/`) and `mechanics/check.ts` is retired.
 
 ## Evidence and reproduction
 
@@ -147,7 +147,20 @@ boundary. Downstream LSP, language-server, editor, host and website consumers
 were audited; none read the removed document fields. Host and prelude scope
 environments remain available for inference and module schemes.
 
-This changes the exported analysis API (minor changeset), without changing
-checker rules, conformance expectations or surface goldens. Stages 2–4 remain
-planned; the 149-fixture direct-checker matrix above still describes the separate
-solver domains and is not a claim that the solvers are equivalent.
+This changes the exported analysis API (minor changeset).
+
+Stages 2–4 are now also implemented:
+
+- **Stage 2 (Contract parity):** Cross-pass contracts and fixtures pin shared
+  behavior across pure, DSL, and Effect entry points.
+- **Stage 3 (Shared data-type relation):** `packages/ts/src/type/data-relation.ts`
+  provides the shared primitive, literal, Int/Float, nominal brand, and Option
+  relation.
+- **Stage 4 (Solver retirement):** Effect checking (`packages/ts/src/type/effect-check.ts`,
+  `infer-effect.ts`, `effect-sets.ts`) now runs inside the single HM checker,
+  downstream Effect TypeScript and Schema generators consume the solver-neutral
+  `CheckedEffectProgram` contract (`mechanics/checked-contract.ts`), and the
+  legacy `packages/ts/src/mechanics/check.ts` and `mechanics/builtins.ts` files
+  have been deleted. `mechanics/types.ts` remains only as the IR/codegen
+  projection type representation. The 149-fixture direct-checker matrix above is
+  retained as the historical baseline that motivated this staged migration.

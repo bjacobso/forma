@@ -8,10 +8,9 @@
  */
 import type { BuiltinFn } from "../evaluator/types.js";
 import type { Scheme } from "../type/types.js";
-import type { BuiltinOverload } from "../mechanics/builtins.js";
+import { builtinArithmeticOperators, builtinEmissions, type BuiltinEmission } from "../mechanics/checked-contract.js";
 import { defaultBuiltins } from "./index.js";
 import { builtinScheme } from "../type/builtin-schemes.js";
-import { builtins, arithmeticOperators } from "../mechanics/builtins.js";
 
 export interface BuiltinContract {
   readonly runtime: boolean;
@@ -24,7 +23,7 @@ export interface BuiltinContract {
 export interface ResolvedBuiltinContract extends BuiltinContract {
   readonly implementation: BuiltinFn | undefined;
   readonly scheme: Scheme | undefined;
-  readonly lowering: readonly BuiltinOverload[] | string | undefined;
+  readonly lowering: readonly BuiltinEmission[] | string | undefined;
 }
 
 const entries: [string, BuiltinContract][] = [];
@@ -73,6 +72,6 @@ export const builtinContracts: ReadonlyMap<string, ResolvedBuiltinContract> = ne
     ...(checked[name] ? { checked: checked[name] } : {}),
     implementation: defaultBuiltins[name],
     scheme: builtinScheme(name),
-    lowering: builtins.get(name) ?? arithmeticOperators.get(name),
+    lowering: builtinEmissions.get(name) ?? builtinArithmeticOperators.get(name),
   }]),
 );

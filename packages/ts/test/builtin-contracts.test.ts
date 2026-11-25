@@ -6,7 +6,7 @@ import { Reader, Evaluator, Type, Mechanics } from "../src/index.js";
 import { defaultBuiltins } from "../src/builtins/index.js";
 import { builtinContracts } from "../src/builtins/contracts.js";
 import { builtinScheme } from "../src/type/builtin-schemes.js";
-import { builtins, arithmeticOperators } from "../src/mechanics/builtins.js";
+import { builtinEmissions, builtinArithmeticOperators } from "../src/mechanics/checked-contract.js";
 import { normalizeCoreProgram } from "../src/surface/core.js";
 
 const source = readFileSync(new URL("../../../conformance/fixtures/typecheck/builtin-contracts-success/source.lisp", import.meta.url), "utf8");
@@ -29,7 +29,7 @@ describe("builtin contracts", () => {
     };
     visit(file);
     const runtime = new Set(Object.keys(defaultBuiltins));
-    const effect = new Set([...builtins.keys(), ...arithmeticOperators.keys()]);
+    const effect = new Set([...builtinEmissions.keys(), ...builtinArithmeticOperators.keys()]);
     expect([...new Set([...runtime, ...hm, ...effect])].sort()).toEqual([...builtinContracts.keys()].sort());
     for (const [name, contract] of builtinContracts) {
       expect(runtime.has(name), `${name}: runtime`).toBe(contract.runtime);

@@ -11,7 +11,8 @@ import type { SExpr } from "./reader/types.js";
 import { head, name, list, sym, normalizeEffectProgram } from "./surface/effect.js";
 import { mechanicsPackageableDeclarations } from "./mechanics/artifact.js";
 import { effectProgramStrayForms } from "./mechanics/elaborate.js";
-import { checkMechanicsDeclarations, type CheckInfo } from "./mechanics/check.js";
+import { checkMechanicsProgram } from "./mechanics/checked.js";
+import type { CheckedEffectInfo as CheckInfo } from "./mechanics/checked-contract.js";
 import { generateMechanicsEffectTypeScriptModule } from "./mechanics/effect-typescript.js";
 import { typeName } from "./mechanics/naming.js";
 
@@ -163,7 +164,7 @@ export function generateEmailProgram(source: string, options: { readonly sourceI
     const normalized = normalizeEffectProgram(lowered);
     for (const { expr, message } of effectProgramStrayForms(normalized)) report(expr, "top-level-form", message);
     if (diagnostics.length) return result();
-    const issues = (ds: readonly { code: string; message: string; severity?: "error" | "warning"; span?: { startOffset: number; endOffset: number } }[]) => {
+    const issues = (ds: readonly { code: string; message: string; severity?: "error" | "warning" | "info" | undefined; span?: { startOffset: number; endOffset: number } | undefined }[]) => {
       for (const d of ds) diagnostics.push({ code: d.code, message: d.message
         .replace(`Function ${ruleName} cannot call`, `Rule ${ruleName} cannot call`)
         .replace("functions and constants have no services in scope. Give its define an Effect return signature.", "rules have no services in scope."),
@@ -172,13 +173,13 @@ export function generateEmailProgram(source: string, options: { readonly sourceI
     };
     const mechanics = mechanicsPackageableDeclarations(normalized, sourceId, true);
     if (!mechanics.ok) { issues(mechanics.diagnostics); return result(); }
-    const checked = checkMechanicsDeclarations(mechanics.declarations);
+    const checked = checkMechanicsProgram(mechanics.declarations);
     issues(checked.diagnostics);
-    check = checked.info;
+    check = checked.check;
     declarations = [...mechanics.declarations, ...projected.declarations];
     if (!checked.ok) return result();
 
-    const module = generateMechanicsEffectTypeScriptModule(mechanics.declarations, { check: checked.info }).code;
+    const module = generateMechanicsEffectTypeScriptModule(mechanics.declarations, { check: checked.check }).code;
     const exported = typeName(ruleName);
     const exports = new Set([...module.matchAll(/^export (?:const|class|type) ([\w$]+)/gm)].map(m => m[1]!));
     if (exports.has(exported)) report(nameNode!, "name-collision", `Generated name ${exported} is already in use.`);

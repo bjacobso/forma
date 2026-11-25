@@ -14,7 +14,7 @@ import { bootstrapFromSources, type BootstrappedPrelude } from "../descriptor/bo
 import { elaborateProgram, elaborateSources, sourceLocator, type ElaboratedDeclaration } from "../descriptor/elaborate.js";
 import { SimpleSemanticEnvironment } from "../descriptor/SemanticEnvironment.js";
 import { emissionDatum, emissionSchema } from "../descriptor/form-emitter.js";
-import type { CheckInfo } from "../mechanics/check.js";
+import type { CheckedEffectInfo as CheckInfo } from "../mechanics/checked-contract.js";
 import { schemaReferences } from "../mechanics/effect-schema.js";
 import { generateMechanicsEffectTypeScriptModule } from "../mechanics/effect-typescript.js";
 import { elaborateEffectForms } from "../mechanics/elaborate.js";

@@ -2,9 +2,9 @@
 
 | | |
 | --- | --- |
-| Status | Stages 1–2 accepted and in flight (`EP12`); Stage 3 queued behind RFC 0019 Stage 4; Stages 4–6 proposed |
+| Status | Stages 1–3 and Stage 5 (single HM checker parity) implemented; Stages 4 and 6 proposed |
 | Created | 2026-11-05 |
-| Updated | 2026-11-24 |
+| Updated | 2026-11-25 |
 | Resolves | [RFC 0003](./0003-direct-style-effects.md)'s open decision on the syntax and inference rules for open requirement and failure rows, for Effect programs; [RFC 0018](./0018-type-generics.md)'s "Effect integration" decision |
 | Depends on | [RFC 0019](./0019-everyday-checker-gaps.md) section 10 (named callbacks) for stage 3 |
 | Scope | Type variables in operation signatures, error-set and requirement-set variables, call-site instantiation, body checking, set subtraction, built-in combinators as signatures, Effect TypeScript lowering, IR, diagnostics, host profiles |
@@ -475,8 +475,10 @@ before stage 2 and pass after it.
    `for-each` moves to the table. Stored goldens must not change.
 4. **Subtraction** (section 5). `without`, `provide` and tagged `catch` over
    variables, `provide` in the table, and the RFC 0014 helper case.
-5. **Kernel parity** (section 9). The kernel parses and checks set variables in
-   Effect signatures.
+5. **Kernel parity** (section 9). Implemented: the single HM checker
+   (`packages/ts/src/type/`, including `effect-sets.ts` and `effect-check.ts`)
+   now parses and checks set variables and polymorphic Effect signatures
+   directly, and the legacy `mechanics/check.ts` solver has been retired.
 6. **Other hosts.** Rust and Go encodings under RFC 0022, gated on that RFC's
    consumer decision.
 

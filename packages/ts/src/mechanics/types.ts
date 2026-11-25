@@ -144,40 +144,6 @@ function withRefinement(type: MType, refine: Refinement): MType {
   return type;
 }
 
-/** Renders refinements the way they are written, for diagnostics. */
-export function showRefinement(type: MType & { readonly kind: "prim" }): string {
-  const refine = type.refine;
-  if (!refine) return type.name;
-  const parts = [
-    ...(refine.min !== undefined ? [`:min ${refine.min}`] : []),
-    ...(refine.max !== undefined ? [`:max ${refine.max}`] : []),
-    ...(refine.minLength !== undefined ? [`:min-length ${refine.minLength}`] : []),
-    ...(refine.maxLength !== undefined ? [`:max-length ${refine.maxLength}`] : []),
-    ...(refine.pattern !== undefined ? [`:pattern ${JSON.stringify(refine.pattern)}`] : []),
-  ];
-  return `(${type.name} ${parts.join(" ")})`;
-}
-
-/** Why a literal falls outside a primitive's refinements, or undefined when it fits. */
-export function refinementViolation(refine: Refinement, value: string | number | boolean): string | undefined {
-  if (typeof value === "number") {
-    if (refine.min !== undefined && value < refine.min) return `must be at least ${refine.min}`;
-    if (refine.max !== undefined && value > refine.max) return `must be at most ${refine.max}`;
-  }
-  if (typeof value === "string") {
-    if (refine.minLength !== undefined && value.length < refine.minLength) return `must have at least ${refine.minLength} character${refine.minLength === 1 ? "" : "s"}`;
-    if (refine.maxLength !== undefined && value.length > refine.maxLength) return `must have at most ${refine.maxLength} character${refine.maxLength === 1 ? "" : "s"}`;
-    if (refine.pattern !== undefined) {
-      try {
-        if (!new RegExp(refine.pattern).test(value)) return `must match the pattern ${refine.pattern}`;
-      } catch {
-        return undefined;
-      }
-    }
-  }
-  return undefined;
-}
-
 export const effectOf = (
   success: MType,
   errors: Provenance = emptySet,
@@ -656,7 +622,7 @@ function setIncluded(source: Provenance, target: Provenance, requirements = fals
  * A requirement set covers a capability `Service.method` when it lists that
  * capability or the whole `Service`.
  */
-export function coversRequirement(declared: Provenance, requirement: string): boolean {
+function coversRequirement(declared: Provenance, requirement: string): boolean {
   if (declared.has(requirement)) return true;
   const service = requirement.split(".")[0]!;
   return service !== requirement && declared.has(service);
@@ -667,7 +633,7 @@ export function requirementService(requirement: string): string {
 }
 
 /** Stable identity used for deduplication. */
-export function typeKey(type: MType): string {
+function typeKey(type: MType): string {
   return showType(type);
 }
 

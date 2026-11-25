@@ -22,14 +22,6 @@ export {
 } from "./mechanics/artifact.js";
 
 export {
-  checkMechanicsDeclarations,
-  type CheckInfo as MechanicsCheckInfo,
-  type MechanicsCheckDiagnostic,
-  type MechanicsCheckResult,
-  type MechanicsSourceSpan,
-} from "./mechanics/check.js";
-
-export {
   createCheckedEffectInfo,
   toCheckedEffectProgram,
   type CheckedEffectDiagnostic,

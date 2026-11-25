@@ -4,8 +4,8 @@
     {
       "phase": "typecheck",
       "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "Expected Msg, but this is \"Increment\".",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Msg, found String",
       "line": 26,
       "column": 25,
       "endLine": 26,

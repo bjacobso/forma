@@ -4,22 +4,12 @@
     {
       "phase": "typecheck",
       "severity": "error",
-      "code": "mechanics/pure-service",
-      "message": "Rule launch-warmup-3 cannot call Mailer.deliver: rules have no services in scope.",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Effect<Unit, ErrorSet<RateLimited, Bounced>, RequirementSet<Mailer.deliver>>, found Int",
       "line": 7,
-      "column": 12,
+      "column": 9,
       "endLine": 7,
-      "endColumn": 40
-    },
-    {
-      "phase": "typecheck",
-      "severity": "error",
-      "code": "mechanics/equality",
-      "message": "= compares strings, numbers, booleans, and enums; (Effect Unit [RateLimited Bounced] [Mailer.deliver]) would be compared by reference in TypeScript.",
-      "line": 7,
-      "column": 12,
-      "endLine": 7,
-      "endColumn": 40
+      "endColumn": 43
     }
   ]
 }

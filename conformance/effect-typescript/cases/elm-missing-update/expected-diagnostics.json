@@ -5,7 +5,7 @@
       "phase": "typecheck",
       "severity": "error",
       "code": "mechanics/non-exhaustive-match",
-      "message": "update does not handle Decrement.",
+      "message": "Non-exhaustive match: missing constructor(s) Decrement",
       "line": 15,
       "column": 1,
       "endLine": 19,
