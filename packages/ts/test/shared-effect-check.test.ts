@@ -75,7 +75,7 @@ test("editing Effect declarations and preludes invalidates checks and author off
   const first = ws.analysis("main");
   expect(ws.analysis("main")).toBe(first);
   ws.setPrelude("clock", '(service Clock (: now (Effect String)))');
-  expect(ws.diagnostics("main").map(d => d.code)).toContain("mechanics/type-mismatch");
+  expect(ws.diagnostics("main").map(d => d.code)).toContain("typecheck/type-mismatch");
   ws.setDocument("main", '\n\n' + source.replace("Effect Int", "Effect String"));
   expect(ws.diagnostics("main")).toEqual([]);
   expect(ws.analysis("main")).not.toBe(first);
@@ -101,7 +101,7 @@ test("selected module emission checks dependencies before filtering, keeping lex
   session.rememberSource({id:"a.lisp", text:broken});
   const rejected = emit({session, sourceId:"main.lisp"});
   expect(rejected.ok).toBe(false);
-  expect(rejected.diagnostics.some(d => d.code === "mechanics/type-mismatch" && d.span?.sourceId === "a.lisp")).toBe(true);
+  expect(rejected.diagnostics.some(d => d.code === "typecheck/type-mismatch" && d.span?.sourceId === "a.lisp")).toBe(true);
 });
 
 test("mixed descriptor and mechanics artifacts retain domain validation", () => {

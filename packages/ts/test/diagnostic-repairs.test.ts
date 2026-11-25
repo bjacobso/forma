@@ -208,7 +208,7 @@ test("a base value where a brand is expected offers the brand constructor", asyn
   const effect = '(type UserId (Brand String))\n(: find-user (-> UserId (Effect String)))\n(define find-user [id] (succeed "x"))\n(: main (Effect String))\n(define main ';
   const program = effect + '(find-user "u-1"))';
   const mechanics = elaborateEffectProgram(program).diagnostics[0]!;
-  expect(mechanics).toMatchObject({code:"mechanics/type-mismatch", help:'Wrap the value with the brand constructor: (UserId "u-1").'});
+  expect(mechanics).toMatchObject({code:"typecheck/type-mismatch", help:'Wrap the value with the brand constructor: (UserId "u-1").'});
   expect(applyFix(program, mechanics.fix!)).toBe(effect + '(find-user (UserId "u-1")))');
   expect(elaborateEffectProgram(applyFix(program, mechanics.fix!)).diagnostics).toEqual([]);
 });

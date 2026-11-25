@@ -4,8 +4,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "Expected Member, but this is {:name String :role String}.",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Union<:admin, :member>, found String",
       "line": 13,
       "column": 19,
       "endLine": 13,

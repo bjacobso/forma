@@ -4,42 +4,22 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/unbound-name",
-      "message": "Unknown function summ.",
+      "code": "typecheck/unbound-symbol",
+      "message": "Unbound variable: summ",
       "line": 4,
-      "column": 12,
+      "column": 13,
       "endLine": 4,
-      "endColumn": 24
+      "endColumn": 17
     },
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/unknown-requirement",
-      "message": "Unknown requirement Customers.find. Requirements name a service, a Service.method capability, or Scope.",
-      "line": 6,
-      "column": 22,
-      "endLine": 6,
-      "endColumn": 59
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/unknown-type",
-      "message": "Unknown type Customer. Declare it with type or error.",
-      "line": 6,
-      "column": 30,
-      "endLine": 6,
-      "endColumn": 38
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/unknown-service",
-      "message": "Unknown service Customers. Declare it with service.",
+      "code": "typecheck/unbound-symbol",
+      "message": "Unbound variable: Customers.find",
       "line": 8,
-      "column": 3,
+      "column": 4,
       "endLine": 8,
-      "endColumn": 22
+      "endColumn": 18
     }
   ]
 }

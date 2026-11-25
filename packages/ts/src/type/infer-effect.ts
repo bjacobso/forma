@@ -43,6 +43,7 @@ import {
   effectSetToType,
   emptyEffectSet,
   extractOperationalEffect,
+  reprovenanceEffectSet,
   unionEffectSets,
   type EffectProvenance,
 } from "./effect-sets.js";
@@ -352,9 +353,12 @@ function requireEffect(
     const resolved = applyType(yield* Ref.get(ctx.subst), type);
     const eff = extractOperationalEffect(resolved, origin.span);
     if (!eff) {
+      const got = showType(resolved);
       return yield* ctx.fail(origin, {
         code: "typecheck/type-mismatch",
-        message: `Expected ${what}, found ${showType(resolved)}`,
+        message: `Expected ${what}, found ${got}`,
+        expected: what,
+        got,
       });
     }
     return eff;
@@ -419,9 +423,12 @@ export const inferEffectCombinator = (
         );
         const resolvedRelease = applyType(yield* Ref.get(ctx.subst), releaseFnT);
         if (resolvedRelease._tag !== "TFun") {
+          const got = showType(resolvedRelease);
           return yield* ctx.fail(originOf(expr.args[1]!, "release"), {
             code: "typecheck/type-mismatch",
-            message: `acquire-release release must be a function, found ${showType(resolvedRelease)}`,
+            message: `acquire-release release must be a function, found ${got}`,
+            expected: "Function",
+            got,
           });
         }
         const releaseEff = yield* requireEffect(resolvedRelease.res, originOf(expr.args[1]!, "release"));
@@ -511,6 +518,8 @@ export const inferEffectCombinator = (
         return yield* ctx.fail(originOf(collection, "all"), {
           code: "typecheck/type-mismatch",
           message: "all expects a record or vector of effects",
+          expected: "Record or Vector of Effects",
+          got: collection._tag,
         });
       }
 
@@ -546,9 +555,12 @@ export const inferEffectCombinator = (
           ),
         );
         if (fnT._tag !== "TFun") {
+          const got = showType(fnT);
           return yield* ctx.fail(originOf(expr.args[1]!, "for-each-fn"), {
             code: "typecheck/type-mismatch",
-            message: `for-each callback must be a function, found ${showType(fnT)}`,
+            message: `for-each callback must be a function, found ${got}`,
+            expected: "Function",
+            got,
           });
         }
         const eff = yield* requireEffect(fnT.res, originOf(expr.args[1]!, "for-each-fn"));
@@ -588,9 +600,12 @@ export const inferEffectCombinator = (
         const fiberT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         const fiber = extractFiber(fiberT);
         if (!fiber) {
+          const got = showType(fiberT);
           return yield* ctx.fail(originOf(expr.args[0]!, name), {
             code: "typecheck/type-mismatch",
-            message: `${name} expects a Fiber from fork, found ${showType(fiberT)}`,
+            message: `${name} expects a Fiber from fork, found ${got}`,
+            expected: "Fiber",
+            got,
           });
         }
         return name === "join"
@@ -670,9 +685,12 @@ export const inferEffectCombinator = (
           ),
         );
         if (fnT._tag !== "TFun") {
+          const got = showType(fnT);
           return yield* ctx.fail(originOf(expr.args[1]!, "map-error"), {
             code: "typecheck/type-mismatch",
-            message: `map-error expects a function, found ${showType(fnT)}`,
+            message: `map-error expects a function, found ${got}`,
+            expected: "Function",
+            got,
           });
         }
         const resultT = applyType(yield* Ref.get(ctx.subst), fnT.res);
@@ -761,8 +779,11 @@ export const inferEffectCombinator = (
         }
         return buildOperationalEffect(
           body.success,
-          unionEffectSets(body.errors, layer.errors),
-          unionEffectSets(subtractProvidedServices(body.requirements, layer.provides), layer.requirements),
+          unionEffectSets(body.errors, reprovenanceEffectSet(layer.errors, expr.span)),
+          unionEffectSets(
+            subtractProvidedServices(body.requirements, layer.provides),
+            reprovenanceEffectSet(layer.requirements, expr.span),
+          ),
         );
       }
 
@@ -797,7 +818,10 @@ export const inferEffectCombinator = (
         if (fallback) {
           yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), fallback, configType);
         }
-        return buildOperationalEffect(configType, effectSetOf(["ConfigError"], expr.span));
+        return buildOperationalEffect(
+          configType,
+          fallback ? emptyEffectSet : effectSetOf(["ConfigError"], expr.span),
+        );
       }
 
       case "decode": {
@@ -837,9 +861,12 @@ export const inferEffectCombinator = (
         }
         const refT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         if (!(refT._tag === "TApp" && refT.con._tag === "TCon" && refT.con.name === "Ref" && refT.args.length === 1)) {
+          const got = showType(refT);
           return yield* ctx.fail(originOf(expr.args[0]!, name), {
             code: "typecheck/type-mismatch",
-            message: `${name} expects a Ref from ref-make, found ${showType(refT)}`,
+            message: `${name} expects a Ref from ref-make, found ${got}`,
+            expected: "Ref",
+            got,
           });
         }
         const itemT = refT.args[0]!;
@@ -882,9 +909,12 @@ export const inferEffectCombinator = (
         const streamT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         const stream = extractStream(streamT);
         if (!stream) {
+          const got = showType(streamT);
           return yield* ctx.fail(originOf(expr.args[0]!, "stream-map"), {
             code: "typecheck/type-mismatch",
-            message: `stream-map expects a Stream, found ${showType(streamT)}`,
+            message: `stream-map expects a Stream, found ${got}`,
+            expected: "Stream",
+            got,
           });
         }
         const outT = yield* ctx.freshTVar;
@@ -899,9 +929,12 @@ export const inferEffectCombinator = (
         const streamT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         const stream = extractStream(streamT);
         if (!stream) {
+          const got = showType(streamT);
           return yield* ctx.fail(originOf(expr.args[0]!, "stream-filter"), {
             code: "typecheck/type-mismatch",
-            message: `stream-filter expects a Stream, found ${showType(streamT)}`,
+            message: `stream-filter expects a Stream, found ${got}`,
+            expected: "Stream",
+            got,
           });
         }
         yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[1]!, TFun(stream.item, tBool));
@@ -915,9 +948,12 @@ export const inferEffectCombinator = (
         const streamT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         const stream = extractStream(streamT);
         if (!stream) {
+          const got = showType(streamT);
           return yield* ctx.fail(originOf(expr.args[0]!, "stream-take"), {
             code: "typecheck/type-mismatch",
-            message: `stream-take expects a Stream, found ${showType(streamT)}`,
+            message: `stream-take expects a Stream, found ${got}`,
+            expected: "Stream",
+            got,
           });
         }
         yield* assignType(yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[1]!), tInt, originOf(expr.args[1]!, "stream-take"));
@@ -931,9 +967,12 @@ export const inferEffectCombinator = (
         const streamT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         const stream = extractStream(streamT);
         if (!stream) {
+          const got = showType(streamT);
           return yield* ctx.fail(originOf(expr.args[0]!, "stream-map-effect"), {
             code: "typecheck/type-mismatch",
-            message: `stream-map-effect expects a Stream, found ${showType(streamT)}`,
+            message: `stream-map-effect expects a Stream, found ${got}`,
+            expected: "Stream",
+            got,
           });
         }
         if (expr.args[2]) {
@@ -944,9 +983,12 @@ export const inferEffectCombinator = (
           yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[1]!, TFun(stream.item, yield* ctx.freshTVar)),
         );
         if (fnT._tag !== "TFun") {
+          const got = showType(fnT);
           return yield* ctx.fail(originOf(expr.args[1]!, "stream-map-effect"), {
             code: "typecheck/type-mismatch",
-            message: `stream-map-effect callback must be a function, found ${showType(fnT)}`,
+            message: `stream-map-effect callback must be a function, found ${got}`,
+            expected: "Function",
+            got,
           });
         }
         const eff = yield* requireEffect(fnT.res, originOf(expr.args[1]!, "stream-map-effect"));
@@ -964,9 +1006,12 @@ export const inferEffectCombinator = (
         const streamT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         const stream = extractStream(streamT);
         if (!stream) {
+          const got = showType(streamT);
           return yield* ctx.fail(originOf(expr.args[0]!, "stream-run-collect"), {
             code: "typecheck/type-mismatch",
-            message: `stream-run-collect expects a Stream, found ${showType(streamT)}`,
+            message: `stream-run-collect expects a Stream, found ${got}`,
+            expected: "Stream",
+            got,
           });
         }
         return buildOperationalEffect(TApp(tList, [stream.item]), stream.errors, stream.requirements);
@@ -979,9 +1024,12 @@ export const inferEffectCombinator = (
         const streamT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         const stream = extractStream(streamT);
         if (!stream) {
+          const got = showType(streamT);
           return yield* ctx.fail(originOf(expr.args[0]!, "stream-run-fold"), {
             code: "typecheck/type-mismatch",
-            message: `stream-run-fold expects a Stream, found ${showType(streamT)}`,
+            message: `stream-run-fold expects a Stream, found ${got}`,
+            expected: "Stream",
+            got,
           });
         }
         const accT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[1]!));
@@ -1000,9 +1048,12 @@ export const inferEffectCombinator = (
         const streamT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
         const stream = extractStream(streamT);
         if (!stream) {
+          const got = showType(streamT);
           return yield* ctx.fail(originOf(expr.args[0]!, "stream-run-for-each"), {
             code: "typecheck/type-mismatch",
-            message: `stream-run-for-each expects a Stream, found ${showType(streamT)}`,
+            message: `stream-run-for-each expects a Stream, found ${got}`,
+            expected: "Stream",
+            got,
           });
         }
         const fnT = applyType(
@@ -1010,9 +1061,12 @@ export const inferEffectCombinator = (
           yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), expr.args[1]!, TFun(stream.item, yield* ctx.freshTVar)),
         );
         if (fnT._tag !== "TFun") {
+          const got = showType(fnT);
           return yield* ctx.fail(originOf(expr.args[1]!, "stream-run-for-each"), {
             code: "typecheck/type-mismatch",
-            message: `stream-run-for-each callback must be a function, found ${showType(fnT)}`,
+            message: `stream-run-for-each callback must be a function, found ${got}`,
+            expected: "Function",
+            got,
           });
         }
         const eff = yield* requireEffect(fnT.res, originOf(expr.args[1]!, "stream-run-for-each"));

@@ -222,8 +222,9 @@ function brandAdvice(expected: Type, actual: Type, origin: Origin): Pick<Inferen
   const actualBase = actual._tag === "TCon" ? literalBase(actual.name) ?? actual.name : undefined;
   if (brand?._tag !== "TCon" || base?._tag !== "TCon" || actualBase !== base.name) return undefined;
   const span = origin.macroOrigins?.length ? undefined : origin.span, sourceId = span?.sourceId ?? "";
+  const sample = actual._tag === "TCon" && literalBase(actual.name) ? actual.name : "value";
   return {
-    help: `Wrap the value with the brand constructor: (${brand.name} value).`,
+    help: `Wrap the value with the brand constructor: (${brand.name} ${sample}).`,
     fix: span ? [
       {span:{sourceId,startOffset:span.start,endOffset:span.start},newText:`(${brand.name} `},
       {span:{sourceId,startOffset:span.end,endOffset:span.end},newText:")"},

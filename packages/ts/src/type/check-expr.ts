@@ -11,6 +11,7 @@ import { InferContext } from "./context.js";
 import { InferenceError } from "./errors.js";
 import { assignType, literalBase } from "./assign.js";
 import { inferExpr, inferLam, originOf } from "./infer-core.js";
+import { inferMatch } from "./infer-control.js";
 import { EFFECT_COMBINATORS, inferEffectCombinator } from "./infer-effect.js";
 
 /** Literals remain widened in inference and retain their exact value in checking. */
@@ -37,7 +38,10 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     const precise=yield* assignType(literal,target,originOf(expr,"literal-check")).pipe(Effect.result);
     if (precise._tag === "Success") return target;
     yield* Ref.set(ctx.subst, snapshot);
-    if (precise.failure.details["code"] === "typecheck/refinement") {
+    if (
+      precise.failure.details["code"] === "typecheck/refinement" ||
+      (ctx.effectMode && precise.failure.help && target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Brand")
+    ) {
       return yield* Effect.fail(precise.failure);
     }
     const members = target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Union" ? target.args : [];
@@ -80,13 +84,18 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     }
   }
   if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Map"
-    && expr._tag === "App" && expr.fn._tag === "Var" && expr.fn.name === "__dictionary" && expr.args[0]?._tag === "Record") {
-    for (const field of expr.args[0].fields) {
-      const key = TCon(field.label.startsWith(":") ? field.label : JSON.stringify(field.label.startsWith("\0str:") ? field.label.slice(5) : field.label));
-      yield* assignType(key, target.args[0]!, originOf(expr, "map-key"));
-      yield* checkExpr(env, field.value, target.args[1]!);
+    && (expr._tag === "Record" || (expr._tag === "App" && expr.fn._tag === "Var" && expr.fn.name === "__dictionary" && expr.args[0]?._tag === "Record"))) {
+    const record = expr._tag === "Record" ? expr : expr.args[0] as CoreExpr & { _tag: "Record" };
+    for (const field of record.fields) {
+      const keyTarget = applyType(yield* Ref.get(ctx.subst), target.args[0]!);
+      const key =
+        keyTarget._tag === "TVar"
+          ? TCon(field.label.startsWith(":") ? "Keyword" : "String")
+          : TCon(field.label.startsWith(":") ? field.label : JSON.stringify(field.label.startsWith("\0str:") ? field.label.slice(5) : field.label));
+      yield* assignType(key, keyTarget, originOf(expr, "map-key"));
+      yield* checkExpr(env, field.value, applyType(yield* Ref.get(ctx.subst), target.args[1]!));
     }
-    return target;
+    return applyType(yield* Ref.get(ctx.subst), target);
   }
   // Each element of a vector literal is checked against the list's item type, so
   // ["warehouse" "office"] can be a List of an enum.
@@ -101,6 +110,15 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     yield* ctx.recordType(expr.id, target);
     return target;
   }
+  if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Tuple"
+    && expr._tag === "App" && expr.fn._tag === "Var" && expr.fn.name === "__vector"
+    && expr.args.length === target.args.length) {
+    for (let i = 0; i < expr.args.length; i++) {
+      yield* checkExpr(env, expr.args[i]!, target.args[i]!);
+    }
+    yield* ctx.recordType(expr.id, target);
+    return target;
+  }
   if (expr._tag === "Lam") {
     const actual=yield* inferLam(env,expr,target);
     yield* assignType(actual,target,originOf(expr,"function-check"));
@@ -111,6 +129,12 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     yield* checkExpr(env,expr.cond,TCon("Bool"));
     yield* checkExpr(env,expr.then,target);
     yield* checkExpr(env,expr.else_,target);
+    return target;
+  }
+  if (expr._tag === "Match" && target._tag !== "TVar") {
+    const matched = yield* inferMatch(env, expr, inferExpr, (armEnv, body) => checkExpr(armEnv, body, target));
+    yield* assignType(matched, target, originOf(expr, "match-check"));
+    yield* ctx.recordType(expr.id, matched);
     return target;
   }
   if (

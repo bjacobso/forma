@@ -4,18 +4,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/undeclared-error",
-      "message": "Cache.read can fail with Corrupt here, but the service declares only [Unavailable] for it.",
-      "line": 11,
-      "column": 15,
-      "endLine": 11,
-      "endColumn": 35
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/missing-method",
-      "message": "Layer CacheBroken does not implement Cache.write.",
+      "code": "mechanics/provide",
+      "message": "layer CacheBroken does not implement method write of service Cache.",
       "line": 9,
       "column": 1,
       "endLine": 12,

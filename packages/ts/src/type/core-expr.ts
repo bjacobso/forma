@@ -230,6 +230,7 @@ export interface CEffectFail {
   readonly span: Span;
   readonly errorName: string;
   readonly payload: CoreExpr;
+  readonly errorSpan?: Span | undefined;
 }
 
 /** One catch arm: (ErrorName binding) handler, or (_ binding) handler for catch-all. */
@@ -534,12 +535,14 @@ export const CEffectFail = (
   span: Span,
   errorName: string,
   payload: CoreExpr,
+  errorSpan?: Span,
 ): CEffectFail => ({
   _tag: "EffectFail",
   id: freshNodeId(),
   span,
   errorName,
   payload,
+  ...(errorSpan ? { errorSpan } : {}),
 });
 
 export const CEffectCatch = (

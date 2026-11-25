@@ -4,7 +4,7 @@ import type { Diagnostic } from "./diagnostic/diagnostic.js";
 import { bootstrapPreludes } from "./Preludes.js";
 import { emissionDatum, emissionSchema, emitFormTypeScript } from "./descriptor/form-emitter.js";
 import { linkEffectSystem, type EffectExtension } from "./effect-system/link.js";
-import { checkMechanicsDeclarations } from "./mechanics/check.js";
+import { checkMechanicsProgram } from "./mechanics/checked.js";
 import { typeName } from "./mechanics/naming.js";
 import { arrayItems, isRecord } from "./mechanics/types.js";
 
@@ -50,7 +50,7 @@ export const rpcExtension: EffectExtension = {
       schemas.push({ ...d, summary: { kind: "SchemaDef", name, resultType: "SchemaDef" }, payload: { kind: "SchemaDef", name, schema } });
     }
     if (!schemas.length) return;
-    diagnose(checkMechanicsDeclarations([...mechanics, ...schemas]).diagnostics.map(d => ({ ...d, phase: "typecheck" as const })));
+    diagnose(checkMechanicsProgram([...mechanics, ...schemas]).diagnostics.map(d => ({ ...d, phase: "typecheck" as const })));
   },
   emit: (d, { prelude }) => {
     if (d.formName !== "rpc-group" || !isRecord(d.payload)) return [];

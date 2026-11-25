@@ -7,6 +7,7 @@ import { Effect, Ref } from "effect";
 import type { Type, Scheme } from "./types.js";
 import { TApp, TCon, TRow, REmpty, RExtend, tNil, tStr, tNum, tBool, mono, showType } from "./types.js";
 import { BUILTIN_EFFECT_ERRORS } from "./infer-effect.js";
+import { buildOperationalEffect, effectSetOf } from "./effect-sets.js";
 import { applyType, applyEnv, type TypeEnv } from "./substitution.js";
 import { assignType, joinType } from "./assign.js";
 import { unify } from "./unify.js";
@@ -153,7 +154,7 @@ export const inferEffectFail = (
     if (expr.errorName === "") {
       const valT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.payload));
       if (valT._tag === "TCon" && (errorTypes.has(valT.name) || BUILTIN_EFFECT_ERRORS.has(valT.name))) {
-        return operationalEffectType(yield* ctx.freshTVar, [valT], []);
+        return buildOperationalEffect(yield* ctx.freshTVar, effectSetOf([valT.name], expr.errorSpan ?? expr.span));
       }
       return yield* ctx.fail(originOf(expr, "effect-fail"), {
         code: "mechanics/fail-value",
@@ -176,7 +177,7 @@ export const inferEffectFail = (
       applyType(yield* Ref.get(ctx.subst), expectedPayload),
       originOf(expr, "effect-fail-payload"),
     );
-    return operationalEffectType(yield* ctx.freshTVar, [TCon(expr.errorName)], []);
+    return buildOperationalEffect(yield* ctx.freshTVar, effectSetOf([expr.errorName], expr.errorSpan ?? expr.span));
   });
 
 export const inferEffectCatch = (
@@ -390,6 +391,7 @@ export const inferMatch = (
   env: TypeEnv,
   expr: CoreExpr & { _tag: "Match" },
   inferExpr: InferFn,
+  checkArm?: InferFn,
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
     const ctx = yield* InferContext;
@@ -501,10 +503,10 @@ export const inferMatch = (
         }
       }
 
-      // Infer the arm body
+      // Infer or check the arm body
       const bodyS = yield* Ref.get(ctx.subst);
       const bodyEnv = applyEnv(bodyS, armEnv);
-      const bodyT = yield* inferExpr(bodyEnv, arm.body);
+      const bodyT = yield* (checkArm ?? inferExpr)(bodyEnv, arm.body);
       const resolvedBodyT = applyType(yield* Ref.get(ctx.subst), bodyT);
       const bodyEffect = operationalEffectParts(resolvedBodyT);
 
@@ -608,6 +610,7 @@ export const inferMatch = (
           }
           if (missing.length > 0) {
             yield* ctx.addDiagnostic({
+              ...(ctx.effectMode ? { code: "mechanics/non-exhaustive-match" } : {}),
               message: `Non-exhaustive match: missing constructor(s) ${missing.join(", ")}`,
               span: expr.span,
               severity: "error",
@@ -652,6 +655,7 @@ export const inferMatch = (
           .filter((name) => !matched.has(canonical(name)));
         if (missing.length > 0) {
           yield* ctx.addDiagnostic({
+            ...(ctx.effectMode ? { code: "mechanics/non-exhaustive-match" } : {}),
             message: `Non-exhaustive match: missing case(s) ${missing.join(", ")}`,
             span: expr.span,
             severity: "error",

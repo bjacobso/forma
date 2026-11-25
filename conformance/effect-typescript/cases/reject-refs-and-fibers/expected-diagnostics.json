@@ -4,8 +4,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "Expected Int, but this is \"one\".",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Int, found String",
       "line": 5,
       "column": 28,
       "endLine": 5,
@@ -14,18 +14,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "Expected Int, but this is String.",
-      "line": 6,
-      "column": 39,
-      "endLine": 6,
-      "endColumn": 50
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "join expects a Fiber from fork, but this is Int.",
+      "code": "typecheck/type-mismatch",
+      "message": "join expects a Fiber from fork, found Int",
       "line": 12,
       "column": 22,
       "endLine": 12,
@@ -34,8 +24,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "for-each expects an Array, but this is String.",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected List<a>, found String",
       "line": 17,
       "column": 13,
       "endLine": 17,

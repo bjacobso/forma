@@ -134,6 +134,13 @@ const validateSignatureEffectSets = (
     });
     const first = diagnostics[0];
     if (first) {
+      for (const extra of diagnostics.slice(1)) {
+        const extraSpan = extra.span ?? fallbackSpan;
+        yield* Ref.update(ctx.diagnostics, (ds) => [
+          ...ds,
+          { code: extra.code, message: extra.message, severity: "error" as const, source: "hm", span: extraSpan },
+        ]);
+      }
       const span = first.span ?? fallbackSpan;
       return yield* ctx.fail(
         { nodeId: `effect-sig:${span.start}`, span, kind: "effect-signature" },
@@ -466,6 +473,13 @@ const refineEffectDefFailure = (
     const first = diagnostics[0];
     if (!first) return originalError;
 
+    for (const extra of diagnostics.slice(1)) {
+      const extraSpan = extra.span ?? bodyExpr.span;
+      yield* Ref.update(ctx.diagnostics, (ds) => [
+        ...ds,
+        { code: extra.code, message: extra.message, severity: "error" as const, source: "hm", span: extraSpan },
+      ]);
+    }
     const span = first.span ?? bodyExpr.span;
     const sigSpan = defExpr.signature.span;
     return new InferenceError({
@@ -645,9 +659,21 @@ export const inferProgram = (
               const pendingBeforeComponent = memoKey !== null ? (yield* Ref.get(ctx.pendingConstraints)).length : 0;
               const seedEnv = applyEnv(yield* Ref.get(ctx.subst), env);
               const sigTypes = new Map<string, Type>();
+              const failedNames: string[] = [];
               for (const defExpr of component) {
                 if (defExpr.signature) {
-                  yield* validateSignatureEffectSets(defExpr.signature, defExpr.span, knownServices, true);
+                  if (options.onFormError === undefined) {
+                    yield* validateSignatureEffectSets(defExpr.signature, defExpr.span, knownServices, true);
+                  } else {
+                    const sigAttempt = yield* Effect.result(
+                      validateSignatureEffectSets(defExpr.signature, defExpr.span, knownServices, true),
+                    );
+                    if (sigAttempt._tag === "Failure") {
+                      yield* options.onFormError(sigAttempt.failure);
+                      failedNames.push(defExpr.name);
+                      continue;
+                    }
+                  }
                   const tvarMap = new Map<string, Type>();
                   const rvarMap = new Map<string, Row>();
                   const sigT = yield* typeExprToType(defExpr.signature, tvarMap, rvarMap);
@@ -662,8 +688,8 @@ export const inferProgram = (
 
               const inferredDefs: Array<{ name: string; type: Type; pendingStart: number; annotation?: import("./core-expr.js").Span; declaration: import("./core-expr.js").Span }> = [];
               yield* Ref.set(ctx.globalNames, new Set(seedEnv.keys()));
-              const failedNames: string[] = [];
               for (const defExpr of component) {
+                if (failedNames.includes(defExpr.name)) continue;
                 const pendingStart = (yield* Ref.get(ctx.pendingConstraints)).length;
                 const sigT = sigTypes.get(defExpr.name);
                 const specialized = yield* specializeEffectPolyCalls(defExpr, seedEnv, sigT);

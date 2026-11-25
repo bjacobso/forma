@@ -126,7 +126,9 @@ export function lowerProgram(
       }
       if (isDef(expr) && expr.items[1]?._tag === "Sym") definitions.add(expr.items[1].name);
     }
-    for (const [name, expr] of signatureSources) if (!definitions.has(name)) throw new InferenceError({ details:{code:"typecheck/lower"}, message: `Type signature for '${name}' has no matching definition`, origin:{nodeId:`signature:${expr.loc.start}`,kind:"signature",span:spanOf(expr)} });
+    if (!options?.effectMode) {
+      for (const [name, expr] of signatureSources) if (!definitions.has(name)) throw new InferenceError({ details:{code:"typecheck/lower"}, message: `Type signature for '${name}' has no matching definition`, origin:{nodeId:`signature:${expr.loc.start}`,kind:"signature",span:spanOf(expr)} });
+    }
     const result: CoreExpr[] = [];
     for (const expr of expanded) {
       if (isTypeSig(expr)) continue;

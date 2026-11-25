@@ -16,6 +16,7 @@ import type { SExpr } from "../reader/types.js";
 import { isMechanicsArtifactForm, mechanicsPackageableDeclarations, type MechanicsArtifactDiagnostic } from "./artifact.js";
 import { toCheckedEffectProgram, type CheckedEffectInfo, type CheckedEffectProgram } from "./checked-contract.js";
 import { checkMechanicsProgram } from "./checked.js";
+import { checkEffectForms } from "../type/effect-check.js";
 import { generateCheckedEffectTypeScriptModule } from "./effect-typescript.js";
 import { expandEffectLibrary } from "./effect-library.js";
 
@@ -194,7 +195,8 @@ export function elaborateEffectForms(
     };
   }
 
-  const checked = checkMechanicsProgram(projected.declarations);
+  const hm = checkEffectForms(authored, source, { sourceId });
+  const checked = checkMechanicsProgram(projected.declarations, hm, sourceId);
   const program = toCheckedEffectProgram(checked);
   return {
     ok: program.ok,

@@ -12,8 +12,10 @@ import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import type { Type } from "./types.js";
 import { showType } from "./types.js";
 import type { TypeEnv } from "./substitution.js";
+import { applyType } from "./substitution.js";
 import type { Span } from "./core-expr.js";
 import { resetNodeIds } from "./core-expr.js";
+import { InferenceError } from "./errors.js";
 import {
   InferContext,
   makeOwnedInferContext,
@@ -79,18 +81,26 @@ function failResult(
   };
 }
 
-function extractErrorSpan(error: unknown): { readonly start: number; readonly end: number } | undefined {
+function extractErrorSpan(error: unknown): Span | undefined {
   if (typeof error === "object" && error !== null) {
     if ("origin" in error && typeof error.origin === "object" && error.origin !== null && "span" in error.origin) {
-      const span = error.origin.span as { readonly start?: unknown; readonly end?: unknown } | undefined;
+      const span = error.origin.span as { readonly start?: unknown; readonly end?: unknown; readonly sourceId?: unknown } | undefined;
       if (typeof span?.start === "number" && typeof span?.end === "number") {
-        return { start: span.start, end: span.end };
+        return {
+          start: span.start,
+          end: span.end,
+          ...(typeof span.sourceId === "string" ? { sourceId: span.sourceId } : {}),
+        };
       }
     }
     if ("loc" in error && typeof error.loc === "object" && error.loc !== null) {
-      const loc = error.loc as { readonly start?: unknown; readonly end?: unknown };
+      const loc = error.loc as { readonly start?: unknown; readonly end?: unknown; readonly sourceId?: unknown };
       if (typeof loc.start === "number" && typeof loc.end === "number") {
-        return { start: loc.start, end: loc.end };
+        return {
+          start: loc.start,
+          end: loc.end,
+          ...(typeof loc.sourceId === "string" ? { sourceId: loc.sourceId } : {}),
+        };
       }
     }
   }
@@ -164,16 +174,31 @@ export function checkEffectForms(
       });
       const layer = Layer.succeed(InferContext, ctxService);
       let capturedEnv: TypeEnv = new Map();
+      const formErrors: InferenceError[] = [];
       const outcome = yield* Effect.result(
         Effect.provide(
-          inferProgram(coreExprs, options.initialEnv, dslProvider, exprs, (env) => {
-            capturedEnv = env;
-          }),
+          inferProgram(
+            coreExprs,
+            options.initialEnv,
+            dslProvider,
+            exprs,
+            (env) => {
+              capturedEnv = env;
+            },
+            {
+              onFormError: (error) => Effect.sync(() => void formErrors.push(error)),
+            },
+          ),
           layer,
         ),
       );
+      const finalSubst = yield* Ref.get(ctxService.subst);
       const diagnostics = [...(yield* Ref.get(ctxService.diagnostics))];
-      const nodeTypes = new Map(yield* Ref.get(ctxService.nodeTypes));
+      const rawNodeTypes = yield* Ref.get(ctxService.nodeTypes);
+      const nodeTypes: Map<string, Type> = new Map();
+      for (const [id, type] of rawNodeTypes) {
+        nodeTypes.set(id, applyType(finalSubst, type));
+      }
       const services = new Map(
         [...(yield* Ref.get(ctxService.serviceRegistry))].map(([name, methods]) => [
           name,
@@ -182,38 +207,39 @@ export function checkEffectForms(
       );
       const errors = new Set(yield* Ref.get(ctxService.errorTypes));
 
-      if (outcome._tag === "Failure") {
-        const failure = outcome.failure;
+      const failureToDiag = (failure: InferenceError): InferDiagnostic => {
         const span = extractErrorSpan(failure);
-        diagnostics.unshift({
-          code: extractErrorCode(failure, "typecheck/type-mismatch"),
+        const fallbackCode =
+          typeof failure.details["expected"] === "string" && typeof failure.details["got"] === "string"
+            ? "typecheck/type-mismatch"
+            : "typecheck/error";
+        return {
+          code: extractErrorCode(failure, fallbackCode),
           message: failure.message,
           severity: "error",
           source: "hm",
+          ...(failure.details && Object.keys(failure.details).length > 0 ? { details: failure.details } : {}),
           ...(span ? { span } : {}),
           ...(failure.help ? { help: failure.help } : {}),
           ...(failure.fix ? { fix: failure.fix } : {}),
           ...(failure.related ? { related: failure.related } : {}),
-        });
-        return {
-          ok: false,
-          phase: "infer" as const,
-          bindings: new Map(),
-          services,
-          errors,
-          nodeTypes,
-          diagnostics,
         };
+      };
+
+      const failures = outcome._tag === "Failure" ? [...formErrors, outcome.failure] : formErrors;
+      if (failures.length > 0) {
+        diagnostics.unshift(...failures.map(failureToDiag));
       }
 
       const bindings = new Map<string, CheckedEffectBinding>();
       for (const [name, scheme] of capturedEnv) {
-        const eff = extractFunctionEffect(scheme.type);
-        const layerSummary = extractLayer(scheme.type);
+        const resolved = applyType(finalSubst, scheme.type);
+        const eff = extractFunctionEffect(resolved);
+        const layerSummary = extractLayer(resolved);
         bindings.set(name, {
           name,
-          type: scheme.type,
-          display: showType(scheme.type),
+          type: resolved,
+          display: showType(resolved),
           ...(eff ? { effect: eff } : {}),
           ...(layerSummary ? { layer: layerSummary } : {}),
           ...(scheme.declaration ? { span: scheme.declaration } : {}),

@@ -4,28 +4,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/equality",
-      "message": "= compares strings, numbers, booleans, and enums; Money would be compared by reference in TypeScript.",
-      "line": 9,
-      "column": 15,
-      "endLine": 9,
-      "endColumn": 19
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/str",
-      "message": "str joins strings, numbers, and booleans, not Money.",
-      "line": 13,
-      "column": 27,
-      "endLine": 13,
-      "endColumn": 32
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/condition",
-      "message": "Conditions must be Bool, but this is Int.",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Bool, found Int",
       "line": 17,
       "column": 7,
       "endLine": 17,
@@ -34,8 +14,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "Expected Int, but this is Float.",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Int, found Float",
       "line": 23,
       "column": 12,
       "endLine": 23,
