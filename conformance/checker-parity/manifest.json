@@ -144,6 +144,46 @@
       "expected": "reject",
       "checkers": ["hm", "mechanics", "engine", "workspace"],
       "description": "Wide primitive String is rejected where a literal union is expected"
+    },
+    {
+      "id": "refinements-accept",
+      "category": "refinements",
+      "file": "cases/refinements-accept.lisp",
+      "expected": "accept",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Refined primitives accept in-range literals across annotations, brands, records, and calls, and accept computed values"
+    },
+    {
+      "id": "refinements-reject-direct-min",
+      "category": "refinements",
+      "file": "cases/refinements-reject-direct-min.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Direct annotation rejects an Int literal below :min"
+    },
+    {
+      "id": "refinements-reject-brand-bounds",
+      "category": "refinements",
+      "file": "cases/refinements-reject-brand-bounds.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Brand constructor rejects an Int literal outside :min/:max"
+    },
+    {
+      "id": "refinements-reject-record-pattern",
+      "category": "refinements",
+      "file": "cases/refinements-reject-record-pattern.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Record field rejects a String literal failing :pattern"
+    },
+    {
+      "id": "refinements-reject-call-length",
+      "category": "refinements",
+      "file": "cases/refinements-reject-call-length.lisp",
+      "expected": "reject",
+      "checkers": ["hm", "mechanics", "engine", "workspace"],
+      "description": "Call argument rejects a String literal exceeding :max-length"
     }
   ]
 }

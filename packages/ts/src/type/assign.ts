@@ -9,10 +9,13 @@ import { InferenceError, type Origin } from "./errors.js";
 import { requireNumeric, numericResult } from "./numeric.js";
 import {
   decideDataRelation,
+  formatDataLiteral,
+  getRefinement,
   isPrimitiveName,
   joinNumericPrimitives,
   literalBaseName,
   parseLiteralTypeName,
+  showDataRefinement,
   type DataNode,
 } from "./data-relation.js";
 
@@ -20,7 +23,10 @@ function toHmDataNode(type: Type): DataNode<Type> {
   if (type._tag === "TCon") {
     if (type.name === "Unknown") return { kind: "unknown", raw: type };
     if (type.name === "Never") return { kind: "never", raw: type };
-    if (isPrimitiveName(type.name)) return { kind: "prim", name: type.name, raw: type };
+    if (isPrimitiveName(type.name)) {
+      const refine = getRefinement(type);
+      return refine ? { kind: "prim", name: type.name, refine, raw: type } : { kind: "prim", name: type.name, raw: type };
+    }
     const literal = parseLiteralTypeName(type.name);
     if (literal) return { kind: "literal", literal, raw: type };
     return { kind: "other", raw: type };
@@ -63,12 +69,17 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
     return;
   }
   if (b._tag === "TApp" && b.con._tag === "TCon" && b.con.name === "Union") {
+    let refinementFailure: InferenceError | undefined;
     for (const member of b.args) {
       const snapshot=yield* Ref.get(ctx.subst);
       const result=yield* assignType(a,member,origin).pipe(Effect.result);
       if (result._tag === "Success") return;
+      if (result.failure.details["code"] === "typecheck/refinement" && !refinementFailure) {
+        refinementFailure = result.failure;
+      }
       yield* Ref.set(ctx.subst,snapshot);
     }
+    if (refinementFailure) return yield* Effect.fail(refinementFailure);
   }
   if (a._tag === "TApp" && b._tag === "TApp" && a.con._tag === "TCon" && b.con._tag === "TCon" && a.con.name === b.con.name && ["ErrorSet", "RequirementSet"].includes(a.con.name)) {
     const requirements = a.con.name === "RequirementSet";
@@ -80,6 +91,22 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
     const decision = decideDataRelation(toHmDataNode(a), toHmDataNode(b));
     if (decision.verdict === "accept") return;
     if (decision.verdict === "check") return yield* assignType(decision.actual, decision.expected, origin);
+    if (decision.verdict === "refinement-error") {
+      const expected = showDataRefinement(decision.primitive, decision.refine);
+      const got = formatDataLiteral(decision.literal);
+      const message = `${got} ${decision.problem}, as ${expected} requires.`;
+      return yield* Effect.fail(new InferenceError({
+        message,
+        origin,
+        details: {
+          code: "typecheck/refinement",
+          expected,
+          got,
+          problem: decision.problem,
+          refinement: decision.refine,
+        },
+      }));
+    }
     if (decision.verdict === "reject") {
       const details: Record<string, unknown> = { ...typeMismatch(b, a), code: "typecheck/type-mismatch" };
       return yield* Effect.fail(new InferenceError({

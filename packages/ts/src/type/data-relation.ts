@@ -57,10 +57,87 @@ export type DataLiteral =
   | { readonly kind: "int"; readonly value: number }
   | { readonly kind: "float"; readonly value: number };
 
+export interface DataRefinement {
+  readonly min?: number;
+  readonly max?: number;
+  readonly minLength?: number;
+  readonly maxLength?: number;
+  readonly pattern?: string;
+  readonly finite?: boolean;
+}
+
+const attachedRefinements = new WeakMap<object, DataRefinement>();
+
+/** Attaches compile-time literal refinements to a type node object. */
+export function attachRefinement<T extends object>(type: T, refine: DataRefinement): T {
+  const existing = attachedRefinements.get(type);
+  attachedRefinements.set(type, existing ? { ...existing, ...refine } : refine);
+  return type;
+}
+
+/** Returns any compile-time literal refinements attached to a type node object. */
+export function getRefinement(type: object): DataRefinement | undefined {
+  return attachedRefinements.get(type);
+}
+
+/** Formats a data literal for refinement diagnostics. */
+export function formatDataLiteral(literal: DataLiteral): string {
+  switch (literal.kind) {
+    case "string":
+      return JSON.stringify(literal.value);
+    case "keyword":
+      return literal.value;
+    case "boolean":
+    case "int":
+    case "float":
+      return String(literal.value);
+  }
+}
+
+/** Renders a refined primitive the way it is written in Forma source. */
+export function showDataRefinement(primitive: string, refine: DataRefinement): string {
+  const parts = [
+    ...(refine.min !== undefined ? [`:min ${refine.min}`] : []),
+    ...(refine.max !== undefined ? [`:max ${refine.max}`] : []),
+    ...(refine.minLength !== undefined ? [`:min-length ${refine.minLength}`] : []),
+    ...(refine.maxLength !== undefined ? [`:max-length ${refine.maxLength}`] : []),
+    ...(refine.pattern !== undefined ? [`:pattern ${JSON.stringify(refine.pattern)}`] : []),
+    ...(refine.finite === true ? [":finite true"] : []),
+  ];
+  return parts.length > 0 ? `(${primitive} ${parts.join(" ")})` : primitive;
+}
+
+/** Why a literal falls outside a primitive's refinements, or undefined when it fits. */
+export function checkLiteralRefinement(literal: DataLiteral, refine: DataRefinement): string | undefined {
+  if (literal.kind === "int" || literal.kind === "float") {
+    if (refine.finite === true && !Number.isFinite(literal.value)) return "must be finite";
+    if (refine.min !== undefined && literal.value < refine.min) return `must be at least ${refine.min}`;
+    if (refine.max !== undefined && literal.value > refine.max) return `must be at most ${refine.max}`;
+  }
+  if (literal.kind === "string") {
+    if (refine.minLength !== undefined && literal.value.length < refine.minLength) {
+      return `must have at least ${refine.minLength} character${refine.minLength === 1 ? "" : "s"}`;
+    }
+    if (refine.maxLength !== undefined && literal.value.length > refine.maxLength) {
+      return `must have at most ${refine.maxLength} character${refine.maxLength === 1 ? "" : "s"}`;
+    }
+    if (refine.pattern !== undefined) {
+      try {
+        if (!new RegExp(refine.pattern).test(literal.value)) {
+          return `must match the pattern ${refine.pattern}`;
+        }
+      } catch {
+        return undefined;
+      }
+    }
+  }
+  return undefined;
+}
+
 export type DataNode<Raw> =
   | { readonly kind: "unknown"; readonly raw: Raw }
   | { readonly kind: "never"; readonly raw: Raw }
-  | { readonly kind: "prim"; readonly name: string; readonly raw: Raw }
+  | { readonly kind: "prim"; readonly name: string; readonly refine?: DataRefinement; readonly raw: Raw }
   | { readonly kind: "literal"; readonly literal: DataLiteral; readonly raw: Raw }
   | { readonly kind: "brand"; readonly name: string; readonly base: Raw; readonly raw: Raw }
   | { readonly kind: "option"; readonly item: Raw; readonly raw: Raw }
@@ -69,6 +146,13 @@ export type DataNode<Raw> =
 export type DataRelationDecision<Raw> =
   | { readonly verdict: "accept" }
   | { readonly verdict: "reject" }
+  | {
+      readonly verdict: "refinement-error";
+      readonly literal: DataLiteral;
+      readonly primitive: string;
+      readonly refine: DataRefinement;
+      readonly problem: string;
+    }
   | { readonly verdict: "check"; readonly actual: Raw; readonly expected: Raw }
   | { readonly verdict: "defer" };
 
@@ -199,9 +283,22 @@ export function decideDataRelation<Raw>(
         : { verdict: "reject" };
     }
     if (actual.kind === "literal") {
-      return isLiteralAssignableToPrimitive(actual.literal, expected.name)
-        ? { verdict: "accept" }
-        : { verdict: "reject" };
+      if (!isLiteralAssignableToPrimitive(actual.literal, expected.name)) {
+        return { verdict: "reject" };
+      }
+      if (expected.refine) {
+        const problem = checkLiteralRefinement(actual.literal, expected.refine);
+        if (problem) {
+          return {
+            verdict: "refinement-error",
+            literal: actual.literal,
+            primitive: expected.name,
+            refine: expected.refine,
+            problem,
+          };
+        }
+      }
+      return { verdict: "accept" };
     }
     return { verdict: "reject" };
   }

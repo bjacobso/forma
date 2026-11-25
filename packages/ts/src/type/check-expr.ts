@@ -2,7 +2,7 @@ import { typeMismatch } from "./diagnostic-types.js";
 import { printFloat } from "../evaluator/types.js";
 import { Effect, Ref } from "effect";
 import type { Type } from "./types.js";
-import { flattenRow, TCon, TRow, REmpty, RExtend, type Row } from "./types.js";
+import { flattenRow, TApp, TCon, TRow, REmpty, RExtend, type Row } from "./types.js";
 import type { TypeEnv } from "./substitution.js";
 import { applyType } from "./substitution.js";
 import type { CoreExpr } from "./core-expr.js";
@@ -36,10 +36,35 @@ export const checkExpr = (env: TypeEnv, expr: CoreExpr, expected: Type): Effect.
     const precise=yield* assignType(literal,target,originOf(expr,"literal-check")).pipe(Effect.result);
     if (precise._tag === "Success") return target;
     yield* Ref.set(ctx.subst, snapshot);
+    if (precise.failure.details["code"] === "typecheck/refinement") {
+      return yield* Effect.fail(precise.failure);
+    }
     const members = target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Union" ? target.args : [];
     const base = literal._tag === "TCon" ? literalBase(literal.name) : undefined;
     if (base && members.length > 0 && members.every(member => member._tag === "TCon" && literalBase((member as Type & { _tag: "TCon" }).name) === base)) {
       return yield* ctx.fail(originOf(expr,"literal-check"),typeMismatch(target,literal));
+    }
+  }
+  if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Effect" && target.args.length === 3
+    && expr._tag === "App" && expr.fn._tag === "Var" && expr.fn.name === "succeed" && !env.has("succeed") && expr.args.length === 1) {
+    const successTarget = applyType(yield* Ref.get(ctx.subst), target.args[0]!);
+    if (successTarget._tag !== "TVar") {
+      const checked = yield* checkExpr(env, expr.args[0]!, successTarget);
+      const actual = TApp(TCon("Effect"), [checked, TApp(TCon("ErrorSet"), []), TApp(TCon("RequirementSet"), [])]);
+      yield* assignType(actual, target, originOf(expr, "check"));
+      yield* ctx.recordType(expr.id, actual);
+      return target;
+    }
+  }
+  if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Option" && target.args.length === 1
+    && expr._tag === "App" && expr.fn._tag === "Var" && (expr.fn.name === "Some" || expr.fn.name === "Option.Some") && expr.args.length === 1) {
+    const itemTarget = applyType(yield* Ref.get(ctx.subst), target.args[0]!);
+    if (itemTarget._tag !== "TVar") {
+      const checked = yield* checkExpr(env, expr.args[0]!, itemTarget);
+      const actual = TApp(TCon("Option"), [checked]);
+      yield* assignType(actual, target, originOf(expr, "check"));
+      yield* ctx.recordType(expr.id, actual);
+      return target;
     }
   }
   if (target._tag === "TApp" && target.con._tag === "TCon" && target.con.name === "Map"

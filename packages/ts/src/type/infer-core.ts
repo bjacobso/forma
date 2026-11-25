@@ -35,6 +35,7 @@ import {
 } from "./types.js";
 import { applyType, applyEnv, type TypeEnv, applyERow } from "./substitution.js";
 import { assignType, joinType, literalBase } from "./assign.js";
+import { attachRefinement, getRefinement, type DataRefinement } from "./data-relation.js";
 import { requireNumeric, numericResult } from "./numeric.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
@@ -258,6 +259,15 @@ export const typeExprToType = (
       }
 
       case "TEApp": {
+        const splitMeta = splitTypeExprMetadata(texpr);
+        if (splitMeta) {
+          const baseExpr: TypeExpr = splitMeta.args.length === 0
+            ? texpr.con
+            : { ...texpr, args: splitMeta.args };
+          const baseType = yield* typeExprToType(baseExpr, tvarMap, rvarMap);
+          const refine = parseRefinementMetadata(splitMeta.metadata);
+          return refine ? withTypeRefinement(baseType, refine) : baseType;
+        }
         if (texpr.con._tag === "TESym") {
           const alias = (yield* Ref.get(ctx.typeAliases)).get(texpr.con.name);
           const params = (yield* Ref.get(ctx.typeAliasParams)).get(texpr.con.name);
@@ -1047,4 +1057,90 @@ function validMapKey(type: Type): boolean {
     if (type.con.name === "Union") return type.args.length > 0 && type.args.every(value => value._tag === "TCon" && (value.name.startsWith(":") || value.name.startsWith('"')));
   }
   return false;
+}
+
+const TYPE_METADATA_KEYS = new Set([
+  ":indexed",
+  ":doc",
+  ":default",
+  ":pattern",
+  ":min",
+  ":max",
+  ":min-length",
+  ":max-length",
+  ":finite",
+  ":format",
+  ":title",
+  ":identifier",
+]);
+
+function splitTypeExprMetadata(
+  texpr: TypeExpr & { readonly _tag: "TEApp" },
+): { readonly args: readonly TypeExpr[]; readonly metadata: readonly (readonly [string, TypeExpr])[] } | undefined {
+  const conName = texpr.con._tag === "TESym" ? texpr.con.name : undefined;
+  const minimum = conName && ["Map", "Result", "Brand"].includes(conName) ? 2
+    : conName && ["List", "Option", "Id"].includes(conName) ? 1
+    : conName === "Effect" ? 3
+    : 0;
+  const at = texpr.args.findIndex((arg, index) =>
+    index >= minimum &&
+    arg._tag === "TESym" &&
+    arg.name.startsWith(":") &&
+    arg.name !== ":" &&
+    (conName !== "Union" && conName !== "Tagged" || TYPE_METADATA_KEYS.has(arg.name)),
+  );
+  if (at < 0) return undefined;
+  const tail = texpr.args.slice(at);
+  if (tail.length % 2 !== 0) return undefined;
+  const metadata: (readonly [string, TypeExpr])[] = [];
+  for (let i = 0; i < tail.length; i += 2) {
+    const key = tail[i]!;
+    const value = tail[i + 1]!;
+    if (key._tag !== "TESym" || !key.name.startsWith(":")) return undefined;
+    metadata.push([key.name, value]);
+  }
+  return { args: texpr.args.slice(0, at), metadata };
+}
+
+function parseRefinementMetadata(
+  metadata: readonly (readonly [string, TypeExpr])[],
+): DataRefinement | undefined {
+  const refine: { -readonly [K in keyof DataRefinement]: DataRefinement[K] } = {};
+  for (const [key, value] of metadata) {
+    if (value._tag !== "TESym") continue;
+    if (key === ":min" || key === ":max") {
+      const parsed = Number(value.name);
+      if (Number.isFinite(parsed)) {
+        if (key === ":min") refine.min = parsed;
+        else refine.max = parsed;
+      }
+    } else if (key === ":min-length" || key === ":max-length") {
+      const parsed = Number(value.name);
+      if (Number.isSafeInteger(parsed) && parsed >= 0) {
+        if (key === ":min-length") refine.minLength = parsed;
+        else refine.maxLength = parsed;
+      }
+    } else if (key === ":pattern") {
+      try {
+        const parsed: unknown = JSON.parse(value.name);
+        if (typeof parsed === "string") refine.pattern = parsed;
+      } catch {
+        // Ignore non-string pattern values; surface syntax validation reports them.
+      }
+    } else if (key === ":finite" && value.name === "true") {
+      refine.finite = true;
+    }
+  }
+  return Object.keys(refine).length > 0 ? refine : undefined;
+}
+
+function withTypeRefinement(type: Type, refine: DataRefinement): Type {
+  if (type._tag === "TCon") {
+    const existing = getRefinement(type);
+    return attachRefinement(TCon(type.name), existing ? { ...existing, ...refine } : refine);
+  }
+  if (type._tag === "TApp" && type.con._tag === "TCon" && type.con.name === "Brand" && type.args.length === 2) {
+    return TApp(type.con, [type.args[0]!, withTypeRefinement(type.args[1]!, refine)]);
+  }
+  return type;
 }
