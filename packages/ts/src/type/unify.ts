@@ -22,6 +22,13 @@ import {
 import { InferContext } from "./context.js";
 import type { Origin } from "./errors.js";
 import { InferenceError } from "./errors.js";
+import {
+  checkEffectSetInclusion,
+  effectSetFromArgs,
+  effectSetIncluded,
+  isEffectSetCon,
+  type EffectSetKind,
+} from "./effect-sets.js";
 
 // ---------------------------------------------------------------------------
 // Bind helpers — mutate Subst through InferContext
@@ -153,8 +160,9 @@ export const unify = (
     // TApp: unify constructor and all args
     if (a._tag === "TApp" && b._tag === "TApp") {
       yield* unify(a.con, b.con, origin);
-      if (isFiniteTypeSet(a.con) && isFiniteTypeSet(b.con)) {
-        yield* unifyFiniteTypeSetArgs(a.args, b.args, origin);
+      if (isEffectSetCon(a.con) && isEffectSetCon(b.con)) {
+        const kind: EffectSetKind = a.con.name === "ErrorSet" ? "error" : "requirement";
+        yield* unifyFiniteTypeSetArgs(kind, a.args, b.args, origin);
         return;
       }
       yield* unifyTypeAppArgs(a, b, origin);
@@ -170,22 +178,43 @@ export const unify = (
     return yield* ctx.fail(origin, typeMismatch(a, b));
   });
 
-function isFiniteTypeSet(type: Type): boolean {
-  return type._tag === "TCon" && (type.name === "ErrorSet" || type.name === "RequirementSet");
-}
-
 const sortTypeSetArgs = (args: readonly Type[]): readonly Type[] =>
   [...args].sort((left, right) => showType(left).localeCompare(showType(right)));
 
+const hasTypeVariableArg = (args: readonly Type[]): boolean =>
+  args.some((arg) => arg._tag === "TVar");
+
 const unifyFiniteTypeSetArgs = (
-  left: readonly Type[],
-  right: readonly Type[],
+  kind: EffectSetKind,
+  expectedArgs: readonly Type[],
+  actualArgs: readonly Type[],
   origin: Origin,
 ): Effect.Effect<void, InferenceError, InferContext> =>
   Effect.gen(function* () {
     const ctx = yield* InferContext;
-    const sortedLeft = sortTypeSetArgs(left);
-    const sortedRight = sortTypeSetArgs(right);
+    if (!hasTypeVariableArg(expectedArgs) && !hasTypeVariableArg(actualArgs)) {
+      const expectedSet = effectSetFromArgs(expectedArgs, origin.span);
+      const actualSet = effectSetFromArgs(actualArgs, origin.span);
+      if (effectSetIncluded(actualSet, expectedSet, kind, false)) return;
+      const diagnostics = checkEffectSetInclusion(
+        actualSet,
+        expectedSet,
+        kind,
+        "expression",
+        origin.span,
+      );
+      const first = diagnostics[0];
+      if (first) {
+        return yield* ctx.fail(origin, {
+          code: first.code,
+          message: first.message,
+          expected: showType(TApp(TCon(kind === "error" ? "ErrorSet" : "RequirementSet"), expectedArgs)),
+          got: showType(TApp(TCon(kind === "error" ? "ErrorSet" : "RequirementSet"), actualArgs)),
+        });
+      }
+    }
+    const sortedLeft = sortTypeSetArgs(expectedArgs);
+    const sortedRight = sortTypeSetArgs(actualArgs);
     const commonLength = Math.min(sortedLeft.length, sortedRight.length);
     for (let i = 0; i < commonLength; i++) {
       yield* unify(sortedLeft[i]!, sortedRight[i]!, origin);
@@ -193,8 +222,8 @@ const unifyFiniteTypeSetArgs = (
     if (sortedLeft.length !== sortedRight.length) {
       return yield* ctx.fail(origin, {
         code: "typecheck/arity", message: "Type application arity mismatch",
-        left: showType(TApp(TCon("Set"), left)),
-        right: showType(TApp(TCon("Set"), right)),
+        left: showType(TApp(TCon("Set"), expectedArgs)),
+        right: showType(TApp(TCon("Set"), actualArgs)),
       });
     }
   });
