@@ -591,6 +591,17 @@ export const inferProgram = (
               env = updatedEnv;
               serviceMethodSchemes.clear();
             }
+          } else if (expr._tag === "DefLayer") {
+            const layerT = (yield* withAmbientEffectScope(inferExpr(envN, expr))).value;
+            const sAfter = yield* Ref.get(ctx.subst);
+            const updatedEnv = applyEnv(sAfter, env);
+            updatedEnv.set(expr.name, {
+              ...mono(applyType(sAfter, layerT)),
+              declaration: expr.span,
+              ...(expr.signature ? { annotation: expr.signature.span } : {}),
+            });
+            env = updatedEnv;
+            lastType = applyType(sAfter, layerT);
           } else if (expr._tag === "Def") {
             const defGroup: Array<CoreExpr & { _tag: "Def" }> = [expr];
             while (exprIndex + 1 < exprs.length && exprs[exprIndex + 1]!._tag === "Def") {
@@ -919,6 +930,17 @@ export const inferProgramAll = (
           }
           const sAfter = yield* Ref.get(ctx.subst);
           types.push(applyType(sAfter, t));
+        } else if (expr._tag === "DefLayer") {
+          const layerT = (yield* withAmbientEffectScope(inferExpr(envN, expr))).value;
+          const sAfter = yield* Ref.get(ctx.subst);
+          const updatedEnv = applyEnv(sAfter, env);
+          updatedEnv.set(expr.name, {
+            ...mono(applyType(sAfter, layerT)),
+            declaration: expr.span,
+            ...(expr.signature ? { annotation: expr.signature.span } : {}),
+          });
+          env = updatedEnv;
+          types.push(applyType(sAfter, layerT));
         } else if (expr._tag === "Def") {
           const pendingStart = (yield* Ref.get(ctx.pendingConstraints)).length;
           let sigT: Type | undefined;

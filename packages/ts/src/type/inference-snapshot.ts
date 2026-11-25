@@ -14,6 +14,7 @@ export interface InferenceSnapshot {
   readonly nominalRecords: ReadonlyMap<string, Type>;
   readonly typeAliasParams: ReadonlyMap<string, readonly string[]>;
   readonly errorTypes: ReadonlySet<string>;
+  readonly serviceRegistry?: ReadonlyMap<string, ReadonlyMap<string, Type>>;
   readonly adtRegistry: ReadonlyMap<string, ADTInfo>;
   readonly constructorToType: ReadonlyMap<string, string>;
   readonly classRegistry: ReadonlyMap<string, ClassInfo>;
@@ -31,6 +32,7 @@ export const captureInferenceSnapshot = (
     nominalRecords: new Map(yield* Ref.get(context.nominalRecords)),
     typeAliasParams: new Map(yield* Ref.get(context.typeAliasParams)),
     errorTypes: new Set(yield* Ref.get(context.errorTypes)),
+    serviceRegistry: new Map([...(yield* Ref.get(context.serviceRegistry))].map(([name, methods]) => [name, new Map(methods)])),
     adtRegistry: new Map(yield* Ref.get(context.adtRegistry)),
     constructorToType: new Map(yield* Ref.get(context.constructorToType)),
     classRegistry: new Map(yield* Ref.get(context.classRegistry)),

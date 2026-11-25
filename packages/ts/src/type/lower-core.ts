@@ -97,6 +97,8 @@ import {
   lowerTypeDef,
   lowerDefineSchema,
   lowerDefineError,
+  lowerDefineClass,
+  lowerDefineLayer,
   isDefineSchemaProjection,
   lowerDefineService,
   lowerDefineTypeclass,
@@ -238,8 +240,12 @@ function lowerList(expr: SExpr & { _tag: "List" }): CoreExpr {
         break;
       case "__error":
         return lowerDefineError(span, items);
+      case "__class":
+        return lowerDefineClass(span, items);
       case "__service":
         return lowerDefineService(span, items);
+      case "__layer":
+        return lowerDefineLayer(lower, span, items);
       case "match":
         return lowerMatch(lower, span, items);
       case "defclass":

@@ -200,12 +200,25 @@ export type {
   CDefClass,
   CInstance,
   CDefService,
+  CDefLayer,
+  EffectCatchArm,
+  LayerSetupStep,
+  LayerMethodDef,
+  LayerBody,
   ClassTypeParam,
   ClassConstraint,
   ClassMethod,
   InstanceMethod,
   ServiceMethod,
 } from "./core-expr.js";
+export {
+  checkEffectProgram,
+  checkEffectForms,
+  type CheckEffectProgramOptions,
+  type CheckedEffectProgram,
+  type CheckedEffectBinding,
+  type CheckedLayerSummary,
+} from "./effect-check.js";
 export { lower, lowerProgram } from "./lower.js";
 export {
   analyzeLsp,
