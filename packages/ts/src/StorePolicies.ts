@@ -1,38 +1,38 @@
+export * from "./store/tx-types.js";
+
 export {
-  POLICY_HASH_VERSION,
-  SNAPSHOT_HASH_VERSION,
   capabilityAllowed,
   evaluateBranchPolicies,
   hashBranchPolicy,
+  hashBranchPolicy as hashPolicyConfig,
   isRequirementDefinition,
   matchesNamespace,
   namespaceOfQualifiedName,
+  type PolicySnapshotView,
 } from "./store/policies.js";
 
-export type {
-  AffectedDependent,
-  BranchPolicy,
-  CapabilityBudgetRule,
-  DependencyBoundaryRule,
-  EvidenceGatePolicy,
-  EvolutionPolicy,
-  InterfaceImpact,
-  OperationClass,
-  PolicyEvaluationContext,
-  PolicyEvaluator,
-  PolicyEvidenceSource,
-  PolicyRuleKind,
-  PolicySetHash,
-  PolicySnapshotView,
-  PolicyViolation,
-  QualifiedName,
-  RequirementEditPolicy,
-  SnapshotDiff,
-  SnapshotDiffAdded,
-  SnapshotDiffRemoved,
-  SnapshotDiffRenamed,
-  SnapshotDiffUpdated,
-  SnapshotHash,
-  TransactionOp,
-  TransactionProposal,
-} from "./store/policies.js";
+export {
+  InMemorySnapshotBackend,
+  TransactionalStore,
+  buildIndexFromSnapshot,
+  computeSnapshotHash,
+  deserializeSnapshot,
+  diffSnapshots,
+  isSameInterface,
+  makeQualifiedName,
+  serializeSnapshot,
+  splitQualifiedName,
+  type CreateBranchOptions,
+  type DefinitionLookup,
+  type TransactionalStoreOptions,
+} from "./store/transactions.js";
+
+export {
+  classifyOperationClass,
+  exportSnapshotToSources,
+  importSourcesAsTransaction,
+  type ExportSnapshotOptions,
+  type ImportSourcesOptions,
+  type ProjectedModuleSource,
+  type ProjectionSnapshot,
+} from "./store/projection.js";

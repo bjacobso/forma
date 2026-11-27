@@ -10,223 +10,75 @@
  */
 
 import { canonicalJson, sha256 } from "../artifact/canonical-json.js";
+import {
+  POLICY_HASH_VERSION,
+  SNAPSHOT_HASH_VERSION,
+  type AffectedDependent,
+  type BranchPolicy,
+  type CapabilityBudgetRule,
+  type DependencyBoundaryRule,
+  type EvidenceGatePolicy,
+  type EvolutionPolicy,
+  type InterfaceImpact,
+  type OperationClass,
+  type PolicyEvaluationContext,
+  type PolicyEvaluator,
+  type PolicyEvidenceSource,
+  type PolicyRuleKind,
+  type PolicySetHash,
+  type PolicyViolation,
+  type QualifiedName,
+  type RequirementEditPolicy,
+  type Snapshot,
+  type SnapshotDiff,
+  type SnapshotDiffAdded,
+  type SnapshotDiffRemoved,
+  type SnapshotDiffRenamed,
+  type SnapshotDiffUpdated,
+  type SnapshotHash,
+  type TransactionOp,
+  type TransactionProposal,
+} from "./tx-types.js";
 import type {
   DefHash,
-  DefinitionIndex,
   DefinitionRecord,
-  EvidenceKind,
   EvidenceRecord,
-  EvidenceSummary,
-  PresentationMeta,
-  StoreDefinitionKind,
   TestEvidencePayload,
   TypecheckEvidencePayload,
   VerificationEvidencePayload,
 } from "./types.js";
 
-// ---------------------------------------------------------------------------
-// Structurally aligned Stage 2–3 transaction & policy types
-// ---------------------------------------------------------------------------
+export { POLICY_HASH_VERSION, SNAPSHOT_HASH_VERSION };
+export type {
+  AffectedDependent,
+  BranchPolicy,
+  CapabilityBudgetRule,
+  DependencyBoundaryRule,
+  EvidenceGatePolicy,
+  EvolutionPolicy,
+  InterfaceImpact,
+  OperationClass,
+  PolicyEvaluationContext,
+  PolicyEvaluator,
+  PolicyEvidenceSource,
+  PolicyRuleKind,
+  PolicySetHash,
+  PolicyViolation,
+  QualifiedName,
+  RequirementEditPolicy,
+  Snapshot,
+  SnapshotDiff,
+  SnapshotDiffAdded,
+  SnapshotDiffRemoved,
+  SnapshotDiffRenamed,
+  SnapshotDiffUpdated,
+  SnapshotHash,
+  TransactionOp,
+  TransactionProposal,
+};
 
-export const SNAPSHOT_HASH_VERSION = "snap:v1" as const;
-export const POLICY_HASH_VERSION = "policy:v1" as const;
-
-export type SnapshotHash = string;
-export type PolicySetHash = string;
-export type QualifiedName = string;
-export type OperationClass = "impl-edit" | "requirement-edit";
-
-export interface DependencyBoundaryRule {
-  readonly from: string;
-  readonly allow?: readonly string[] | undefined;
-  readonly deny?: readonly string[] | undefined;
-}
-
-export interface CapabilityBudgetRule {
-  readonly namespace: string;
-  readonly maxRequirements: readonly string[];
-}
-
-export interface RequirementEditPolicy {
-  readonly requireExplicitClass?: boolean | undefined;
-  readonly requireApproval?: boolean | undefined;
-}
-
-export interface EvidenceGatePolicy {
-  readonly requiredKinds: readonly EvidenceKind[];
-  readonly rejectInconclusiveVerification?: boolean | undefined;
-  readonly requireDeterministicTests?: boolean | undefined;
-}
-
-export interface EvolutionPolicy {
-  readonly publishedNamespaces: readonly string[];
-  readonly mode: "add-only" | "backward-compatible";
-}
-
-export interface BranchPolicy {
-  readonly protected?: boolean | undefined;
-  readonly dependencyBoundaries?: readonly DependencyBoundaryRule[] | undefined;
-  readonly capabilityBudgets?: readonly CapabilityBudgetRule[] | undefined;
-  readonly requirementEdit?: RequirementEditPolicy | undefined;
-  readonly evidenceGates?: EvidenceGatePolicy | undefined;
-  readonly evolution?: EvolutionPolicy | undefined;
-}
-
-export interface PolicySnapshotView {
-  readonly hash: SnapshotHash;
-  readonly parent: SnapshotHash | null;
-  readonly bindings: ReadonlyMap<QualifiedName, DefHash>;
-  readonly metadata: ReadonlyMap<DefHash, PresentationMeta>;
-  readonly policies: PolicySetHash;
-  readonly policyConfig: BranchPolicy;
-  readonly languageProfile: string;
-  readonly createdAt?: string | undefined;
-  readonly message?: string | undefined;
-}
-
-export type TransactionOp =
-  | {
-      readonly kind: "add";
-      readonly qualifiedName: QualifiedName;
-      readonly source?: string | undefined;
-      readonly record?: DefinitionRecord | undefined;
-      readonly meta?: Partial<PresentationMeta> | undefined;
-    }
-  | {
-      readonly kind: "update";
-      readonly qualifiedName: QualifiedName;
-      readonly source?: string | undefined;
-      readonly record?: DefinitionRecord | undefined;
-      readonly meta?: Partial<PresentationMeta> | undefined;
-    }
-  | {
-      readonly kind: "rename";
-      readonly from: QualifiedName;
-      readonly to: QualifiedName;
-      readonly displayName?: string | undefined;
-    }
-  | {
-      readonly kind: "remove";
-      readonly qualifiedName: QualifiedName;
-    }
-  | {
-      readonly kind: "move";
-      readonly from: QualifiedName;
-      readonly toModuleId: string;
-      readonly newName?: string | undefined;
-    };
-
-export interface TransactionProposal {
-  readonly branch: string;
-  readonly baseSnapshot: SnapshotHash;
-  readonly operationClass: OperationClass;
-  readonly operations: readonly TransactionOp[];
-  readonly message?: string | undefined;
-  readonly author?: string | undefined;
-  readonly onInterfaceChange?: "reject" | "staging-branch" | "add-only" | undefined;
-  readonly stagingBranchName?: string | undefined;
-  readonly coexistenceSuffix?: string | undefined;
-  readonly approvedRequirementEdit?: boolean | undefined;
-  readonly waiveEvolution?: boolean | undefined;
-  readonly nextPolicy?: BranchPolicy | undefined;
-}
-
-export interface AffectedDependent {
-  readonly qualifiedName: QualifiedName;
-  readonly hash: DefHash;
-}
-
-export interface InterfaceImpact {
-  readonly qualifiedName: QualifiedName;
-  readonly oldHash: DefHash;
-  readonly newHash: DefHash;
-  readonly kind: "same-interface" | "interface-changed";
-  readonly oldSignature?: string | undefined;
-  readonly newSignature?: string | undefined;
-  readonly oldRequirements: readonly string[];
-  readonly newRequirements: readonly string[];
-  readonly oldErrors: readonly string[];
-  readonly newErrors: readonly string[];
-  readonly affectedDependents: readonly AffectedDependent[];
-  readonly reboundDependents: readonly AffectedDependent[];
-  readonly unupdatedDependents: readonly AffectedDependent[];
-}
-
-export interface SnapshotDiffAdded {
-  readonly qualifiedName: QualifiedName;
-  readonly hash: DefHash;
-  readonly kind: StoreDefinitionKind;
-  readonly signature?: string | undefined;
-}
-
-export interface SnapshotDiffRemoved {
-  readonly qualifiedName: QualifiedName;
-  readonly hash: DefHash;
-  readonly kind: StoreDefinitionKind;
-  readonly signature?: string | undefined;
-}
-
-export interface SnapshotDiffUpdated {
-  readonly qualifiedName: QualifiedName;
-  readonly oldHash: DefHash;
-  readonly newHash: DefHash;
-  readonly kind: StoreDefinitionKind;
-  readonly interfaceChanged: boolean;
-  readonly oldSignature?: string | undefined;
-  readonly newSignature?: string | undefined;
-  readonly oldRequirements: readonly string[];
-  readonly newRequirements: readonly string[];
-  readonly oldErrors: readonly string[];
-  readonly newErrors: readonly string[];
-}
-
-export interface SnapshotDiffRenamed {
-  readonly from: QualifiedName;
-  readonly to: QualifiedName;
-  readonly hash: DefHash;
-}
-
-export interface SnapshotDiff {
-  readonly fromSnapshot: SnapshotHash;
-  readonly toSnapshot: SnapshotHash;
-  readonly added: readonly SnapshotDiffAdded[];
-  readonly removed: readonly SnapshotDiffRemoved[];
-  readonly updated: readonly SnapshotDiffUpdated[];
-  readonly renamed: readonly SnapshotDiffRenamed[];
-}
-
-export type PolicyRuleKind =
-  | "dependency-boundary"
-  | "capability-budget"
-  | "requirement-edit"
-  | "evidence-gate"
-  | "evolution";
-
-export interface PolicyViolation {
-  readonly rule: PolicyRuleKind;
-  readonly qualifiedName?: QualifiedName | undefined;
-  readonly message: string;
-  readonly details?: Readonly<Record<string, unknown>> | undefined;
-}
-
-export type PolicyEvidenceSource =
-  | ReadonlyMap<DefHash, readonly EvidenceRecord[]>
-  | ReadonlyMap<DefHash, EvidenceSummary>
-  | ((hash: DefHash) => readonly EvidenceRecord[] | EvidenceSummary | undefined);
-
-export interface PolicyEvaluationContext {
-  readonly proposal: TransactionProposal;
-  readonly policy: BranchPolicy;
-  readonly baseSnapshot: PolicySnapshotView;
-  readonly baseIndex: DefinitionIndex;
-  readonly candidateSnapshot: PolicySnapshotView;
-  readonly candidateIndex: DefinitionIndex;
-  readonly impacts: readonly InterfaceImpact[];
-  readonly diff: SnapshotDiff;
-  readonly evidence?: PolicyEvidenceSource | undefined;
-}
-
-export type PolicyEvaluator = (context: PolicyEvaluationContext) => readonly PolicyViolation[];
+/** Alias preserved for callers referencing `PolicySnapshotView`. */
+export type PolicySnapshotView = Snapshot;
 
 // ---------------------------------------------------------------------------
 // Policy hashing & matching helpers
@@ -570,7 +422,17 @@ function checkRequirementEditSeparation(context: PolicyEvaluationContext): Polic
     }
   }
 
+  // Dependents whose DefHash changed solely due to same-interface upstream
+  // rebinding (never directly edited by the proposal) are not requirement edits.
+  const reboundOnlyNames = new Set<QualifiedName>();
+  for (const impact of context.impacts) {
+    for (const dep of impact.reboundDependents) {
+      reboundOnlyNames.add(dep.qualifiedName);
+    }
+  }
+
   for (const updated of context.diff.updated) {
+    if (reboundOnlyNames.has(updated.qualifiedName)) continue;
     const before = context.baseIndex.definitions.get(updated.oldHash);
     const after = context.candidateIndex.definitions.get(updated.newHash);
     if (updated.kind === "test" || isRequirementDefinition(before) || isRequirementDefinition(after)) {

@@ -24,6 +24,15 @@ import {
   type DefinitionIndexSource,
 } from "./index-builder.js";
 import type {
+  InterfaceChangeMode,
+  OperationClass,
+  PolicySetHash,
+  QualifiedName,
+  SnapshotHash,
+  TransactionOp,
+  TransactionProposal,
+} from "./tx-types.js";
+import type {
   DefHash,
   DefinitionIndex,
   DefinitionRecord,
@@ -31,18 +40,19 @@ import type {
   StoreDefinitionKind,
 } from "./types.js";
 
-// ---------------------------------------------------------------------------
-// Structurally compatible Stage 2–3 transaction contract types (`tx-types.ts`)
-// ---------------------------------------------------------------------------
-
-export type SnapshotHash = string;
-export type PolicySetHash = string;
-export type QualifiedName = string;
-export type OperationClass = "impl-edit" | "requirement-edit";
+export type {
+  InterfaceChangeMode,
+  OperationClass,
+  PolicySetHash,
+  QualifiedName,
+  SnapshotHash,
+  TransactionOp,
+  TransactionProposal,
+};
 
 /**
- * Minimal snapshot view required for projection (structurally compatible with
- * `Snapshot` in `tx-types.ts`).
+ * Minimal snapshot view required for projection (any full `Snapshot` from
+ * `tx-types.ts` is assignable to `ProjectionSnapshot`).
  */
 export interface ProjectionSnapshot {
   readonly hash: SnapshotHash;
@@ -51,52 +61,6 @@ export interface ProjectionSnapshot {
   readonly metadata: ReadonlyMap<DefHash, PresentationMeta>;
   readonly policies?: PolicySetHash | undefined;
   readonly languageProfile?: string | undefined;
-}
-
-export type TransactionOp =
-  | {
-      readonly kind: "add";
-      readonly qualifiedName: QualifiedName;
-      readonly source?: string | undefined;
-      readonly record?: DefinitionRecord | undefined;
-      readonly meta?: Partial<PresentationMeta> | undefined;
-    }
-  | {
-      readonly kind: "update";
-      readonly qualifiedName: QualifiedName;
-      readonly source?: string | undefined;
-      readonly record?: DefinitionRecord | undefined;
-      readonly meta?: Partial<PresentationMeta> | undefined;
-    }
-  | {
-      readonly kind: "rename";
-      readonly from: QualifiedName;
-      readonly to: QualifiedName;
-      readonly displayName?: string | undefined;
-    }
-  | {
-      readonly kind: "remove";
-      readonly qualifiedName: QualifiedName;
-    }
-  | {
-      readonly kind: "move";
-      readonly from: QualifiedName;
-      readonly toModuleId: string;
-      readonly newName?: string | undefined;
-    };
-
-export interface TransactionProposal {
-  readonly branch: string;
-  readonly baseSnapshot: SnapshotHash;
-  readonly operationClass: OperationClass;
-  readonly operations: readonly TransactionOp[];
-  readonly message?: string | undefined;
-  readonly author?: string | undefined;
-  readonly onInterfaceChange?: "reject" | "staging-branch" | "add-only" | undefined;
-  readonly stagingBranchName?: string | undefined;
-  readonly coexistenceSuffix?: string | undefined;
-  readonly approvedRequirementEdit?: boolean | undefined;
-  readonly waiveEvolution?: boolean | undefined;
 }
 
 // ---------------------------------------------------------------------------

@@ -11,6 +11,7 @@ import type {
   DefinitionIndex,
   DefinitionRecord,
   EvidenceKind,
+  EvidenceRecord,
   EvidenceSummary,
   PresentationMeta,
   StoreDefinitionKind,
@@ -301,6 +302,11 @@ export interface SnapshotDiff {
   readonly renamed: readonly SnapshotDiffRenamed[];
 }
 
+export type PolicyEvidenceSource =
+  | ReadonlyMap<DefHash, readonly EvidenceRecord[]>
+  | ReadonlyMap<DefHash, EvidenceSummary>
+  | ((hash: DefHash) => readonly EvidenceRecord[] | EvidenceSummary | undefined);
+
 export interface PolicyEvaluationContext {
   readonly proposal: TransactionProposal;
   readonly policy: BranchPolicy;
@@ -310,10 +316,7 @@ export interface PolicyEvaluationContext {
   readonly candidateIndex: DefinitionIndex;
   readonly impacts: readonly InterfaceImpact[];
   readonly diff: SnapshotDiff;
-  readonly evidence?:
-    | ReadonlyMap<DefHash, EvidenceSummary>
-    | ((hash: DefHash) => EvidenceSummary | undefined)
-    | undefined;
+  readonly evidence?: PolicyEvidenceSource | undefined;
 }
 
 /** Pluggable policy evaluator hook invoked inside every transaction commit. */

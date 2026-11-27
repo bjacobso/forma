@@ -43,9 +43,9 @@ import {
   type BuildDefinitionIndexOptions,
   type DefinitionIndexSource,
 } from "./index-builder.js";
+import { hashBranchPolicy } from "./policies.js";
 import { findDependents, type EvidenceLookup } from "./queries.js";
 import {
-  POLICY_HASH_VERSION,
   SNAPSHOT_HASH_VERSION,
   type AffectedDependent,
   type BranchPolicy,
@@ -122,14 +122,9 @@ export function makeQualifiedName(moduleId: string, name: string): QualifiedName
 // Hashing & serialization for Snapshots and Policies
 // ---------------------------------------------------------------------------
 
-/** Compute deterministic `PolicySetHash` for a `BranchPolicy`. */
-export function hashPolicyConfig(policy: BranchPolicy): PolicySetHash {
-  const canonical = canonicalJson({
-    version: POLICY_HASH_VERSION,
-    policy: policy as unknown as JsonValue,
-  });
-  return `${POLICY_HASH_VERSION}:${sha256(canonical)}`;
-}
+/** Compute deterministic `PolicySetHash` for a `BranchPolicy` (unified with `hashBranchPolicy`). */
+export const hashPolicyConfig = hashBranchPolicy;
+export { hashBranchPolicy };
 
 /** Compute deterministic `SnapshotHash` over immutable snapshot contents. */
 export function computeSnapshotHash(input: {
@@ -646,21 +641,29 @@ function parseOpUnit(
     }
   }
 
+  // Filter out top-level module directives (`import` / `export`) before lowering
+  // single-definition transaction units.
+  const declRawExprs = rawExprs.filter((expr) => {
+    const h = headSym(expr);
+    return h !== "import" && h !== "export";
+  });
+  const effectiveRawExprs = declRawExprs.length > 0 ? declRawExprs : rawExprs;
+
   let provider: ReturnType<typeof unifiedFormProvider> | undefined;
   try {
-    provider = unifiedFormProvider(source, [...rawExprs]);
+    provider = unifiedFormProvider(source, [...effectiveRawExprs]);
   } catch {
     provider = undefined;
   }
 
   let coreExprs: CoreExpr[] = [];
-  const primaryRaw = rawExprs[rawExprs.length - 1];
+  const primaryRaw = effectiveRawExprs[effectiveRawExprs.length - 1];
   const rawKind = inferKindFromRaw(primaryRaw);
   const isRawOnly = rawKind === "macro" || rawKind === "test" || rawKind === "form";
 
   if (!isRawOnly) {
     try {
-      coreExprs = lowerProgram(desugarDefineFunctionHeads(rawExprs), provider);
+      coreExprs = lowerProgram(desugarDefineFunctionHeads(effectiveRawExprs), provider);
     } catch (err) {
       return {
         ok: false,
@@ -801,6 +804,8 @@ export class TransactionalStore {
   readonly #onTypecheck: ((qualifiedName: QualifiedName) => void) | undefined;
   /** In-memory cache of resolved HM Schemes keyed by `DefHash` to avoid re-typechecking unchanged defs. */
   readonly #schemeCache = new Map<DefHash, Scheme>();
+  /** Auxiliary `TypeEnv` bindings introduced by service/type definitions (e.g. `Db.query`), keyed by `DefHash`. */
+  readonly #extraEnvCache = new Map<DefHash, ReadonlyMap<string, Scheme>>();
 
   constructor(options: TransactionalStoreOptions = {}) {
     this.backend = options.backend ?? new InMemorySnapshotBackend();
@@ -1017,6 +1022,12 @@ export class TransactionalStore {
       if (cached) {
         const { name } = splitQualifiedName(qName);
         env.set(name, cached);
+      }
+      const extra = this.#extraEnvCache.get(hash);
+      if (extra) {
+        for (const [k, s] of extra) {
+          env.set(k, s);
+        }
       }
     }
 
@@ -1455,6 +1466,7 @@ export class TransactionalStore {
         : new Map();
 
     const inferredSchemes = new Map<QualifiedName, Scheme>();
+    const inferredExtraEnv = new Map<QualifiedName, ReadonlyMap<string, Scheme>>();
 
     for (const unit of orderedUnits) {
       if (unit.coreExprs.length > 0) {
@@ -1462,6 +1474,7 @@ export class TransactionalStore {
         typecheckedCount++;
         try {
           const inferOpts = this.#inferOptions;
+          const prevEnvKeys = new Set(workingEnv.keys());
           const nextEnv = Effect.runSync(
             Effect.gen(function* () {
               const ctx = yield* makeOwnedInferContext(inferOpts);
@@ -1485,6 +1498,15 @@ export class TransactionalStore {
           const scheme = nextEnv.get(unit.name);
           if (scheme) {
             inferredSchemes.set(unit.qualifiedName, scheme);
+          }
+          const addedBindings = new Map<string, Scheme>();
+          for (const [k, s] of nextEnv) {
+            if (!prevEnvKeys.has(k) && k !== unit.name) {
+              addedBindings.set(k, s);
+            }
+          }
+          if (addedBindings.size > 0) {
+            inferredExtraEnv.set(unit.qualifiedName, addedBindings);
           }
         } catch (err) {
           return {
@@ -1570,6 +1592,10 @@ export class TransactionalStore {
       const scheme = inferredSchemes.get(rec.qualifiedName);
       if (scheme) {
         this.#schemeCache.set(rec.hash, scheme);
+      }
+      const extraEnv = inferredExtraEnv.get(rec.qualifiedName);
+      if (extraEnv) {
+        this.#extraEnvCache.set(rec.hash, extraEnv);
       }
       for (const dep of rec.dependencies) {
         if (!hashedRecords.some((r) => r.hash === dep)) {
