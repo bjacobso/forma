@@ -14,18 +14,22 @@
  */
 import { authorNames } from "../diagnostic/diagnostic.js";
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
-import { arrowBody, Precedence, type BuiltinOverload, type EmitContext, type ImportName } from "./builtins.js";
 import {
+  arrowBody,
   builtinErrors,
-  checkMechanicsDeclarations,
   constantDependencies,
   keywordName,
   parsePattern,
+  Precedence,
   recordKey,
-  type CheckInfo,
+  type BuiltinEmitContext,
+  type BuiltinEmission,
+  type BuiltinImportName,
+  type CheckedEffectInfo,
+  type CheckedEffectProgram,
   type EffectType,
   type LayerInfo,
-} from "./check.js";
+} from "./checked-contract.js";
 import { inlineBrands, orderSchemaDeclarations, recursiveSchemaNames, schemaExpressionTs, type SchemaNaming } from "./effect-schema.js";
 import {
   camelIdentifier,
@@ -57,8 +61,8 @@ export interface MechanicsEffectTypeScriptModule {
 }
 
 export interface MechanicsEffectTypeScriptOptions {
-  /** Check results to reuse; the generator runs the checker when omitted. */
-  readonly check?: CheckInfo;
+  /** Checked metadata produced by a solver-neutral Effect checker. */
+  readonly check?: CheckedEffectInfo;
   /** Resolved names owned by dependency modules; never synthesize their brands. */
   readonly externalNames?: ReadonlySet<string>;
   /** Only these resolved declarations are public in a linked file module. */
@@ -89,11 +93,21 @@ const schemaNaming: SchemaNaming = { schemaConst: typeName };
 /** Lines longer than this are broken across lines. */
 const maxWidth = 100;
 
+export function generateCheckedEffectTypeScriptModule(
+  program: CheckedEffectProgram,
+  options: Omit<MechanicsEffectTypeScriptOptions, "check"> = {},
+): MechanicsEffectTypeScriptModule {
+  return generateMechanicsEffectTypeScriptModule(program.declarations, { ...options, check: program.info });
+}
+
 export function generateMechanicsEffectTypeScriptModule(
   declarations: readonly PackageableDeclaration[],
   options: MechanicsEffectTypeScriptOptions = {},
 ): MechanicsEffectTypeScriptModule {
-  const info = options.check ?? checkMechanicsDeclarations(declarations).info;
+  const info = options.check;
+  if (!info) {
+    throw new Error("Effect TypeScript: checked metadata is required (pass { check } or use generateCheckedEffectTypeScriptModule)");
+  }
   const generated = new Generator(declarations, info, options.externalNames, options.exports !== undefined).module();
   if (!options.exports) return generated;
   const publicNames = new Set([...options.exports].flatMap(name => [typeName(name), camelIdentifier(name), `${typeName(name)}Constructors`]));
@@ -188,7 +202,7 @@ class Generator {
 
   constructor(
     private readonly declarations: readonly PackageableDeclaration[],
-    private readonly info: CheckInfo,
+    private readonly info: CheckedEffectInfo,
     private readonly externalNames: ReadonlySet<string> = new Set(),
     private readonly linked = false,
   ) {}
@@ -1138,12 +1152,12 @@ class Generator {
   }
 
   /** A builtin used as a function value becomes an arrow function around its translation. */
-  private builtinFunction(name: string, overload: BuiltinOverload, names: Names, contextual: boolean): Expr {
+  private builtinFunction(name: string, overload: BuiltinEmission, names: Names, contextual: boolean): Expr {
     const scope = names.child();
     const params = overload.params.map((_, index) => scope.bind(`builtin-param:${name}:${index}`, overload.params.length === 1 ? "value" : `arg${index}`));
     const typed = contextual ? params : params.map((param, index) => `${param}: ${this.typeTs(overload.params[index]!)}`);
-    const emit: EmitContext = {
-      use: (module: ImportName) => this.use(module),
+    const emit: BuiltinEmitContext = {
+      use: (module: BuiltinImportName) => this.use(module),
       resultType: () => this.typeTs(overload.result),
       fresh: (preferred) => scope.bind(`builtin:${preferred}`, preferred),
     };
@@ -1251,8 +1265,8 @@ class Generator {
     switch (call.kind) {
       case "builtin": {
         const scope = names.child();
-        const emit: EmitContext = {
-          use: (module: ImportName) => this.use(module),
+        const emit: BuiltinEmitContext = {
+          use: (module: BuiltinImportName) => this.use(module),
           resultType: () => {
             const type = this.info.valueTypes.get(node);
             if (!type) throw new Error(`Effect TypeScript: ${call.name} has no checked type`);

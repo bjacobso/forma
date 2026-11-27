@@ -9,6 +9,7 @@ import { head, name, normalizeEffectProgram } from "../surface/effect.js";
 import { reachableHelpers } from "../surface/helpers.js";
 import { mechanicsPackageableDeclarations } from "./artifact.js";
 import { checkMechanicsProgram, type CheckedMechanicsDeclarations } from "./checked.js";
+import { checkEffectForms } from "../type/effect-check.js";
 
 export interface MechanicsAnalysisSource {
   readonly sourceId: string;
@@ -110,7 +111,27 @@ export function analyzeMechanicsSources(sources: readonly MechanicsAnalysisSourc
       else diagnostics.push(...projected.diagnostics.map(d => ({ ...d, severity: "error" as const, phase: "elaborate" as const })));
     }
   }
-  const checked = checkMechanicsProgram(declarations);
+  const tagSourceId = (expr: SExpr, sourceId: string): SExpr => {
+    const loc = expr.loc.sourceId ? expr.loc : { ...expr.loc, sourceId };
+    switch (expr._tag) {
+      case "List":
+        return { ...expr, loc, items: expr.items.map((item) => tagSourceId(item, sourceId)) };
+      case "Vector":
+        return { ...expr, loc, items: expr.items.map((item) => tagSourceId(item, sourceId)) };
+      case "Set":
+        return { ...expr, loc, items: expr.items.map((item) => tagSourceId(item, sourceId)) };
+      case "Map":
+        return { ...expr, loc, pairs: expr.pairs.map(([k, v]) => [tagSourceId(k, sourceId), tagSourceId(v, sourceId)] as const) };
+      default:
+        return { ...expr, loc };
+    }
+  };
+  const ownedWithSourceId = usable.map((e) => {
+    const src = sources.find((s) => s.expressions.includes(e));
+    return src ? tagSourceId(e, src.sourceId) : e;
+  });
+  const hm = checkEffectForms(ownedWithSourceId, "", { sourceId: sources.at(-1)?.sourceId ?? "source" });
+  const checked = checkMechanicsProgram(declarations, hm, sources.at(-1)?.sourceId ?? "source");
   return { ...checked, ok: checked.ok && !diagnostics.some(d => d.severity === "error"), diagnostics: [...diagnostics, ...checked.diagnostics], owned };
 }
 

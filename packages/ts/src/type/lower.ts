@@ -20,7 +20,7 @@
 import { normalizeEffectProgram,head,name,list,sym } from "../surface/effect.js";
 import type { SExpr } from "../reader/index.js";
 import type { CoreExpr } from "./core-expr.js";
-import { CDef, CTypeDef } from "./core-expr.js";
+import { CDef, CDefLayer, CTypeDef } from "./core-expr.js";
 import { parseUnifiedForm } from "../surface/form.js";
 import { typeDefinition } from "../surface/type-alias.js";
 import { InferenceError } from "./errors.js";
@@ -36,7 +36,7 @@ import {
   getDslProvider,
   spanOf,
 } from "./lower-core.js";
-import { parseTypeExpr } from "./type-parser.js";
+import { parseTypeExpr, setAllowNullaryFnType } from "./type-parser.js";
 
 // Re-export for consumers
 export { lower } from "./lower-core.js";
@@ -67,7 +67,7 @@ function isDef(expr: SExpr): expr is SExpr & { _tag: "List" } {
     expr._tag === "List" &&
     expr.items.length >= 3 &&
     expr.items[0]?._tag === "Sym" &&
-    (expr.items[0].name === "define" || expr.items[0].name === "__operation")
+    (expr.items[0].name === "define" || expr.items[0].name === "__operation" || expr.items[0].name === "__layer")
   );
 }
 
@@ -79,23 +79,19 @@ export interface LowerProgramOptions {
   readonly types?: ReadonlyMap<string, SExpr> | undefined;
   /** Type declarations from other modules, used for implicit `Some`/`None` filling. */
   readonly contextTypes?: readonly SExpr[] | undefined;
+  /** Enable Effect-program lowering rules (nullary `(-> R)` types, strict `cond` `:else` ordering). */
+  readonly effectMode?: boolean | undefined;
 }
 
-/**
- * Lower a sequence of top-level SExprs into CoreExprs.
- *
- * Collects (: name Type) signatures anywhere in the module.
- *
- * @param exprs The parsed SExprs to lower
- * @param dslProvider Optional DSL type provider for recognizing DSL forms.
- *   When provided, forms like (entity ...) are lowered to CDSLForm nodes
- *   instead of CApp nodes (which would fail with "Unbound variable").
- */
 export function lowerProgram(
   exprs: readonly SExpr[],
   dslProvider?: DSLTypeProvider,
   options: LowerProgramOptions = {},
 ): CoreExpr[] {
+  if (options.effectMode) {
+    for (const expr of exprs) validateCondOrder(expr);
+  }
+  const prevNullaryFn = setAllowNullaryFnType(Boolean(options.effectMode));
   const formTypes = new Map([...options.types ?? [], ...exprs.flatMap(expr => {const entry=typeDefinition(expr);return entry ? [entry] : [];})]);
   // Set the module-level provider for use by lower/lowerList/lowerDSLForm
   const prevProvider = getDslProvider();
@@ -130,7 +126,9 @@ export function lowerProgram(
       }
       if (isDef(expr) && expr.items[1]?._tag === "Sym") definitions.add(expr.items[1].name);
     }
-    for (const [name, expr] of signatureSources) if (!definitions.has(name)) throw new InferenceError({ details:{code:"typecheck/lower"}, message: `Type signature for '${name}' has no matching definition`, origin:{nodeId:`signature:${expr.loc.start}`,kind:"signature",span:spanOf(expr)} });
+    if (!options?.effectMode) {
+      for (const [name, expr] of signatureSources) if (!definitions.has(name)) throw new InferenceError({ details:{code:"typecheck/lower"}, message: `Type signature for '${name}' has no matching definition`, origin:{nodeId:`signature:${expr.loc.start}`,kind:"signature",span:spanOf(expr)} });
+    }
     const result: CoreExpr[] = [];
     for (const expr of expanded) {
       if (isTypeSig(expr)) continue;
@@ -142,8 +140,15 @@ export function lowerProgram(
         continue;
       }
       const lowered = lower(expr);
-      const annotation = lowered._tag === "Def" ? signatures.get(lowered.name) : undefined;
-      result.push(lowered._tag === "Def" && annotation ? CDef(lowered.span, lowered.name, lowered.expr, annotation) : lowered);
+      const annotation =
+        lowered._tag === "Def" || lowered._tag === "DefLayer" ? signatures.get(lowered.name) : undefined;
+      result.push(
+        lowered._tag === "Def" && annotation
+          ? CDef(lowered.span, lowered.name, lowered.expr, annotation)
+          : lowered._tag === "DefLayer" && annotation
+            ? CDefLayer(lowered.span, lowered.name, lowered.body, annotation)
+            : lowered,
+      );
     }
 
     return result;
@@ -151,5 +156,37 @@ export function lowerProgram(
     // Restore previous provider (for safety in nested calls)
     setDslProvider(prevProvider);
     setInternalBindingCounter(prevInternalBindingCounter);
+    setAllowNullaryFnType(prevNullaryFn);
   }
+}
+
+function validateCondOrder(expr: SExpr): void {
+  if (expr._tag === "Vector") {
+    for (const item of expr.items) validateCondOrder(item);
+    return;
+  }
+  if (expr._tag === "Map") {
+    for (const [, v] of expr.pairs) validateCondOrder(v);
+    return;
+  }
+  if (expr._tag !== "List" || expr.items.length === 0) return;
+  const h = head(expr);
+  if (h === "quote" || h === "quasiquote") return;
+  if (h === "cond") {
+    const clauses = expr.items.slice(1);
+    for (let i = 0; i < clauses.length; i += 2) {
+      const test = clauses[i];
+      const isAlwaysTrue =
+        (test?._tag === "Sym" && test.name === ":else") ||
+        (test?._tag === "Bool" && test.value === true);
+      if (isAlwaysTrue && i + 2 < clauses.length) {
+        throw new InferenceError({
+          message: "An always-true cond clause (:else or true) must come last.",
+          origin: { nodeId: `cond:${test!.loc.start}`, kind: "cond", span: spanOf(test!) },
+          details: { code: "mechanics/cond-else" },
+        });
+      }
+    }
+  }
+  for (const item of expr.items) validateCondOrder(item);
 }

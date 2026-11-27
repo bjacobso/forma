@@ -1,4 +1,5 @@
 import type { JsonValue, PackageableDeclaration } from "../artifact/artifact.js";
+import type { CheckedEffectProgram } from "./checked-contract.js";
 import { propertyName, typeName } from "./naming.js";
 
 export interface MechanicsEffectSchemaModule {
@@ -16,6 +17,12 @@ interface SchemaDefPayload {
 export interface SchemaNaming {
   /** The runtime schema constant for a declared or hoisted schema. */
   readonly schemaConst: (name: string) => string;
+}
+
+export function generateCheckedEffectSchemaModule(
+  program: CheckedEffectProgram,
+): MechanicsEffectSchemaModule {
+  return generateMechanicsEffectSchemaModule(program.declarations);
 }
 
 export function generateMechanicsEffectSchemaModule(

@@ -4,8 +4,8 @@
     {
       "phase": "typecheck",
       "severity": "error",
-      "code": "mechanics/type-mismatch",
-      "message": "Expected Int, but this is \"wrong\".",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Int, found String",
       "line": 12,
       "column": 28,
       "endLine": 12,

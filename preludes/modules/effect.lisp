@@ -12,9 +12,11 @@
 ; A do without bind or let steps keeps its core meaning: (do e1 e2) runs e1
 ; and returns e2, in an effect body or in a value.
 ;
-; service, error, class, layer, and catch (stages 2-3) are in scope in every
-; Effect program without an import. They lower declarations to the engine's
-; __service, __error, __class, and __layer, and normalize catch shorthand.
+; service, error, class, layer, catch, and the Effect/Stream/Fiber/Layer type
+; shorthands (stages 2-4) are in scope in every Effect program without an
+; import. They lower declarations to the engine's __service, __error, __class,
+; and __layer, normalize catch shorthand, and pad omitted error/requirement
+; vectors on Effect, Stream, Fiber, and Layer types.
 ; -----------------------------------------------------------------------------
 (import "./kernel.lisp" [and or not])
 (export do bind pure)
@@ -95,12 +97,24 @@
 ;; error — a tagged error type, in every Effect program
 ;;
 ;; (error UserNotFound {:id String})
-(macro (error parts ...) `(__error ~@parts))
+(macro (error parts ...)
+  (if (= (count parts) 0)
+    (syntax-error "surface/invalid-form" "error requires a symbolic name")
+    (let [n (sexpr-sym-name (first parts))]
+      (if (or (= n nil) (starts-with? n ":"))
+        (syntax-error "surface/invalid-form" "error requires a symbolic name" (first parts))
+        `(__error ~@parts)))))
 
 ;; class — a nominal class type, in every Effect program
 ;;
 ;; (class Customer {:name String})
-(macro (class parts ...) `(__class ~@parts))
+(macro (class parts ...)
+  (if (= (count parts) 0)
+    (syntax-error "surface/invalid-form" "class requires a symbolic name")
+    (let [n (sexpr-sym-name (first parts))]
+      (if (or (= n nil) (starts-with? n ":"))
+        (syntax-error "surface/invalid-form" "class requires a symbolic name" (first parts))
+        `(__class ~@parts)))))
 
 ;; layer — a service implementation or layer composition, in every Effect program
 ;;
@@ -196,3 +210,61 @@
                        [true (concat out [item])])))
             normalized (nth (reduce step [true []] clauses) 1)]
         `(catch ~(first parts) ~@normalized)))))
+
+;; Effect — an effect type with optional error and requirement vectors, in every Effect program
+;;
+;; (service Clock (: now (Effect Int)))
+(macro (Effect parts ...)
+  (let [n (count parts)]
+    (if (= n 1)
+      `(Effect ~(first parts) [] [])
+      (if (= n 2)
+        `(Effect ~(first parts) ~(nth parts 1) [])
+        (if (= n 3)
+          `(Effect ~@parts)
+          (syntax-error "surface/invalid-form"
+            "Effect expects a success type, with optional error and requirement vectors."))))))
+
+;; Stream — a stream type with optional error and requirement vectors, in every Effect program
+;;
+;; (class Feed {:name String})
+;; (: items (-> Feed (Stream String)))
+;; (define items [feed] (stream-of [(get feed :name)]))
+(macro (Stream parts ...)
+  (let [n (count parts)]
+    (if (= n 1)
+      `(Stream ~(first parts) [] [])
+      (if (= n 2)
+        `(Stream ~(first parts) ~(nth parts 1) [])
+        (if (= n 3)
+          `(Stream ~@parts)
+          (syntax-error "surface/invalid-form"
+            "Stream expects an item type, with optional error and requirement vectors."))))))
+
+;; Fiber — a fiber handle type with an optional error vector, in every Effect program
+;;
+;; (service Jobs (: start (-> String (Effect (Fiber Int)))))
+(macro (Fiber parts ...)
+  (let [n (count parts)]
+    (if (= n 1)
+      `(Fiber ~(first parts) [])
+      (if (= n 2)
+        `(Fiber ~@parts)
+        (syntax-error "surface/invalid-form"
+          "Fiber expects a success type and an optional error vector.")))))
+
+;; Layer — a layer type with optional error and requirement vectors, in every Effect program
+;;
+;; (service Store (: get (-> String (Effect String))))
+;; (: StoreLive (Layer [Store]))
+;; (layer StoreLive :provides Store (define get [k] (succeed k)))
+(macro (Layer parts ...)
+  (let [n (count parts)]
+    (if (= n 1)
+      `(Layer ~(first parts) [] [])
+      (if (= n 2)
+        `(Layer ~(first parts) ~(nth parts 1) [])
+        (if (= n 3)
+          `(Layer ~@parts)
+          (syntax-error "surface/invalid-form"
+            "Layer expects a provides vector, with optional error and requirement vectors."))))))

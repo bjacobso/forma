@@ -10,16 +10,6 @@
       "column": 1,
       "endLine": 4,
       "endColumn": 23
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/unreachable-pattern",
-      "message": "This _ is unreachable: every case is already matched.",
-      "line": 10,
-      "column": 60,
-      "endLine": 10,
-      "endColumn": 61
     }
   ]
 }

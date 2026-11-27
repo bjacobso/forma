@@ -5,7 +5,7 @@
       "phase": "check",
       "severity": "error",
       "code": "mechanics/cond-else",
-      "message": "An always-true cond clause (:else or true) must be the last clause.",
+      "message": "An always-true cond clause (:else or true) must come last.",
       "line": 6,
       "column": 5,
       "endLine": 6,

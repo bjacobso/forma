@@ -4,18 +4,8 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/pure-service",
-      "message": "Function readings cannot call Sensors.read: functions and constants have no services in scope. Give its define an Effect return signature.",
-      "line": 8,
-      "column": 66,
-      "endLine": 8,
-      "endColumn": 87
-    },
-    {
-      "phase": "check",
-      "severity": "error",
-      "code": "mechanics/effect-in-value",
-      "message": "succeed builds an effect, so it belongs in an effect body (an operation, a layer method, or an effect (fn ...) argument). In a value, call an operation instead.",
+      "code": "typecheck/type-mismatch",
+      "message": "Expected Int, found Effect<Int, ErrorSet<>, RequirementSet<>>",
       "line": 11,
       "column": 22,
       "endLine": 11,

@@ -518,3 +518,15 @@ export function buildERow(labels: Set<string>, tail: ERow): ERow {
   }
   return e;
 }
+
+// ---------------------------------------------------------------------------
+// Operational Effect Provenance Sets (RFC 0023)
+// ---------------------------------------------------------------------------
+
+export type {
+  EffectProvenance,
+  EffectSetKind,
+  OperationalEffect,
+  EffectSetDiagnostic,
+  EffectSetDiagnosticCode,
+} from "./effect-sets.js";

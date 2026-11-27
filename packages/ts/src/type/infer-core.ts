@@ -35,6 +35,7 @@ import {
 } from "./types.js";
 import { applyType, applyEnv, type TypeEnv, applyERow } from "./substitution.js";
 import { assignType, joinType, literalBase } from "./assign.js";
+import { attachRefinement, getRefinement, type DataRefinement } from "./data-relation.js";
 import { requireNumeric, numericResult } from "./numeric.js";
 import { unify } from "./unify.js";
 import { InferContext } from "./context.js";
@@ -50,6 +51,14 @@ import { inferRecord, inferGet } from "./infer-record.js";
 import { inferDef } from "./infer-binding.js";
 import { inferAscribe, inferDSLForm } from "./infer-dsl.js";
 import { inferTypeDef, inferDefClass, inferInstance, inferDefService } from "./infer-typedef.js";
+import { EFFECT_COMBINATORS, inferDefLayer, inferEffectCombinator } from "./infer-effect.js";
+import {
+  buildOperationalEffect,
+  emptyEffectSet,
+  extractOperationalEffect,
+  unionEffectSets,
+  type EffectProvenance,
+} from "./effect-sets.js";
 
 // ---------------------------------------------------------------------------
 // Origin helper
@@ -212,6 +221,8 @@ export const typeExprToType = (
 
         // Known type constants
         switch (name) {
+          case "__Infer":
+            return yield* ctx.freshTVar;
           case "Num":
           case "Number":
             return yield* ctx.fail(
@@ -258,6 +269,18 @@ export const typeExprToType = (
       }
 
       case "TEApp": {
+        if (texpr.con._tag === "TESym" && texpr.con.name === "Numeric" && texpr.args.length === 1) {
+          return yield* typeExprToType(texpr.args[0]!, tvarMap, rvarMap);
+        }
+        const splitMeta = splitTypeExprMetadata(texpr);
+        if (splitMeta) {
+          const baseExpr: TypeExpr = splitMeta.args.length === 0
+            ? texpr.con
+            : { ...texpr, args: splitMeta.args };
+          const baseType = yield* typeExprToType(baseExpr, tvarMap, rvarMap);
+          const refine = parseRefinementMetadata(splitMeta.metadata);
+          return refine ? withTypeRefinement(baseType, refine) : baseType;
+        }
         if (texpr.con._tag === "TESym") {
           const alias = (yield* Ref.get(ctx.typeAliases)).get(texpr.con.name);
           const params = (yield* Ref.get(ctx.typeAliasParams)).get(texpr.con.name);
@@ -418,6 +441,8 @@ const inferExprInner = (
       return inferInstance(env, expr, inferExpr);
     case "DefService":
       return inferDefService(expr);
+    case "DefLayer":
+      return inferDefLayer(env, expr, inferExpr);
   }
 };
 
@@ -497,15 +522,15 @@ const inferEffectDo = (
   Effect.gen(function* () {
     const ctx = yield* InferContext;
     let currentEnv = new Map(env);
-    let accumulatedErrors: readonly Type[] = [];
-    let accumulatedRequirements: readonly Type[] = [];
+    let accumulatedErrors: EffectProvenance = emptyEffectSet;
+    let accumulatedRequirements: EffectProvenance = emptyEffectSet;
 
     for (const binding of expr.bindings) {
       const s = yield* Ref.get(ctx.subst);
       currentEnv = applyEnv(s, currentEnv);
       const bindingType = yield* inferExpr(currentEnv, binding.expr);
       const resolvedBindingType = applyType(yield* Ref.get(ctx.subst), bindingType);
-      const parts = operationalEffectParts(resolvedBindingType);
+      const parts = extractOperationalEffect(resolvedBindingType, binding.expr.span);
       if (!parts) {
         return yield* ctx.fail(
           {
@@ -517,22 +542,22 @@ const inferEffectDo = (
         );
       }
 
-      accumulatedErrors = mergeTypeSets(accumulatedErrors, parts.errors);
-      accumulatedRequirements = mergeTypeSets(accumulatedRequirements, parts.requirements);
+      accumulatedErrors = unionEffectSets(accumulatedErrors, parts.errors);
+      accumulatedRequirements = unionEffectSets(accumulatedRequirements, parts.requirements);
       currentEnv.set(binding.name, mono(parts.success));
     }
 
     const bodyType = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(currentEnv, expr.body));
-    const bodyParts = operationalEffectParts(bodyType);
+    const bodyParts = extractOperationalEffect(bodyType, expr.body.span);
     if (bodyParts) {
-      return operationalEffectType(
+      return buildOperationalEffect(
         bodyParts.success,
-        mergeTypeSets(accumulatedErrors, bodyParts.errors),
-        mergeTypeSets(accumulatedRequirements, bodyParts.requirements),
+        unionEffectSets(accumulatedErrors, bodyParts.errors),
+        unionEffectSets(accumulatedRequirements, bodyParts.requirements),
       );
     }
 
-    return operationalEffectType(bodyType, accumulatedErrors, accumulatedRequirements);
+    return buildOperationalEffect(bodyType, accumulatedErrors, accumulatedRequirements);
   });
 
 // ---------------------------------------------------------------------------
@@ -580,6 +605,25 @@ const inferVar = (
     if (scheme) {
       const t = yield* instantiateWithConstraints(scheme, originOf(expr, "var"));
       return t;
+    }
+
+    // Chained member access like cfg.inner.port when cfg is in scope.
+    if (expr.name.includes(".")) {
+      const segments = expr.name.split(".");
+      const root = segments[0]!;
+      if (env.has(root)) {
+        let current: CoreExpr = { ...expr, name: root };
+        for (let i = 1; i < segments.length; i++) {
+          current = {
+            _tag: "Get",
+            id: `${expr.id}:dot:${i}`,
+            span: expr.span,
+            record: current,
+            label: `:${segments[i]!}`,
+          };
+        }
+        return yield* inferGet(env, current as CoreExpr & { _tag: "Get" }, inferExpr);
+      }
     }
 
     const bt = ctx.builtinScheme(expr.name);
@@ -664,6 +708,12 @@ const literalName = (e: CoreExpr): string | undefined =>
   : e.lit._tag === "LInt" || e.lit._tag === "LFloat" || e.lit._tag === "LBool" ? String(e.lit.value) : undefined;
 const sameLiteral = (member: string, literal: string): boolean => {
   if (member === literal) return true;
+  if (member.startsWith(":") && literal.startsWith("\"")) {
+    try { return member.slice(1) === JSON.parse(literal); } catch { return false; }
+  }
+  if (literal.startsWith(":") && member.startsWith("\"")) {
+    try { return literal.slice(1) === JSON.parse(member); } catch { return false; }
+  }
   try { return !member.startsWith(":") && JSON.parse(member) === JSON.parse(literal); } catch { return false; }
 };
 
@@ -694,6 +744,30 @@ const inferApp = (
         ? new InferenceError({...error,message:error.message,related:[...(error.related ?? []),{message:"Expected type declared here",span:{sourceId:annotation.sourceId ?? "",startOffset:annotation.start,endOffset:annotation.end}}]})
         : error));
     const known = named ? env.get(named)?.type ?? ctx.builtinScheme(named)?.type : undefined;
+    if (named && !env.has(named) && EFFECT_COMBINATORS.has(named)) {
+      const combResult = yield* inferEffectCombinator(env, expr, named, inferExpr);
+      if (combResult !== undefined) return combResult;
+    }
+    if (named === "assoc" && !env.has(named) && expr.args.length === 3) {
+      const targetT = applyType(yield* Ref.get(ctx.subst), yield* inferExpr(env, expr.args[0]!));
+      const keyArg = expr.args[1]!;
+      const valArg = expr.args[2]!;
+      if (targetT._tag === "TApp" && targetT.con._tag === "TCon" && targetT.con.name === "Map" && targetT.args.length === 2) {
+        yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), keyArg, targetT.args[0]!);
+        yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), valArg, targetT.args[1]!);
+        return targetT;
+      }
+      const nominalShape = targetT._tag === "TCon" ? (yield* Ref.get(ctx.nominalRecords)).get(targetT.name) : undefined;
+      const rowTarget = nominalShape?._tag === "TRow" ? nominalShape : targetT._tag === "TRow" ? targetT : undefined;
+      if (rowTarget && keyArg._tag === "Lit" && keyArg.lit._tag === "LKeyword") {
+        const fields = flattenRow(rowTarget.row).fields;
+        const fieldT = fields.get(keyArg.lit.value);
+        if (fieldT) {
+          yield* checkExpr(applyEnv(yield* Ref.get(ctx.subst), env), valArg, fieldT);
+          return targetT;
+        }
+      }
+    }
     const variadicHead = named && !env.has(named) && ["+", "-", "*", "/", "min", "max"].includes(named);
     let expected = lambda._tag === "Lam" && !lambda.restParam ? lambda.params.length : known?.arity;
     if (expected === undefined && known?._tag === "TFun") {
@@ -918,7 +992,9 @@ const inferApp = (
     }
     const sFinal = yield* Ref.get(ctx.subst);
     const resolved = applyType(sFinal, fnT);
-    return resolved._tag === "TVariadic" ? applyType(sFinal, resolved.res) : resolved;
+    const result = resolved._tag === "TVariadic" ? applyType(sFinal, resolved.res) : resolved;
+    const eff = extractOperationalEffect(result, expr.span);
+    return eff ? buildOperationalEffect(eff.success, eff.errors, eff.requirements) : result;
   });
 
 const inferVector = (
@@ -1047,4 +1123,90 @@ function validMapKey(type: Type): boolean {
     if (type.con.name === "Union") return type.args.length > 0 && type.args.every(value => value._tag === "TCon" && (value.name.startsWith(":") || value.name.startsWith('"')));
   }
   return false;
+}
+
+const TYPE_METADATA_KEYS = new Set([
+  ":indexed",
+  ":doc",
+  ":default",
+  ":pattern",
+  ":min",
+  ":max",
+  ":min-length",
+  ":max-length",
+  ":finite",
+  ":format",
+  ":title",
+  ":identifier",
+]);
+
+function splitTypeExprMetadata(
+  texpr: TypeExpr & { readonly _tag: "TEApp" },
+): { readonly args: readonly TypeExpr[]; readonly metadata: readonly (readonly [string, TypeExpr])[] } | undefined {
+  const conName = texpr.con._tag === "TESym" ? texpr.con.name : undefined;
+  const minimum = conName && ["Map", "Result", "Brand"].includes(conName) ? 2
+    : conName && ["List", "Option", "Id"].includes(conName) ? 1
+    : conName === "Effect" ? 3
+    : 0;
+  const at = texpr.args.findIndex((arg, index) =>
+    index >= minimum &&
+    arg._tag === "TESym" &&
+    arg.name.startsWith(":") &&
+    arg.name !== ":" &&
+    (conName !== "Union" && conName !== "Tagged" || TYPE_METADATA_KEYS.has(arg.name)),
+  );
+  if (at < 0) return undefined;
+  const tail = texpr.args.slice(at);
+  if (tail.length % 2 !== 0) return undefined;
+  const metadata: (readonly [string, TypeExpr])[] = [];
+  for (let i = 0; i < tail.length; i += 2) {
+    const key = tail[i]!;
+    const value = tail[i + 1]!;
+    if (key._tag !== "TESym" || !key.name.startsWith(":")) return undefined;
+    metadata.push([key.name, value]);
+  }
+  return { args: texpr.args.slice(0, at), metadata };
+}
+
+function parseRefinementMetadata(
+  metadata: readonly (readonly [string, TypeExpr])[],
+): DataRefinement | undefined {
+  const refine: { -readonly [K in keyof DataRefinement]: DataRefinement[K] } = {};
+  for (const [key, value] of metadata) {
+    if (value._tag !== "TESym") continue;
+    if (key === ":min" || key === ":max") {
+      const parsed = Number(value.name);
+      if (Number.isFinite(parsed)) {
+        if (key === ":min") refine.min = parsed;
+        else refine.max = parsed;
+      }
+    } else if (key === ":min-length" || key === ":max-length") {
+      const parsed = Number(value.name);
+      if (Number.isSafeInteger(parsed) && parsed >= 0) {
+        if (key === ":min-length") refine.minLength = parsed;
+        else refine.maxLength = parsed;
+      }
+    } else if (key === ":pattern") {
+      try {
+        const parsed: unknown = JSON.parse(value.name);
+        if (typeof parsed === "string") refine.pattern = parsed;
+      } catch {
+        // Ignore non-string pattern values; surface syntax validation reports them.
+      }
+    } else if (key === ":finite" && value.name === "true") {
+      refine.finite = true;
+    }
+  }
+  return Object.keys(refine).length > 0 ? refine : undefined;
+}
+
+function withTypeRefinement(type: Type, refine: DataRefinement): Type {
+  if (type._tag === "TCon") {
+    const existing = getRefinement(type);
+    return attachRefinement(TCon(type.name), existing ? { ...existing, ...refine } : refine);
+  }
+  if (type._tag === "TApp" && type.con._tag === "TCon" && type.con.name === "Brand" && type.args.length === 2) {
+    return TApp(type.con, [type.args[0]!, withTypeRefinement(type.args[1]!, refine)]);
+  }
+  return type;
 }

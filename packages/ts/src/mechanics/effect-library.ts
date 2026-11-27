@@ -151,11 +151,11 @@ function atAuthoredSyntax(expanded: SExpr, call: SExpr): SExpr {
   return relocate(expanded);
 }
 
-/** Declarations `forma:effect` lowers in every Effect program, imported or not (RFC 0029, stages 2-3). */
+/** Declarations `forma:effect` lowers in every Effect program, imported or not (RFC 0029, stages 2-4). */
 const declarations = new Set(["service", "error", "class", "layer"]);
 
-/** Body forms `forma:effect` lowers in every Effect program, imported or not (RFC 0029, stage 3). */
-const bodyForms = new Set(["catch"]);
+/** Body and type forms `forma:effect` lowers in every Effect program, imported or not (RFC 0029, stages 3-4). */
+const bodyForms = new Set(["catch", "Effect", "Stream", "Fiber", "Layer"]);
 
 function rethrowLibraryError(error: unknown, fallbackLoc: SExpr["loc"]): never {
   const failure = error as { readonly message?: string; readonly loc?: SExpr["loc"]; readonly details?: { readonly code?: unknown } };

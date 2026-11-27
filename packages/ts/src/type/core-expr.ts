@@ -173,7 +173,8 @@ export type CoreExpr =
   | CMatch
   | CDefClass
   | CInstance
-  | CDefService;
+  | CDefService
+  | CDefLayer;
 
 export interface CLit {
   readonly _tag: "Lit";
@@ -229,9 +230,17 @@ export interface CEffectFail {
   readonly span: Span;
   readonly errorName: string;
   readonly payload: CoreExpr;
+  readonly errorSpan?: Span | undefined;
 }
 
-/** Recover one typed error: (catch effect (ErrorName binding) handler). */
+/** One catch arm: (ErrorName binding) handler, or (_ binding) handler for catch-all. */
+export interface EffectCatchArm {
+  readonly errorName: string;
+  readonly binding: Param;
+  readonly handler: CoreExpr;
+}
+
+/** Recover one or more typed errors: (catch effect (ErrorName binding) handler ...). */
 export interface CEffectCatch {
   readonly _tag: "EffectCatch";
   readonly id: string;
@@ -240,6 +249,38 @@ export interface CEffectCatch {
   readonly errorName: string;
   readonly binding: Param;
   readonly handler: CoreExpr;
+  readonly arms: readonly EffectCatchArm[];
+}
+
+export interface LayerSetupStep {
+  readonly kind: "bind" | "let";
+  readonly binding: Binding;
+}
+
+export interface LayerMethodDef {
+  readonly name: string;
+  readonly span: Span;
+  readonly params?: readonly Param[] | undefined;
+  readonly body: CoreExpr;
+}
+
+export type LayerBody =
+  | { readonly kind: "compose"; readonly expr: CoreExpr }
+  | {
+      readonly kind: "provide";
+      readonly service: string;
+      readonly serviceSpan: Span;
+      readonly setup: readonly LayerSetupStep[];
+      readonly methods: readonly LayerMethodDef[];
+    };
+
+export interface CDefLayer {
+  readonly _tag: "DefLayer";
+  readonly id: string;
+  readonly span: Span;
+  readonly name: string;
+  readonly body: LayerBody;
+  readonly signature?: TypeExpr | undefined;
 }
 
 export interface CIf {
@@ -321,6 +362,8 @@ export interface CTypeDef {
   readonly typeParams?: readonly string[] | undefined;
   /** Constructor definitions for ADTs */
   readonly constructors?: readonly ADTConstructor[] | undefined;
+  /** Optional discriminator field label for Tagged ADTs (e.g., ":_tag" or ":kind") */
+  readonly tagField?: string | undefined;
 }
 
 export interface ADTConstructor {
@@ -492,12 +535,14 @@ export const CEffectFail = (
   span: Span,
   errorName: string,
   payload: CoreExpr,
+  errorSpan?: Span,
 ): CEffectFail => ({
   _tag: "EffectFail",
   id: freshNodeId(),
   span,
   errorName,
   payload,
+  ...(errorSpan ? { errorSpan } : {}),
 });
 
 export const CEffectCatch = (
@@ -506,6 +551,7 @@ export const CEffectCatch = (
   errorName: string,
   binding: Param,
   handler: CoreExpr,
+  arms?: readonly EffectCatchArm[],
 ): CEffectCatch => ({
   _tag: "EffectCatch",
   id: freshNodeId(),
@@ -514,6 +560,7 @@ export const CEffectCatch = (
   errorName,
   binding,
   handler,
+  arms: arms ?? [{ errorName, binding, handler }],
 });
 
 export const CIf = (span: Span, cond: CoreExpr, then: CoreExpr, else_: CoreExpr): CIf => ({
@@ -576,6 +623,7 @@ export const CTypeDef = (
   typeParams?: readonly string[],
   constructors?: readonly ADTConstructor[],
   source?: "type" | "schema" | "error" | "class" | "form",
+  tagField?: string,
 ): CTypeDef => ({
   _tag: "TypeDef",
   id: freshNodeId(),
@@ -585,6 +633,7 @@ export const CTypeDef = (
   typeParams,
   constructors,
   source,
+  ...(tagField ? { tagField } : {}),
 });
 
 export const CMatch = (span: Span, scrutinee: CoreExpr, arms: readonly MatchArm[]): CMatch => ({
@@ -659,6 +708,20 @@ export const CDefService = (
   methods,
 });
 
+export const CDefLayer = (
+  span: Span,
+  name: string,
+  body: LayerBody,
+  signature?: TypeExpr,
+): CDefLayer => ({
+  _tag: "DefLayer",
+  id: freshNodeId(),
+  span,
+  name,
+  body,
+  ...(signature ? { signature } : {}),
+});
+
 // ---------------------------------------------------------------------------
 // Structural combinators
 // ---------------------------------------------------------------------------
@@ -681,7 +744,7 @@ export const exprChildren = (expr: CoreExpr): readonly CoreExpr[] => {
     case "EffectFail":
       return [expr.payload];
     case "EffectCatch":
-      return [expr.body, expr.handler];
+      return [expr.body, ...expr.arms.map((a) => a.handler)];
     case "If":
       return [expr.cond, expr.then, expr.else_];
     case "Record":
@@ -704,5 +767,12 @@ export const exprChildren = (expr: CoreExpr): readonly CoreExpr[] => {
       return expr.methods.map((m) => m.expr);
     case "DefService":
       return [];
+    case "DefLayer":
+      return expr.body.kind === "compose"
+        ? [expr.body.expr]
+        : [
+            ...expr.body.setup.map((s) => s.binding.expr),
+            ...expr.body.methods.map((m) => m.body),
+          ];
   }
 };

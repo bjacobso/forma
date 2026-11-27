@@ -14,9 +14,10 @@ import { lowerOntologyOperations } from "../surface/ontology-effect.js";
 import { normalizeEffectProgram } from "../surface/effect.js";
 import type { SExpr } from "../reader/types.js";
 import { isMechanicsArtifactForm, mechanicsPackageableDeclarations, type MechanicsArtifactDiagnostic } from "./artifact.js";
-import { type CheckInfo } from "./check.js";
+import { toCheckedEffectProgram, type CheckedEffectInfo, type CheckedEffectProgram } from "./checked-contract.js";
 import { checkMechanicsProgram } from "./checked.js";
-import { generateMechanicsEffectTypeScriptModule } from "./effect-typescript.js";
+import { checkEffectForms } from "../type/effect-check.js";
+import { generateCheckedEffectTypeScriptModule } from "./effect-typescript.js";
 import { expandEffectLibrary } from "./effect-library.js";
 
 export interface EffectProgramSpan {
@@ -50,7 +51,8 @@ export interface EffectProgramElaboration {
   readonly ok: boolean;
   readonly declarations: readonly PackageableDeclaration[];
   readonly diagnostics: readonly EffectProgramDiagnostic[];
-  readonly check?: CheckInfo;
+  readonly check?: CheckedEffectInfo;
+  readonly program?: CheckedEffectProgram;
 }
 
 export interface EffectProgramTypeScript extends EffectProgramElaboration {
@@ -193,12 +195,15 @@ export function elaborateEffectForms(
     };
   }
 
-  const checked = checkMechanicsProgram(projected.declarations);
+  const hm = checkEffectForms(authored, source, { sourceId });
+  const checked = checkMechanicsProgram(projected.declarations, hm, sourceId);
+  const program = toCheckedEffectProgram(checked);
   return {
-    ok: checked.ok,
-    declarations: projected.declarations,
+    ok: program.ok,
+    declarations: program.declarations,
     diagnostics: checked.diagnostics.map((diagnostic) => checkDiagnostic(diagnostic, locate)),
-    check: checked.check,
+    check: program.info,
+    program,
   };
 }
 
@@ -208,8 +213,8 @@ export function generateEffectProgram(
   options: EffectProgramOptions = {},
 ): EffectProgramTypeScript {
   const elaboration = elaborateEffectProgram(source, options);
-  if (!elaboration.ok || !elaboration.check) return elaboration;
-  const module = generateMechanicsEffectTypeScriptModule(elaboration.declarations, { check: elaboration.check });
+  if (!elaboration.ok || !elaboration.program) return elaboration;
+  const module = generateCheckedEffectTypeScriptModule(elaboration.program);
   return { ...elaboration, code: module.code, operationNames: module.operationNames };
 }
 

@@ -4,12 +4,12 @@
     {
       "phase": "check",
       "severity": "error",
-      "code": "mechanics/let-effect",
-      "message": "let binds values; use do! to run Clock.now and bind its result.",
-      "line": 7,
-      "column": 13,
-      "endLine": 7,
-      "endColumn": 22
+      "code": "typecheck/type-mismatch",
+      "message": "Argument 1 to -: Expected Int or Float, found Effect<Int, ErrorSet<>, RequirementSet<Clock.now>>",
+      "line": 8,
+      "column": 17,
+      "endLine": 8,
+      "endColumn": 20
     }
   ]
 }

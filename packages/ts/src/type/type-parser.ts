@@ -36,6 +36,13 @@ function parseEffectTypeSet(expr: SExpr, setName: "ErrorSet" | "RequirementSet")
   );
 }
 
+let _allowNullaryFnType = false;
+export function setAllowNullaryFnType(allow: boolean): boolean {
+  const prev = _allowNullaryFnType;
+  _allowNullaryFnType = allow;
+  return prev;
+}
+
 /**
  * Parse a type expression from SExpr.
  *
@@ -104,9 +111,9 @@ function parseTypeExprInner(expr: SExpr): TypeExpr {
         };
       }
 
-      // Function type: (-> A B C) means A -> B -> C
+      // Function type: (-> A B C) means A -> B -> C; (-> R) allowed in Effect mode
       if (head.name === "->") {
-        if (items.length < 3) {
+        if (items.length < (_allowNullaryFnType ? 2 : 3)) {
           throw new InferenceError({ message: "(-> ...) requires at least 2 type arguments" });
         }
 
@@ -132,6 +139,50 @@ function parseTypeExprInner(expr: SExpr): TypeExpr {
 
         return TEApp(span, TESym(spanOf(head), "Effect"), [
           parseTypeExpr(items[1]!),
+          parseEffectTypeSet(items[2] ?? { _tag: "Vector", items: [], loc: expr.loc }, "ErrorSet"),
+          parseEffectTypeSet(items[3] ?? { _tag: "Vector", items: [], loc: expr.loc }, "RequirementSet"),
+        ]);
+      }
+
+      // Operational Stream type: (Stream Item [Errors...] [Requirements...])
+      if (head.name === "Stream") {
+        if (items.length < 2 || items.length > 4) {
+          throw new InferenceError({
+            message: "Stream type expects item and optional error and requirement vectors.",
+          });
+        }
+
+        return TEApp(span, TESym(spanOf(head), "Stream"), [
+          parseTypeExpr(items[1]!),
+          parseEffectTypeSet(items[2] ?? { _tag: "Vector", items: [], loc: expr.loc }, "ErrorSet"),
+          parseEffectTypeSet(items[3] ?? { _tag: "Vector", items: [], loc: expr.loc }, "RequirementSet"),
+        ]);
+      }
+
+      // Operational Fiber type: (Fiber Success [Errors...])
+      if (head.name === "Fiber") {
+        if (items.length < 2 || items.length > 3) {
+          throw new InferenceError({
+            message: "Fiber type expects success and optional error vector.",
+          });
+        }
+
+        return TEApp(span, TESym(spanOf(head), "Fiber"), [
+          parseTypeExpr(items[1]!),
+          parseEffectTypeSet(items[2] ?? { _tag: "Vector", items: [], loc: expr.loc }, "ErrorSet"),
+        ]);
+      }
+
+      // Operational Layer type: (Layer [Provides...] [Errors...] [Requirements...])
+      if (head.name === "Layer") {
+        if (items.length < 2 || items.length > 4) {
+          throw new InferenceError({
+            message: "Layer type expects provides vector and optional error and requirement vectors.",
+          });
+        }
+
+        return TEApp(span, TESym(spanOf(head), "Layer"), [
+          parseEffectTypeSet(items[1]!, "RequirementSet"),
           parseEffectTypeSet(items[2] ?? { _tag: "Vector", items: [], loc: expr.loc }, "ErrorSet"),
           parseEffectTypeSet(items[3] ?? { _tag: "Vector", items: [], loc: expr.loc }, "RequirementSet"),
         ]);

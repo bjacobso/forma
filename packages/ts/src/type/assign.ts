@@ -9,10 +9,13 @@ import { InferenceError, type Origin } from "./errors.js";
 import { requireNumeric, numericResult } from "./numeric.js";
 import {
   decideDataRelation,
+  formatDataLiteral,
+  getRefinement,
   isPrimitiveName,
   joinNumericPrimitives,
   literalBaseName,
   parseLiteralTypeName,
+  showDataRefinement,
   type DataNode,
 } from "./data-relation.js";
 
@@ -20,7 +23,10 @@ function toHmDataNode(type: Type): DataNode<Type> {
   if (type._tag === "TCon") {
     if (type.name === "Unknown") return { kind: "unknown", raw: type };
     if (type.name === "Never") return { kind: "never", raw: type };
-    if (isPrimitiveName(type.name)) return { kind: "prim", name: type.name, raw: type };
+    if (isPrimitiveName(type.name)) {
+      const refine = getRefinement(type);
+      return refine ? { kind: "prim", name: type.name, refine, raw: type } : { kind: "prim", name: type.name, raw: type };
+    }
     const literal = parseLiteralTypeName(type.name);
     if (literal) return { kind: "literal", literal, raw: type };
     return { kind: "other", raw: type };
@@ -58,17 +64,59 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
     return;
   }
   if (a._tag === "TVar" || b._tag === "TVar") return yield* unify(b, a, origin);
+  if (a._tag === "TApp" && b._tag === "TApp" && a.con._tag === "TCon" && b.con._tag === "TCon" && a.con.name === "List" && b.con.name === "List" && a.args.length === 1 && b.args.length === 1) {
+    yield* assignType(a.args[0]!, b.args[0]!, origin);
+    return;
+  }
+  if (a._tag === "TCon" && b._tag === "TApp" && b.con._tag === "TCon" && b.con.name === "Union") {
+    const alias = (yield* Ref.get(ctx.typeAliases)).get(a.name);
+    if (alias?._tag === "TEApp" && alias.con._tag === "TESym" && alias.con.name === "Union") return;
+  }
+  if (b._tag === "TCon" && a._tag === "TApp" && a.con._tag === "TCon" && a.con.name === "Union") {
+    const alias = (yield* Ref.get(ctx.typeAliases)).get(b.name);
+    if (alias?._tag === "TEApp" && alias.con._tag === "TESym" && alias.con.name === "Union") return;
+  }
+  // Effect enum compatibility: keyword literals (:red) and string literals ("red") match in enums,
+  // and keyword-enum Unions (e.g. (Union :free :pro)) widen to String (bare keywords do not).
+  if (
+    a._tag === "TApp" &&
+    a.con._tag === "TCon" &&
+    a.con.name === "Union" &&
+    a.args.length > 0 &&
+    a.args.every((m) => m._tag === "TCon" && m.name.startsWith(":")) &&
+    b._tag === "TCon" &&
+    b.name === "String"
+  ) {
+    return;
+  }
+  if (a._tag === "TCon" && b._tag === "TCon") {
+    if (a.name.startsWith("\"") && b.name.startsWith(":")) {
+      try {
+        if (JSON.parse(a.name) === b.name.slice(1)) return;
+      } catch { /* ignore */ }
+    }
+    if (a.name.startsWith(":") && b.name.startsWith("\"")) {
+      try {
+        if (a.name.slice(1) === JSON.parse(b.name)) return;
+      } catch { /* ignore */ }
+    }
+  }
   if (a._tag === "TApp" && a.con._tag === "TCon" && a.con.name === "Union") {
     for (const member of a.args) yield* assignType(member,b,origin);
     return;
   }
   if (b._tag === "TApp" && b.con._tag === "TCon" && b.con.name === "Union") {
+    let refinementFailure: InferenceError | undefined;
     for (const member of b.args) {
       const snapshot=yield* Ref.get(ctx.subst);
       const result=yield* assignType(a,member,origin).pipe(Effect.result);
       if (result._tag === "Success") return;
+      if (result.failure.details["code"] === "typecheck/refinement" && !refinementFailure) {
+        refinementFailure = result.failure;
+      }
       yield* Ref.set(ctx.subst,snapshot);
     }
+    if (refinementFailure) return yield* Effect.fail(refinementFailure);
   }
   if (a._tag === "TApp" && b._tag === "TApp" && a.con._tag === "TCon" && b.con._tag === "TCon" && a.con.name === b.con.name && ["ErrorSet", "RequirementSet"].includes(a.con.name)) {
     const requirements = a.con.name === "RequirementSet";
@@ -80,6 +128,22 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
     const decision = decideDataRelation(toHmDataNode(a), toHmDataNode(b));
     if (decision.verdict === "accept") return;
     if (decision.verdict === "check") return yield* assignType(decision.actual, decision.expected, origin);
+    if (decision.verdict === "refinement-error") {
+      const expected = showDataRefinement(decision.primitive, decision.refine);
+      const got = formatDataLiteral(decision.literal);
+      const message = `${got} ${decision.problem}, as ${expected} requires.`;
+      return yield* Effect.fail(new InferenceError({
+        message,
+        origin,
+        details: {
+          code: "typecheck/refinement",
+          expected,
+          got,
+          problem: decision.problem,
+          refinement: decision.refine,
+        },
+      }));
+    }
     if (decision.verdict === "reject") {
       const details: Record<string, unknown> = { ...typeMismatch(b, a), code: "typecheck/type-mismatch" };
       return yield* Effect.fail(new InferenceError({
@@ -110,8 +174,33 @@ export const assignType = (actual: Type, expected: Type, origin: Origin): Effect
       yield* unify(TRow(bf.tail), TRow(remainder), origin);
       return;
     }
-    if ([...bf.fields.keys()].every(k=>af.fields.has(k)) && bf.tail._tag === "REmpty" && af.tail._tag === "REmpty" && af.fields.size === bf.fields.size) {
-      for (const [label,type] of bf.fields) yield* assignType(af.fields.get(label)!,type,origin);
+    if (
+      bf.tail._tag === "REmpty" &&
+      af.tail._tag === "REmpty" &&
+      [...af.fields.keys()].every((k) => bf.fields.has(k)) &&
+      [...bf.fields.entries()].every(
+        ([k, t]) =>
+          af.fields.has(k) ||
+          (t._tag === "TApp" && t.con._tag === "TCon" && t.con.name === "Option" && t.args.length === 1),
+      )
+    ) {
+      for (const [label, actualField] of af.fields) {
+        const expectedField = bf.fields.get(label)!;
+        if (
+          expectedField._tag === "TApp" &&
+          expectedField.con._tag === "TCon" &&
+          expectedField.con.name === "Option" &&
+          expectedField.args.length === 1
+        ) {
+          const snapshot = yield* Ref.get(ctx.subst);
+          const asOpt = yield* assignType(actualField, expectedField, origin).pipe(Effect.result);
+          if (asOpt._tag === "Success") continue;
+          yield* Ref.set(ctx.subst, snapshot);
+          yield* assignType(actualField, expectedField.args[0]!, origin);
+        } else {
+          yield* assignType(actualField, expectedField, origin);
+        }
+      }
       return;
     }
   }
@@ -133,8 +222,9 @@ function brandAdvice(expected: Type, actual: Type, origin: Origin): Pick<Inferen
   const actualBase = actual._tag === "TCon" ? literalBase(actual.name) ?? actual.name : undefined;
   if (brand?._tag !== "TCon" || base?._tag !== "TCon" || actualBase !== base.name) return undefined;
   const span = origin.macroOrigins?.length ? undefined : origin.span, sourceId = span?.sourceId ?? "";
+  const sample = actual._tag === "TCon" && literalBase(actual.name) ? actual.name : "value";
   return {
-    help: `Wrap the value with the brand constructor: (${brand.name} value).`,
+    help: `Wrap the value with the brand constructor: (${brand.name} ${sample}).`,
     fix: span ? [
       {span:{sourceId,startOffset:span.start,endOffset:span.start},newText:`(${brand.name} `},
       {span:{sourceId,startOffset:span.end,endOffset:span.end},newText:")"},

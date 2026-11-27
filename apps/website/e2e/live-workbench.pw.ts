@@ -91,7 +91,7 @@ test("examples switch the code, and the email example shows the email compiler's
   await examples.getByRole("button", { name: "Email rule lanes" }).click();
   await page.getByRole("button", { name: "Introduce error" }).click();
   await expect(check(page)).toContainText("1 error");
-  await expect(page.locator(".rd-inspector")).toContainText("Expected EmailLane");
+  await expect(page.locator(".rd-inspector")).toContainText('Expected Union<"gmail", "default">, found "gmial"');
   await expect(page.locator(".rd-file-count.bad")).toHaveText("1");
 });
 

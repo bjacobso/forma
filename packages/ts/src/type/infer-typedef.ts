@@ -63,6 +63,9 @@ export const inferTypeDef = (
         const base = yield* typeExprToType(expr.typeExpr.args.at(-1)!, new Map(), new Map());
         const branded = yield* typeExprToType(expr.typeExpr, new Map(), new Map());
         getAdtConstructorSchemes().set(expr.name, mkScheme([], [], fnType([base], branded)));
+      } else if (ctx.effectMode && expr.typeExpr._tag === "TERow" && (!expr.typeParams || expr.typeParams.length === 0)) {
+        const rowType = yield* typeExprToType(expr.typeExpr, new Map(), new Map());
+        getAdtConstructorSchemes().set(expr.name, mkScheme([], [], fnType([rowType], rowType)));
       }
       return tNil;
     }
@@ -72,32 +75,14 @@ export const inferTypeDef = (
       const typeParams = expr.typeParams ?? [];
       const typeCon = TCon(expr.name);
 
-      // Register ADT info
+      // Register ADT info (including tagField and variantPayloads for Tagged unions)
       const conArities = new Map<string, number>();
+      const variantPayloads = new Map<string, Type | undefined>();
       for (const con of expr.constructors) {
         conArities.set(con.name, con.fields.length);
       }
-      yield* Ref.update(ctx.adtRegistry, (m) => {
-        const next = new Map(m);
-        next.set(expr.name, { typeParams, constructors: conArities });
-        return next;
-      });
-
-      // Register constructor → type mapping
-      yield* Ref.update(ctx.constructorToType, (m) => {
-        const next = new Map(m);
-        for (const con of expr.constructors!) {
-          next.set(con.name, expr.name);
-          next.set(`${expr.name}.${con.name}`,expr.name);
-        }
-        return next;
-      });
-
-      // Register each constructor as a function in the type environment
-      // via a module-level map that inferProgram will pick up
       const _adtConstructorSchemes = getAdtConstructorSchemes();
       for (const con of expr.constructors) {
-        // Build the result type: TypeName<a, b, ...> or just TypeName
         const resultType =
           typeParams.length > 0
             ? TApp(
@@ -106,12 +91,11 @@ export const inferTypeDef = (
               )
             : typeCon;
 
-        // Build the constructor's function type
         let conType: Type;
         if (con.fields.length === 0) {
           conType = resultType;
+          variantPayloads.set(con.name, undefined);
         } else {
-          // Convert field TypeExprs to Types using the type param mapping
           const tvarMap = new Map<string, Type>();
           const rvarMap = new Map<string, import("./types.js").Row>();
           for (const p of typeParams) {
@@ -122,16 +106,37 @@ export const inferTypeDef = (
             fieldTypes.push(yield* typeExprToType(field, tvarMap, rvarMap));
           }
           conType = fnType(fieldTypes, resultType);
+          variantPayloads.set(con.name, fieldTypes.length === 1 ? fieldTypes[0] : undefined);
         }
 
-        // Generalize over the ADT's type params
         const tvars = typeParams.map((p) => `__adt_${expr.name}_${p}`);
         const scheme = mkScheme(tvars, [], conType);
-
-        // Store in _adtConstructorSchemes for inferProgram to register
         _adtConstructorSchemes.set(con.name, scheme);
-        _adtConstructorSchemes.set(`${expr.name}.${con.name}`,scheme);
+        _adtConstructorSchemes.set(`${expr.name}.${con.name}`, scheme);
       }
+
+      if (ctx.effectMode && expr.tagField) {
+        _adtConstructorSchemes.set(expr.name, mkScheme([], [], fnType([typeCon], typeCon)));
+      }
+
+      yield* Ref.update(ctx.adtRegistry, (m) => {
+        const next = new Map(m);
+        next.set(expr.name, {
+          typeParams,
+          constructors: conArities,
+          ...(expr.tagField ? { tagField: expr.tagField, variantPayloads } : {}),
+        });
+        return next;
+      });
+
+      yield* Ref.update(ctx.constructorToType, (m) => {
+        const next = new Map(m);
+        for (const con of expr.constructors!) {
+          next.set(con.name, expr.name);
+          next.set(`${expr.name}.${con.name}`, expr.name);
+        }
+        return next;
+      });
     }
 
     return tNil;
@@ -424,14 +429,18 @@ export const inferDefService = (
   expr: CoreExpr & { _tag: "DefService" },
 ): Effect.Effect<Type, InferenceError, InferContext> =>
   Effect.gen(function* () {
+    const ctx = yield* InferContext;
     const serviceMethodSchemes = getServiceMethodSchemes();
+    const declaredMethods = new Map<string, Type>();
     for (const method of expr.methods) {
       const methodType = yield* typeExprToType(
         method.typeExpr,
         new Map<string, Type>(),
         new Map<string, Row>(),
       );
+      declaredMethods.set(method.name, methodType);
       serviceMethodSchemes.set(`${expr.name}.${method.name}`, mkScheme([], [], methodType));
     }
+    yield* Ref.update(ctx.serviceRegistry, (m) => new Map(m).set(expr.name, declaredMethods));
     return tNil;
   });
