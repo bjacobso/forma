@@ -1034,10 +1034,22 @@
                         "effect": {
                           "errors": [],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "Counter.next"
+                          ],
+                          "span": {
+                            "endOffset": 691,
+                            "sourceId": "surfaces/effect-typescript/surface-review",
+                            "startOffset": 679
+                          },
                           "success": {
                             "kind": "Primitive",
-                            "name": "Unit"
+                            "name": "Int",
+                            "span": {
+                              "endOffset": 690,
+                              "sourceId": "surfaces/effect-typescript/surface-review",
+                              "startOffset": 687
+                            }
                           }
                         },
                         "kind": "Pure",
@@ -1090,10 +1102,22 @@
                     "effect": {
                       "errors": [],
                       "kind": "Effect",
-                      "requirements": [],
+                      "requirements": [
+                        "Counter.next"
+                      ],
+                      "span": {
+                        "endOffset": 691,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 679
+                      },
                       "success": {
                         "kind": "Primitive",
-                        "name": "Unit"
+                        "name": "Int",
+                        "span": {
+                          "endOffset": 690,
+                          "sourceId": "surfaces/effect-typescript/surface-review",
+                          "startOffset": 687
+                        }
                       }
                     },
                     "forms": [
@@ -1101,10 +1125,22 @@
                         "effect": {
                           "errors": [],
                           "kind": "Effect",
-                          "requirements": [],
+                          "requirements": [
+                            "Counter.next"
+                          ],
+                          "span": {
+                            "endOffset": 691,
+                            "sourceId": "surfaces/effect-typescript/surface-review",
+                            "startOffset": 679
+                          },
                           "success": {
                             "kind": "Primitive",
-                            "name": "Unit"
+                            "name": "Int",
+                            "span": {
+                              "endOffset": 690,
+                              "sourceId": "surfaces/effect-typescript/surface-review",
+                              "startOffset": 687
+                            }
                           }
                         },
                         "kind": "Pure",
@@ -1234,10 +1270,22 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "Counter.next"
+                    ],
+                    "span": {
+                      "endOffset": 691,
+                      "sourceId": "surfaces/effect-typescript/surface-review",
+                      "startOffset": 679
+                    },
                     "success": {
                       "kind": "Primitive",
-                      "name": "Unit"
+                      "name": "Int",
+                      "span": {
+                        "endOffset": 690,
+                        "sourceId": "surfaces/effect-typescript/surface-review",
+                        "startOffset": 687
+                      }
                     }
                   },
                   "kind": "Let",

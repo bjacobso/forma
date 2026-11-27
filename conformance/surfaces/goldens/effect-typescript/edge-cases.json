@@ -3616,10 +3616,22 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "Clock.now"
+                    ],
+                    "span": {
+                      "endOffset": 704,
+                      "sourceId": "surfaces/effect-typescript/edge-cases",
+                      "startOffset": 692
+                    },
                     "success": {
                       "kind": "Primitive",
-                      "name": "Unit"
+                      "name": "Int",
+                      "span": {
+                        "endOffset": 703,
+                        "sourceId": "surfaces/effect-typescript/edge-cases",
+                        "startOffset": 700
+                      }
                     }
                   },
                   "kind": "Succeed",
@@ -3723,10 +3735,22 @@
                   "effect": {
                     "errors": [],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "Greeter.greet"
+                    ],
+                    "span": {
+                      "endOffset": 759,
+                      "sourceId": "surfaces/effect-typescript/edge-cases",
+                      "startOffset": 744
+                    },
                     "success": {
                       "kind": "Primitive",
-                      "name": "Unit"
+                      "name": "String",
+                      "span": {
+                        "endOffset": 758,
+                        "sourceId": "surfaces/effect-typescript/edge-cases",
+                        "startOffset": 752
+                      }
                     }
                   },
                   "kind": "Combinator",

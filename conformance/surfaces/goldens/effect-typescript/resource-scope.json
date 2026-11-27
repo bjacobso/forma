@@ -1804,12 +1804,26 @@
                   ],
                   "body": {
                     "effect": {
-                      "errors": [],
+                      "errors": [
+                        "QueryFailed"
+                      ],
                       "kind": "Effect",
-                      "requirements": [],
+                      "requirements": [
+                        "ReportStore.save"
+                      ],
+                      "span": {
+                        "endOffset": 618,
+                        "sourceId": "surfaces/effect-typescript/resource-scope",
+                        "startOffset": 588
+                      },
                       "success": {
                         "kind": "Primitive",
-                        "name": "Unit"
+                        "name": "Unit",
+                        "span": {
+                          "endOffset": 600,
+                          "sourceId": "surfaces/effect-typescript/resource-scope",
+                          "startOffset": 596
+                        }
                       }
                     },
                     "kind": "Succeed",
@@ -1829,12 +1843,26 @@
                     }
                   },
                   "effect": {
-                    "errors": [],
+                    "errors": [
+                      "QueryFailed"
+                    ],
                     "kind": "Effect",
-                    "requirements": [],
+                    "requirements": [
+                      "ReportStore.save"
+                    ],
+                    "span": {
+                      "endOffset": 618,
+                      "sourceId": "surfaces/effect-typescript/resource-scope",
+                      "startOffset": 588
+                    },
                     "success": {
                       "kind": "Primitive",
-                      "name": "Unit"
+                      "name": "Unit",
+                      "span": {
+                        "endOffset": 600,
+                        "sourceId": "surfaces/effect-typescript/resource-scope",
+                        "startOffset": 596
+                      }
                     }
                   },
                   "kind": "Do",

@@ -781,23 +781,26 @@ function serviceLayerToJson(
   let service: string | undefined;
   let setup: JsonValue[] = [];
   const methods: JsonValue[] = [];
-  const context = bodyContext(sourceId, serviceMethodEffects, operationEffects, {
+  const defaultEffect: JsonValue = {
     kind: "Effect",
     success: { kind: "Primitive", name: "Unit" },
     errors: [],
     requirements: [],
-  });
+  };
+  const context = bodyContext(sourceId, serviceMethodEffects, operationEffects, defaultEffect);
+  for (const section of sections) {
+    if (section._tag !== "List" || symName(section.items[0]) !== ":provides") continue;
+    service = symName(section.items[1]);
+    if (!service || section.items.length !== 2) {
+      return failed(sourceId, section, "artifact/layer", "(:provides Service) names exactly one service.");
+    }
+  }
   for (const section of sections) {
     if (section._tag !== "List") continue;
     const keyword = symName(section.items[0]);
     switch (keyword) {
-      case ":provides": {
-        service = symName(section.items[1]);
-        if (!service || section.items.length !== 2) {
-          return failed(sourceId, section, "artifact/layer", "(:provides Service) names exactly one service.");
-        }
+      case ":provides":
         break;
-      }
       case ":setup": {
         const bindings = section.items[1];
         if (bindings?._tag !== "Vector" || section.items.length !== 2) {
@@ -823,10 +826,12 @@ function serviceLayerToJson(
             }
             params.push(paramName);
           }
+          const methodEffect = (service ? serviceMethodEffects.get(`${service}.${methodName}`) : undefined) ?? defaultEffect;
+          const methodContext: BodyContext = { ...context, effect: methodEffect };
           methods.push({
             name: methodName,
             params,
-            body: effectBodyFormsToJson(context, method.items.slice(2)),
+            body: effectBodyFormsToJson(methodContext, method.items.slice(2)),
             span: spanJson(sourceId, method),
           });
         }

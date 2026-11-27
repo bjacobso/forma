@@ -152,8 +152,9 @@ function paginate(text: string): { pages: string[]; lines: number[] } {
 }
 
 /**
- * Page `index` of a paged result. Its structured result keeps the short fields
- * and names the long ones it leaves out; `:more all` returns them.
+ * Page `index` of a paged result. Its structured result keeps the short fields,
+ * puts this page's text slice in `page.content`, and names the long fields it
+ * leaves out; `:more all` returns them.
  */
 function page(paged: Paged, index: number): ReplReply {
   const kept = Object.entries(paged.result).filter(([key, value]) => key === "diagnostics" || value === null || (typeof value !== "object" && !(typeof value === "string" && value.length > 200)));
@@ -164,9 +165,23 @@ function page(paged: Paged, index: number): ReplReply {
     : paged.result.kind === "describe" ? " :outline lists the names; :describe <name> shows one." : "";
   const more = index + 1 < paged.pages.length ? " :more shows the next page, :more all the rest." : " That is the end.";
   const footer = `[${paged.command}: page ${index + 1} of ${paged.pages.length}, lines ${paged.lines[index]}-${last} of ${lineCount}.${more}${hint}]`;
+  const content = paged.pages[index]!;
   return {
-    result: { ...Object.fromEntries(kept), ok: paged.result.ok, diagnostics: paged.result.diagnostics, page: { page: index + 1, pages: paged.pages.length, omitted, ...(index + 1 < paged.pages.length ? { more: ":more" } : {}) } },
-    text: `${paged.pages[index]}\n${footer}`,
+    result: {
+      ...Object.fromEntries(kept),
+      ok: paged.result.ok,
+      diagnostics: paged.result.diagnostics,
+      page: {
+        page: index + 1,
+        pages: paged.pages.length,
+        lines: [paged.lines[index]!, last],
+        totalLines: lineCount,
+        content,
+        omitted,
+        ...(index + 1 < paged.pages.length ? { more: ":more" } : {}),
+      },
+    },
+    text: `${content}\n${footer}`,
   };
 }
 
