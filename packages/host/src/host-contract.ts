@@ -302,6 +302,205 @@ const queryByErrorResult = Schema.Struct({
   diagnostics,
 });
 
+const branchPolicySchema = Schema.Struct({
+  protected: Schema.optionalKey(Schema.Boolean),
+  dependencyBoundaries: Schema.optionalKey(Schema.Array(Schema.Struct({
+    from: Schema.String,
+    allow: Schema.optionalKey(Schema.Array(Schema.String)),
+    deny: Schema.optionalKey(Schema.Array(Schema.String)),
+  }))),
+  capabilityBudgets: Schema.optionalKey(Schema.Array(Schema.Struct({
+    namespace: Schema.String,
+    maxRequirements: Schema.Array(Schema.String),
+  }))),
+  requirementEdit: Schema.optionalKey(Schema.Struct({
+    requireExplicitClass: Schema.optionalKey(Schema.Boolean),
+    requireApproval: Schema.optionalKey(Schema.Boolean),
+  })),
+  evidenceGates: Schema.optionalKey(Schema.Struct({
+    requiredKinds: Schema.Array(Schema.Literals(["typecheck", "artifact", "test", "verification"])),
+    rejectInconclusiveVerification: Schema.optionalKey(Schema.Boolean),
+    requireDeterministicTests: Schema.optionalKey(Schema.Boolean),
+  })),
+  evolution: Schema.optionalKey(Schema.Struct({
+    publishedNamespaces: Schema.Array(Schema.String),
+    mode: Schema.Literals(["add-only", "backward-compatible"]),
+  })),
+}).annotate({ identifier: "BranchPolicy" });
+
+const transactionOpSchema = Schema.Union([
+  Schema.Struct({
+    kind: Schema.Literal("add"),
+    qualifiedName: id,
+    source: optionalString,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("update"),
+    qualifiedName: id,
+    source: optionalString,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("rename"),
+    from: id,
+    to: id,
+    displayName: optionalString,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("remove"),
+    qualifiedName: id,
+  }),
+  Schema.Struct({
+    kind: Schema.Literal("move"),
+    from: id,
+    toModuleId: id,
+    newName: optionalString,
+  }),
+]).annotate({ identifier: "TransactionOp" });
+
+const branchRefViewSchema = Schema.Struct({
+  name: Schema.String,
+  head: Schema.String,
+  updatedAt: Schema.String,
+}).annotate({ identifier: "BranchRefView" });
+
+const snapshotViewSchema = Schema.Struct({
+  hash: Schema.String,
+  parent: Schema.Union([Schema.String, Schema.Null]),
+  bindings: Schema.Record(Schema.String, Schema.String),
+  policies: Schema.String,
+  policyConfig: branchPolicySchema,
+  languageProfile: Schema.String,
+  createdAt: Schema.String,
+  message: optionalString,
+}).annotate({ identifier: "SnapshotView" });
+
+const affectedDependentSchema = Schema.Struct({
+  qualifiedName: Schema.String,
+  hash: Schema.String,
+});
+
+const interfaceImpactSchema = Schema.Struct({
+  qualifiedName: Schema.String,
+  oldHash: Schema.String,
+  newHash: Schema.String,
+  kind: Schema.Literals(["same-interface", "interface-changed"]),
+  oldSignature: optionalString,
+  newSignature: optionalString,
+  oldRequirements: Schema.Array(Schema.String),
+  newRequirements: Schema.Array(Schema.String),
+  oldErrors: Schema.Array(Schema.String),
+  newErrors: Schema.Array(Schema.String),
+  affectedDependents: Schema.Array(affectedDependentSchema),
+  reboundDependents: Schema.Array(affectedDependentSchema),
+  unupdatedDependents: Schema.Array(affectedDependentSchema),
+}).annotate({ identifier: "InterfaceImpact" });
+
+const snapshotDiffSchema = Schema.Struct({
+  fromSnapshot: Schema.String,
+  toSnapshot: Schema.String,
+  added: Schema.Array(Schema.Struct({
+    qualifiedName: Schema.String,
+    hash: Schema.String,
+    kind: storeDefinitionKind,
+    signature: optionalString,
+  })),
+  removed: Schema.Array(Schema.Struct({
+    qualifiedName: Schema.String,
+    hash: Schema.String,
+    kind: storeDefinitionKind,
+    signature: optionalString,
+  })),
+  updated: Schema.Array(Schema.Struct({
+    qualifiedName: Schema.String,
+    oldHash: Schema.String,
+    newHash: Schema.String,
+    kind: storeDefinitionKind,
+    interfaceChanged: Schema.Boolean,
+    oldSignature: optionalString,
+    newSignature: optionalString,
+    oldRequirements: Schema.Array(Schema.String),
+    newRequirements: Schema.Array(Schema.String),
+    oldErrors: Schema.Array(Schema.String),
+    newErrors: Schema.Array(Schema.String),
+  })),
+  renamed: Schema.Array(Schema.Struct({
+    from: Schema.String,
+    to: Schema.String,
+    hash: Schema.String,
+  })),
+}).annotate({ identifier: "SnapshotDiff" });
+
+const conflictReportSchema = Schema.Struct({
+  branch: Schema.String,
+  baseSnapshot: Schema.String,
+  headSnapshot: Schema.String,
+  conflicts: Schema.Array(Schema.Struct({
+    reason: Schema.Literals(["name-collision", "dependency-changed", "removed-dependency"]),
+    qualifiedName: Schema.String,
+    baseHash: optionalString,
+    headHash: optionalString,
+    proposedHash: optionalString,
+    message: Schema.String,
+  })),
+}).annotate({ identifier: "ConflictReport" });
+
+const policyViolationSchema = Schema.Struct({
+  rule: Schema.Literals(["dependency-boundary", "capability-budget", "requirement-edit", "evidence-gate", "evolution"]),
+  qualifiedName: optionalString,
+  message: Schema.String,
+  details: Schema.optionalKey(Schema.Record(Schema.String, Schema.Unknown)),
+}).annotate({ identifier: "PolicyViolation" });
+
+const listBranchesResult = Schema.Struct({
+  branches: Schema.Array(branchRefViewSchema),
+  diagnostics,
+});
+
+const getSnapshotResult = Schema.Struct({
+  snapshot: Schema.optionalKey(snapshotViewSchema),
+  definitions: Schema.Array(storeDefinitionDetails),
+  diagnostics,
+});
+
+const diffSnapshotsResult = Schema.Struct({
+  diff: Schema.optionalKey(snapshotDiffSchema),
+  diagnostics,
+});
+
+const submitTransactionResult = Schema.Union([
+  Schema.Struct({
+    ok: Schema.Literal(true),
+    branch: Schema.String,
+    snapshot: snapshotViewSchema,
+    previousHead: Schema.String,
+    impacts: Schema.Array(interfaceImpactSchema),
+    diff: snapshotDiffSchema,
+    metrics: Schema.Struct({
+      typecheckedCount: Schema.Int,
+      reboundCount: Schema.Int,
+      rebased: Schema.Boolean,
+    }),
+    diagnostics,
+  }),
+  Schema.Struct({
+    ok: Schema.Literal(false),
+    reason: Schema.Literals([
+      "unknown-branch",
+      "unknown-snapshot",
+      "parse-or-typecheck-error",
+      "interface-change",
+      "cas-conflict",
+      "policy-violation",
+      "invalid-operation",
+    ]),
+    message: Schema.String,
+    diagnostics,
+    impacts: Schema.optionalKey(Schema.Array(interfaceImpactSchema)),
+    conflict: Schema.optionalKey(conflictReportSchema),
+    policyViolations: Schema.optionalKey(Schema.Array(policyViolationSchema)),
+  }),
+]);
+
 const stateResponse = (result: Awaited<ReturnType<TsLanguageHost["evaluateInSession"]>> | Awaited<ReturnType<TsLanguageHost["checkedRun"]>>) => ({
   ...envelope(
     result,
@@ -475,6 +674,44 @@ export const HOST_OPERATIONS = [
     const result = await host.queryByError(request);
     return envelope(result, result.diagnostics);
   }, queryByErrorResult),
+  operation("listBranches", { sessionId: optionalString }, async ({host}, request) => {
+    const result = await host.listBranches(request);
+    return envelope(result, result.diagnostics);
+  }, listBranchesResult),
+  operation("getSnapshot", {
+    sessionId: optionalString,
+    branch: optionalString,
+    snapshotHash: optionalString,
+  }, async ({host}, request) => {
+    const result = await host.getSnapshot(request);
+    return envelope(result, result.diagnostics);
+  }, getSnapshotResult),
+  operation("diffSnapshots", {
+    sessionId: optionalString,
+    from: id,
+    to: id,
+  }, async ({host}, request) => {
+    const result = await host.diffSnapshots(request);
+    return envelope(result, result.diagnostics);
+  }, diffSnapshotsResult),
+  operation("submitTransaction", {
+    sessionId: optionalString,
+    branch: id,
+    baseSnapshot: id,
+    operationClass: Schema.Literals(["impl-edit", "requirement-edit"]),
+    operations: Schema.Array(transactionOpSchema),
+    message: optionalString,
+    author: optionalString,
+    onInterfaceChange: Schema.optionalKey(Schema.Literals(["reject", "staging-branch", "add-only"])),
+    stagingBranchName: optionalString,
+    coexistenceSuffix: optionalString,
+    approvedRequirementEdit: Schema.optionalKey(Schema.Boolean),
+    waiveEvolution: Schema.optionalKey(Schema.Boolean),
+    nextPolicy: Schema.optionalKey(branchPolicySchema),
+  }, async ({host}, request) => {
+    const result = await host.submitTransaction(request);
+    return envelope(result, result.diagnostics);
+  }, submitTransactionResult),
 ] as const;
 export const HOST_CAPABILITIES = HOST_OPERATIONS.map(operation => operation.name);
 export const JsonRequest = Schema.Union(HOST_OPERATIONS.map(operation => operation.request));

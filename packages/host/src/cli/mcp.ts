@@ -156,6 +156,47 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
     { name: "find_dependencies", description: "Find direct or transitive dependencies of a definition (by name or content hash) in source or a file module graph.", inputSchema: input({ ...sourceProperties, target: { type: "string", minLength: 1 }, transitive: { type: "boolean" }, includeFormDependencies: { type: "boolean" }, includeSelf: { type: "boolean" }, maxDepth: nonNegativeInt }, ["target"], sourceChoice) },
     { name: "query_by_capability", description: "Find all definitions requiring a given service or operation capability (e.g. \"Users\" or \"Users.find\") in source or a file module graph.", inputSchema: input({ ...sourceProperties, capability: { type: "string", minLength: 1 } }, ["capability"], sourceChoice) },
     { name: "query_by_error", description: "Find all definitions whose error set includes a given error name in source or a file module graph.", inputSchema: input({ ...sourceProperties, error: { type: "string", minLength: 1 } }, ["error"], sourceChoice) },
+    { name: "list_branches", description: "List all branches and their current head snapshot hashes in the content-addressed codebase store.", inputSchema: input({}) },
+    { name: "get_snapshot", description: "Inspect a snapshot by branch name (default \"main\") or snapshotHash, returning bindings, policy config, and definitions.", inputSchema: input({ branch: { type: "string", minLength: 1 }, snapshotHash: { type: "string", minLength: 1 } }) },
+    { name: "diff_snapshots", description: "Compute a semantic diff (added, removed, updated, renamed definitions and interface changes) between two snapshots.", inputSchema: input({ from: { type: "string", minLength: 1 }, to: { type: "string", minLength: 1 } }, ["from", "to"]) },
+    {
+      name: "submit_transaction",
+      description: "Submit an atomic transactional update against a baseSnapshot with optimistic CAS, disjoint auto-rebase, and enforceable branch policies.",
+      inputSchema: input(
+        {
+          branch: { type: "string", minLength: 1 },
+          baseSnapshot: { type: "string", minLength: 1 },
+          operationClass: { type: "string", enum: ["impl-edit", "requirement-edit"] },
+          operations: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                kind: { type: "string", enum: ["add", "update", "rename", "remove", "move"] },
+                qualifiedName: { type: "string", minLength: 1 },
+                source: { type: "string" },
+                from: { type: "string", minLength: 1 },
+                to: { type: "string", minLength: 1 },
+                displayName: { type: "string" },
+                toModuleId: { type: "string", minLength: 1 },
+                newName: { type: "string" },
+              },
+              required: ["kind"],
+              additionalProperties: false,
+            },
+          },
+          message: { type: "string" },
+          author: { type: "string" },
+          onInterfaceChange: { type: "string", enum: ["reject", "staging-branch", "add-only"] },
+          stagingBranchName: { type: "string" },
+          coexistenceSuffix: { type: "string" },
+          approvedRequirementEdit: { type: "boolean" },
+          waiveEvolution: { type: "boolean" },
+          nextPolicy: { type: "object" },
+        },
+        ["branch", "baseSnapshot", "operationClass", "operations"],
+      ),
+    },
   );
   const validator = new AjvJsonSchemaValidator();
   const validators = new Map(tools.map(tool => [tool.name, validator.getValidator<Record<string, any>>(tool.inputSchema as JsonSchemaType)]));
@@ -200,6 +241,21 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
             const identified = await abi.host.identifySyntax({ source: args.source });
             const described = await abi.host.describeNodes({ source: args.source, identity: identified.identity, ids: identified.identity.nodes.map(node => node.id) });
             result = { ok: !hasErrors(identified.diagnostics), ...described, diagnostics: identified.diagnostics };
+          } else if (params.name === "list_branches") {
+            const res = await abi.host.listBranches({});
+            result = { ok: !hasErrors(res.diagnostics), ...res };
+          } else if (params.name === "get_snapshot") {
+            const res = await abi.host.getSnapshot({
+              ...(args.branch !== undefined ? { branch: args.branch } : {}),
+              ...(args.snapshotHash !== undefined ? { snapshotHash: args.snapshotHash } : {}),
+            });
+            result = { ok: !hasErrors(res.diagnostics), ...res };
+          } else if (params.name === "diff_snapshots") {
+            const res = await abi.host.diffSnapshots({ from: args.from, to: args.to });
+            result = { ok: !hasErrors(res.diagnostics), ...res };
+          } else if (params.name === "submit_transaction") {
+            const res = await abi.host.submitTransaction(args as Parameters<typeof abi.host.submitTransaction>[0]);
+            result = { ...res };
           } else {
             const edited = await abi.host.applyEditScript({ source: args.source, script: args.script });
             result = edited.ok ? { ...edited, ...await checked({ source: edited.source }) } : { ...edited, diagnostics: edited.errors.map(error => ({ code: error.code, severity: "error", message: error.message })) };

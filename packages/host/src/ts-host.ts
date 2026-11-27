@@ -20,6 +20,7 @@ import * as VM from "@formalang/ts/vm";
 
 import { typeProjection } from "./abi-projections.js";
 import { buildSessionDefinitionIndex, recordToDetails, type IndexedSourceDocument } from "./store-queries.js";
+import { HostTransactionStore } from "./store-transactions.js";
 import {
   JOURNAL_FORMAT,
   JournalRuntime,
@@ -67,6 +68,14 @@ import type {
   QueryByErrorRequest,
   QueryByErrorResult,
   StoreQuerySourceInput,
+  SubmitTransactionRequest,
+  SubmitTransactionResult,
+  ListBranchesRequest,
+  ListBranchesResult,
+  GetSnapshotRequest,
+  GetSnapshotResult,
+  DiffSnapshotsRequest,
+  DiffSnapshotsResult,
   EvaluateInSessionRequest,
   EvaluateRequest,
   EvaluationResult,
@@ -297,6 +306,8 @@ export class TsLanguageHost implements LanguageHost {
   #nextCallId = 1;
   #nextValueRefId = 1;
   readonly #sessions = new Map<string, TsSession>();
+  readonly #defaultTxStore = new HostTransactionStore();
+  readonly #sessionTxStores = new Map<string, HostTransactionStore>();
 
   async loadSource(request: LoadSourceRequest): Promise<LoadSourceResult> {
     return this.#locateResult(await this.#loadSourceUnlocated(request), request);
@@ -1348,6 +1359,48 @@ export class TsLanguageHost implements LanguageHost {
       },
       request,
     );
+  }
+
+  #txStoreFor(sessionId?: string): HostTransactionStore {
+    if (!sessionId) return this.#defaultTxStore;
+    const session = this.#requireSession(sessionId);
+    let store = this.#sessionTxStores.get(sessionId);
+    if (!store) {
+      const docs: IndexedSourceDocument[] = [];
+      const seen = new Set<string>();
+      for (const source of session.language.orderedSources()) {
+        if (!seen.has(source.id)) {
+          seen.add(source.id);
+          docs.push({ id: source.id, source: source.text });
+        }
+      }
+      store = new HostTransactionStore(docs);
+      this.#sessionTxStores.set(sessionId, store);
+    }
+    return store;
+  }
+
+  async listBranches(request: ListBranchesRequest = {}): Promise<ListBranchesResult> {
+    const store = this.#txStoreFor(request.sessionId);
+    return { branches: store.listBranches(), diagnostics: [] };
+  }
+
+  async getSnapshot(request: GetSnapshotRequest = {}): Promise<GetSnapshotResult> {
+    const store = this.#txStoreFor(request.sessionId);
+    return store.getSnapshot({
+      ...(request.branch !== undefined ? { branch: request.branch } : {}),
+      ...(request.snapshotHash !== undefined ? { snapshotHash: request.snapshotHash } : {}),
+    });
+  }
+
+  async diffSnapshots(request: DiffSnapshotsRequest): Promise<DiffSnapshotsResult> {
+    const store = this.#txStoreFor(request.sessionId);
+    return store.diffSnapshots(request.from, request.to);
+  }
+
+  async submitTransaction(request: SubmitTransactionRequest): Promise<SubmitTransactionResult> {
+    const store = this.#txStoreFor(request.sessionId);
+    return store.submitTransaction(request);
   }
 
   #indexSymbols(request: SymbolIndexRequest): Editor.SymbolIndex {

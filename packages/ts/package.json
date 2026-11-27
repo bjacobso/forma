@@ -160,6 +160,10 @@
     "./store-queries": {
       "types": "./dist/StoreQueries.d.mts",
       "import": "./dist/StoreQueries.mjs"
+    },
+    "./store-policies": {
+      "types": "./dist/StorePolicies.d.mts",
+      "import": "./dist/StorePolicies.mjs"
     }
   },
   "files": [
