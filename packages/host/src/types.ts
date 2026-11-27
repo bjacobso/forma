@@ -983,6 +983,10 @@ export interface LanguageHost {
   findDependencies?(request: FindDependenciesRequest): Promise<FindDependenciesResult>;
   queryByCapability?(request: QueryByCapabilityRequest): Promise<QueryByCapabilityResult>;
   queryByError?(request: QueryByErrorRequest): Promise<QueryByErrorResult>;
+  submitTransaction?(request: SubmitTransactionRequest): Promise<SubmitTransactionResult>;
+  listBranches?(request?: ListBranchesRequest): Promise<ListBranchesResult>;
+  getSnapshot?(request?: GetSnapshotRequest): Promise<GetSnapshotResult>;
+  diffSnapshots?(request: DiffSnapshotsRequest): Promise<DiffSnapshotsResult>;
 }
 
 /** Shared source/session targeting for read-only semantic definition queries (RFC 0029). */
@@ -1052,6 +1056,56 @@ export interface QueryByErrorResult {
   readonly definitions: readonly DefinitionDetails[];
   readonly diagnostics: readonly Diagnostic[];
 }
+
+export interface ListBranchesRequest {
+  readonly sessionId?: string | undefined;
+}
+
+export interface ListBranchesResult {
+  readonly branches: readonly import("./store-transactions.js").BranchRefView[];
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+export interface GetSnapshotRequest {
+  readonly sessionId?: string | undefined;
+  readonly branch?: string | undefined;
+  readonly snapshotHash?: string | undefined;
+}
+
+export interface GetSnapshotResult {
+  readonly snapshot?: import("./store-transactions.js").SnapshotView | undefined;
+  readonly definitions: readonly DefinitionDetails[];
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+export interface DiffSnapshotsRequest {
+  readonly sessionId?: string | undefined;
+  readonly from: string;
+  readonly to: string;
+}
+
+export interface DiffSnapshotsResult {
+  readonly diff?: import("./store-transactions.js").SnapshotDiff | undefined;
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+export interface SubmitTransactionRequest {
+  readonly sessionId?: string | undefined;
+  readonly branch: string;
+  readonly baseSnapshot: string;
+  readonly operationClass: import("./store-transactions.js").OperationClass;
+  readonly operations: readonly import("./store-transactions.js").TransactionOp[];
+  readonly message?: string | undefined;
+  readonly author?: string | undefined;
+  readonly onInterfaceChange?: "reject" | "staging-branch" | "add-only" | undefined;
+  readonly stagingBranchName?: string | undefined;
+  readonly coexistenceSuffix?: string | undefined;
+  readonly approvedRequirementEdit?: boolean | undefined;
+  readonly waiveEvolution?: boolean | undefined;
+  readonly nextPolicy?: import("./store-transactions.js").BranchPolicy | undefined;
+}
+
+export type SubmitTransactionResult = import("./store-transactions.js").HostTransactionResult;
 
 
 /** Session artifact operations; canonical IR is the only implemented backend. */

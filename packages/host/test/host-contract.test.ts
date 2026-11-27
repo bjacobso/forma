@@ -102,7 +102,15 @@ describe("shared host contract", () => {
         findDependencies: { sessionId, target: "answer" },
         queryByCapability: { sessionId, capability: "Users" },
         queryByError: { sessionId, error: "NotFound" },
+        listBranches: { sessionId },
+        getSnapshot: { sessionId, branch: "main" },
       };
+      if (op === "diffSnapshots" || op === "submitTransaction") {
+        const snap = (await send(abi, { op: "getSnapshot", sessionId, branch: "main" })).value as { snapshot: { hash: string } };
+        fields[op] = op === "diffSnapshots"
+          ? { sessionId, from: snap.snapshot.hash, to: snap.snapshot.hash }
+          : { sessionId, branch: "main", baseSnapshot: snap.snapshot.hash, operationClass: "impl-edit", operations: [] };
+      }
       if (["callValue", "resumeHostCall", "abortEvaluation"].includes(op)) {
         if (op === "callValue") {
           const state = (await send(abi, { op: "evaluateInSession", sessionId, source: "(fn [x] x)", retainValues: "functions" })).value as { result: { value: { valueRef: string } } };
