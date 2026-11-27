@@ -21,11 +21,11 @@
   calls to JSONL and deterministically replay them with zero live host calls,
   detecting program mismatches and call divergence.
 - Operational Effect inference, Effect signature polymorphism (RFC 0023 stages
-  1–3), `forma:effect` lowering (`class`, `layer`, `catch`), portable artifacts,
-  editor services, a multi-file language server (resolving local imports,
-  `forma:*` libraries, and `forma.json` packages), closed-SCC HM memoization per
-  workspace document, and the browser playground. Conformance fixtures pin
-  observable behavior.
+  1–3 and 5), `forma:effect` lowering (`class`, `layer`, `catch`), portable
+  artifacts, editor services, a multi-file language server (resolving local
+  imports, `forma:*` libraries, and `forma.json` packages), closed-SCC HM
+  memoization per workspace document, and the browser playground. Conformance
+  fixtures pin observable behavior.
 - Native unary RPC/group generation through the [RPC prelude](./effect/rpc.md).
 - Prototype Effect Cluster entities with in-memory state and checked delivery
   rules through the [cluster prelude](./effect/cluster.md).
@@ -33,7 +33,76 @@
   families, emitting one module and a [system graph](./effect/system.md) from a
   mixed program.
 
-## Trust work in progress
+## Critical path
+
+Forma's active roadmap focuses on one end-to-end path: **Forma → Effect
+TypeScript + Content-Addressed Transactional Store + Verification/Contracts**.
+Items below are proposed or in-progress work, not features already merged to
+`main` or compatibility commitments.
+
+### 1. Content-addressed store, contract evolution, workflow laws, and cacheable Effect tests
+
+- **Content-addressed transactional store & CLI**
+  ([RFC 0029](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0029-content-addressed-codebase-store.md),
+  proposed; not merged to `main`): layer an optional content-addressed codebase
+  store beneath `.lisp` projections with hash-keyed checking/test/verification
+  evidence, optimistic-concurrency transactions, and CLI workflows.
+- **Directional contract evolution**
+  ([RFC 0027](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0027-contract-evolution.md),
+  proposed; not merged to `main`): comparable contract snapshots, directional
+  wire-compatibility diffs, and explicit pure payload migrations beyond raw
+  contract hashes.
+- **Finite workflow laws**
+  ([RFC 0028](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0028-bounded-verification.md),
+  proposed; not merged to `main`): validate domain workflow and evidence safety
+  laws with bounded exploration and counterexamples before investing in
+  solver-backed verification.
+- **Cacheable Effect tests**
+  ([RFC 0014](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0014-local-providers.md),
+  [RFC 0015](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0015-tests-in-forma.md),
+  [RFC 0023](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-effect-polymorphism.md)):
+  build seeded property/fault-schedule Effect testing and reusable test doubles
+  on top of `forma test` and shipped Effect polymorphism (RFC 0023 stages 1–3
+  and 5 are implemented; RFCs 0014 and 0015 remain proposed).
+
+### 2. Independent trusted core checker & live browser store demo
+
+- **Independent trusted core checker**
+  ([RFC 0022: programmable type system, Stage 1](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md),
+  proposed; not implemented): specify and implement a small independent checker
+  that re-checks elaborated core programs, separating checking trust from the
+  inference/elaboration pipeline.
+- **Live browser store demo** (proposed; not implemented): demonstrate the
+  content-addressed transactional store, cached evidence, and Effect TypeScript
+  compilation directly in the browser playground.
+
+### 3. Multi-agent Effect TypeScript benchmark (Gate 3) & npm publication
+
+- **Multi-agent Effect TypeScript benchmark (Gate 3)**: target agent repair on
+  the hard tier of **at least 7 of 8 tasks**, with a **median of at most 2
+  repair rounds**. These are acceptance targets, not reported results. Typed
+  holes ([RFC 0026](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0026-typed-holes.md)),
+  located diagnostics ([RFC 0017](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0017-diagnostic-catalog.md)),
+  `forma test`, and MCP provide the repair loop; the benchmark must measure
+  whether that loop works.
+- **`@forma-language/forma` npm publication**
+  ([RFC 0025](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0025-single-npm-distribution.md),
+  accepted; implementation in progress): validate the single package in a clean
+  consumer, stabilize the host ABI and artifact schema around end-to-end
+  consumer examples, and prepare its first npm publication.
+
+Agent execution safety belongs to
+[RFC 0012](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0012-checked-evaluation.md)'s
+existing checked-run/host boundary, not a new sandbox language. Durable
+workflows belong to checked IR plus native Effect activities and persistent
+recovery tests
+([RFC 0016](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0016-host-call-journals.md)),
+not a new execution kernel. Contract hashes, static types, and bounded laws do
+not authenticate evidence or secure an in-process native host.
+
+## Active supporting work
+
+### Trust work in progress
 
 Shared data-type relations, numeric branch-join coercion, and VM fallback
 retirement have landed, while remaining raw throw boundaries and full checker
@@ -42,162 +111,73 @@ The independent trusted kernel and elaborator protocol remain proposed.
 Cross-file persistent caching remains future work beyond per-document SCC
 memoization; a VS Code extension is on hold.
 
-Gate 3 targets agent repair on the hard tier: **at least 7 of 8 tasks**, with a
-**median of at most 2 repair rounds**. These are acceptance targets, not reported
-results. Typed holes, located diagnostics, `forma test`, and MCP provide the
-repair loop; the benchmark must measure whether that loop works.
+### Everyday checker gaps
 
-## Elm-style application prototype
-
-The [Foldkit prelude prototype](/elm) generates Effect / Foldkit TypeScript with
-exhaustive message updates, typed command recovery, and pure Hiccup views. It has a strict golden and headless conformance harness.
-Command arguments, subscriptions, richer views, editor/worker integration, and
-shared HttpApi server/client declarations remain proposed work. There is no
-production-readiness claim.
-
-## Next
-
-1. Finish the Trust work with observable contracts and conformance evidence.
-2. Validate the single package in a clean consumer and prepare its first publication.
-3. Run Gate 3 and report measured task success and repair rounds.
-4. Stabilize the host ABI and artifact schema around end-to-end consumer examples.
-5. Improve incremental analysis and caching after their correctness contracts exist.
-
-## Record row rollout
-
-[RFC 0005](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0005-row-operations.md) implements closed-shape `Pick`,
-`Omit`, and disjoint `Merge`. Its follow-ups are proposals,
-not implemented features or a committed delivery schedule:
-
-1. [Qualified rows (0006)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0006-qualified-rows.md): retain presence,
-   absence, and disjointness obligations through generic functions and modules.
-2. [Shared type normalization (0007)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0007-type-normalization.md): make
-   computed record types usable in contextual coercion, type values, and schemas.
-   Closed-shape consumers can progress independently of open-row solving.
-3. [Field/key indices (0009)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0009-field-names-and-row-map.md): represent
-   checked selections in generic signatures. Bounded row mapping is a later
-   stage and does not block ontology migration.
-4. [Typed form results (0008)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0008-typed-form-results.md): expose validated
-   declaration fields and check declarative result templates once. Migrate
-   `query` only after old/new types and artifacts agree; retain `row-of` compatibility.
-
-Each RFC specifies its own conformance gates. The full
-bounded rollout still excludes arbitrary type-level functions and runtime
-value-dependent type computation.
-
-## Type generics exploration
-
-[RFC 0018](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0018-type-generics.md) explores author-facing type generics
-around existing Hindley–Milner inference: callback-driven collection results,
-rigid checking of generic signatures, and consistent module and tooling contracts.
-Its proposed changes are not implemented or scheduled.
-
-## Everyday checker gaps
-
-[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md) collects gaps found while writing the
+[RFC 0019](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0019-everyday-checker-gaps.md)
+collects gaps found while writing the
 [SICP-style guide](./structure-and-interpretation.md) and the
-[domain modeling guide](./domain-modeling.md). The evaluator and the unified Hindley–Milner typechecker (which now checks pure, DSL, and Effect programs) share checked contracts and cross-pass
-fixtures for `reverse`, `sqrt`, `reduce`, `conj`, list `concat`, and `quot`.
-The builtin inventory records remaining pass-specific names and legacy gaps;
-it does not claim complete builtin parity. Stage 2 is also implemented:
-non-exhaustive closed-constructor matches are errors across pure and Effect code (PR #141).
-Stage 3 preserves qualified constructor types through local bindings and
-collection joins, and lets optional record fields accept existing options.
-Named callbacks and compile-time literal refinement checks are now implemented in
-the unified checker, and the legacy `mechanics/check.ts` solver has been retired.
-Local definitions and zero-argument functions still have gaps, and unannotated
-arithmetic infers `Float`. The guides document today's workarounds. The remaining fixes are
-otherwise proposed, not implemented or scheduled.
+[domain modeling guide](./domain-modeling.md). The evaluator and the unified
+Hindley–Milner typechecker (which now checks pure, DSL, and Effect programs)
+share checked contracts and cross-pass fixtures for `reverse`, `sqrt`,
+`reduce`, `conj`, list `concat`, and `quot`. The builtin inventory records
+remaining pass-specific names and legacy gaps; it does not claim complete
+builtin parity. Stage 2 is also implemented: non-exhaustive closed-constructor
+matches are errors across pure and Effect code (PR #141). Stage 3 preserves
+qualified constructor types through local bindings and collection joins, and
+lets optional record fields accept existing options. Named callbacks and
+compile-time literal refinement checks are now implemented in the unified
+checker, and the legacy `mechanics/check.ts` solver has been retired. Local
+definitions and zero-argument functions still have gaps, and unannotated
+arithmetic infers `Float`. The guides document today's workarounds. The
+remaining fixes are otherwise proposed, not implemented or scheduled.
 
-## Languages as libraries
-
-[RFC 0021](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md)
-proposes moving surface syntax out of the engine. Syntax forms would produce
-code from typed holes, and a language would be a prelude that selects exports,
-hidden core names, and a lexical profile. Forma's own surface would become the
-first language, and Lisp dialects such as a Clojure-shaped surface would be
-others. All of them would share one core, one type language, and one contract.
-Declarative surfaces would be invertible, which makes Lisp emitters such as
-`.cljc` possible. Stage 0 is implemented: a macro in scope may claim a
-retired spelling such as `defn`, and `preludes/modules/clojure.lisp` supplies Clojure
-spellings as an ordinary library, with a checked example, its diagnostics, and
-its limits in [Clojure spellings](./clojure.md). Later stages wait on an agent benchmark and
-are not implemented or scheduled.
-
-The proposed emitter order is Clojure (`.cljc`, reaching the JVM and
-ClojureScript), then Racket, then Scheme, then Common Lisp, whose separate
-function namespace is a semantic difference rather than a spelling.
-[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md)'s
-"Lisp targets" records what each kernel port must emulate, the semantic gaps,
-and the conformance gate for each. No emitter is implemented, and effectful
-programs would stay TypeScript-only until a target has an effect runtime.
-
-## A programmable type system
-
-[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-programmable-type-system.md)
-positions Forma as a programmable type system for Lisp. It proposes a small
-trusted kernel that re-checks elaborated programs, bidirectional elaborators
-that generalize forms, a language adapter protocol for Lisp dialects, and a
-gradual boundary for checking existing Clojure code after a second surface
-exists. It also proposes backend capabilities, so that portable code would be
-checked against the intersection of the backends a language selects, and it
-records the Lisp target order and gates described above. Its first stage, the
-positioning on this site, is done. The kernel, elaborators, adapters, and
-backends are not implemented or scheduled.
-
-## Effect hosts
-
-[RFC 0022](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-effect-hosts.md)
-proposes one host-neutral lowering between the Effect checker and its code
-generators, so that each host is a naming and type profile, a printer, and a
-runtime kernel that passes shared, data-driven conformance scenarios. It uses
-that shape for a Rust target that emits async Rust, with closed error sets as
-generated enums, and for the existing Go prototype. The proposal is not
-implemented or scheduled, and a Rust host still needs a concrete consumer.
-
-## Effect polymorphism
+### Effect polymorphism
 
 [RFC 0023](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0023-effect-polymorphism.md)
 adds error-set and requirement-set variables in Effect signatures, so that
 user-written higher-order operations, such as wrappers and reusable test
 doubles, pass their callbacks' effects through without over-approximating them.
-Stages 1–3 (polymorphic Effect signatures, named callbacks, and refined literal
-checks) are implemented. It does not add continuations.
+Stages 1–3 and Stage 5 (single HM checker parity) are implemented. Stages 4 and
+6 remain proposed. It does not add continuations.
 
-## Proposed next-level capabilities and ordering
+### Elm-style application prototype
 
-The following is a dependency-aware proposal, not an implementation commitment:
+The [Foldkit prelude prototype](/elm) generates Effect / Foldkit TypeScript with
+exhaustive message updates, typed command recovery, and pure Hiccup views. It
+has a strict golden and headless conformance harness. Command arguments,
+subscriptions, richer views, editor/worker integration, and shared HttpApi
+server/client declarations remain proposed work. There is no
+production-readiness claim.
 
-1. Close remaining everyday contracts and workspace/module parity (RFCs 0019
-   and 0004). Specify a small independently checked core under the programmable
-   type system RFC; checker consolidation and independent re-checking are
-   different tasks, and neither proves interpreter agreement.
-2. Enable reusable composition: Effect signature polymorphism (RFC 0023), the
-   record rollout above, and typed hook inputs/result templates (RFC 0008).
-   The current raw `nil`/bare-value optional-hole ABI needs an explicit migration,
-   not an assumed `Option` type.
-3. Improve the authoring loop with
-   [typed holes (0026)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0026-typed-holes.md)
-   and RFC 0015's proposed seeded properties/fault schedules. `forma test` ships with the kernel
-   test framework; richer property and fault scheduling remain proposed.
-   Build generated Effect testing on that foundation, not a parallel runner.
-4. Run the small
-   [finite workflow/evidence experiment (0028)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0028-bounded-verification.md)
-   before SMT/Lean integration or general affine/dependent typing. This experiment
-   can proceed independently of the kernel with an explicit trust account.
-5. Demonstrate one checked schema → RPC/HTTP → native Effect → Foldkit path
-   (RFC 0011), then a directional
-   [contract diff/migration gate (0027)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0027-contract-evolution.md).
-   Go/Rust and multi-dialect editing remain gated by their existing RFCs;
-   no line-count target or “verified full-stack system” claim is implied.
+## Deferred sidequests
 
-Agent execution safety belongs to RFC 0012's existing checked-run/host boundary,
-not a new sandbox language. Durable workflows belong to checked IR plus native
-Effect activities and persistent recovery tests (RFC 0016), not a new execution
-kernel. Contract hashes, static types and bounded laws do not authenticate
-evidence or secure an in-process native host.
+The following RFCs are **Deferred (off critical path)** while Forma focuses on
+the critical path above. Already-shipped prerequisites (such as closed-shape
+row operations in
+[RFC 0005](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0005-row-operations.md),
+FX2 authored-syntax retention, and stage 0 [Clojure spellings](./clojure.md))
+remain supported as-is; the remaining proposal work is parked.
 
-### Review baseline and corrected claims
+| RFC | Topic | Shipped baseline | Deferral reason |
+| --- | --- | --- | --- |
+| [RFC 0003](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0003-direct-style-effects.md) | Direct-style effects | None | Explicit `Effect`/`do!` is the shipped foundation. |
+| [RFC 0006](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0006-qualified-rows.md) | Qualified rows and generic record programs | Closed-shape `Pick`/`Omit`/`Merge` ([RFC 0005](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0005-row-operations.md)) | Parked until after Milestones A–C. |
+| [RFC 0007](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0007-type-normalization.md) | Shared type normalization for record consumers | None | Parked until after Milestones A–C. |
+| [RFC 0008](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0008-typed-form-results.md) | Typed declaration reflection and form result templates | FX2 authored-syntax retention | Typed result templates parked until after Milestones A–C. |
+| [RFC 0009](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0009-field-names-and-row-map.md) | Bounded field names, key sets, and row mapping | None | Parked until after Milestones A–C. |
+| [RFC 0018](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0018-type-generics.md) | Type generics and collection inference | Built-in HM polymorphism | Author-facing contract expansion parked until after Milestones A–C. |
+| [RFC 0021](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0021-languages-as-libraries.md) | Languages as libraries | Stage 0 [Clojure spellings](./clojure.md) (`preludes/modules/clojure.lisp`) | Multi-dialect surfaces and `.cljc`/Racket/Scheme/Common Lisp emitters deferred. |
+| [RFC 0022 (effect hosts)](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0022-effect-hosts.md) | Effect hosts (TypeScript, Go, Rust) | Effect TypeScript only | Go/Rust Effect hosts deferred while owning Effect TypeScript completely first. |
+| [RFC 0024](https://github.com/bjacobso/forma/blob/main/docs/rfcs/0024-inspectable-grammar-descriptions.md) | Inspectable grammar descriptions | None | Evaluation-only grammar descriptions deferred. |
+
+Other deferred work:
+
+- General-purpose application-language positioning.
+- A stable package or wire-format compatibility promise.
+- Automatic registry publication or website deployment.
+- Additional backends without a concrete consumer and conformance target.
+
+## Review baseline and corrected claims
 
 This review used shared main
 [`38b3da9`](https://github.com/bjacobso/forma/commit/38b3da9bdcca99cdbcbb2a88ab5f761b9d472316)
@@ -228,14 +208,7 @@ claims that other Lisps lack all capability mechanisms or that no other platform
 can support these ideas are not established by this repository review.
 
 The RFC directory has pre-existing duplicate 0022 and 0023 numbers. Keep those
-filenames stable and use descriptive links. New proposals use unique 0026–0028;
-0024 is occupied and 0025 is accepted with amendments; implementation is in
-progress. The existing qualified-row and host-target designs are
+filenames stable and use descriptive links. Newer proposals use unique 0026–0029;
+0024 is occupied (deferred) and 0025 is accepted with amendments; implementation
+is in progress. The existing qualified-row and host-target designs are
 extended/referenced, not replaced by parallel RFCs.
-
-## Deferred work
-
-- General-purpose application-language positioning.
-- A stable package or wire-format compatibility promise.
-- Automatic registry publication or website deployment.
-- Additional backends without a concrete consumer and conformance target.

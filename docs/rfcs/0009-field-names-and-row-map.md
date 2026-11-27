@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Deferred (off critical path) — parked until after Milestones A–C while Forma focuses on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-10-09 |
 | Depends on | [RFC 0006](./0006-qualified-rows.md); [RFC 0007](./0007-type-normalization.md) for concrete consumers |
 | Scope | Compile-time field/key indices and mapping named unary type constructors over records |
