@@ -96,3 +96,26 @@ export { managePackages, verifyPackages } from "./node/package-manager.js";
 export type { PackageCommand, PackageCommandOptions } from "./node/package-manager.js";
 export { gitSource, defaultPackageFetcher } from "./node/package-fetch.js";
 export type { GitSource, PackageFetcher } from "./node/package-fetch.js";
+export {
+  DEFAULT_SNAPSHOT_STORE_RELATIVE_DIR,
+  FileSnapshotBackend,
+  openNodeTransactionalStore,
+  type NodeTransactionalStoreOptions,
+} from "./node/snapshot-store.js";
+export {
+  DEFAULT_STORE_RELATIVE_DIR,
+  FileEvidenceBackend,
+  openNodeEvidenceCache,
+  type NodeEvidenceCacheOptions,
+} from "./node/evidence-store.js";
+export {
+  EvidenceCache,
+  cachedTypecheck,
+  type EvidenceCacheStats,
+  type TypecheckEvidencePayload,
+} from "./store/evidence-cache.js";
+export {
+  computeInputDigest,
+  computeToolchainDigest,
+  defaultTypecheckToolchain,
+} from "./store/toolchain-digest.js";

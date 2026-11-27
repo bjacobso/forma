@@ -12,6 +12,8 @@ Human commands:
   describe <entry.lisp | --prelude path> [--format md|json]
                                       Describe forms, functions, and types.
   explain <code> [--json]             Explain a diagnostic offline.
+  store <init|status|branches|query|diff|export|import> ...
+                                      Manage the content-addressed transactional store (.forma/store/).
   help                                Print this help.
 
 Machine commands (JSON):
