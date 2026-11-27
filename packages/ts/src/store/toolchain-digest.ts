@@ -7,17 +7,18 @@
 import { engineVersion } from "../Engine.js";
 import type { JsonValue } from "../artifact/artifact.js";
 import { canonicalJson, sha256 } from "../artifact/canonical-json.js";
+import {
+  DEFAULT_LANGUAGE_PROFILE,
+  type InputDigest,
+  type ToolchainDigest,
+} from "./types.js";
+
+export type { InputDigest, ToolchainDigest } from "./types.js";
 
 export const TOOLCHAIN_DIGEST_VERSION = "toolchain:v1" as const;
 export const INPUT_DIGEST_VERSION = "input:v1" as const;
 export const PRELUDE_DIGEST_VERSION = "prelude:v1" as const;
-export const DEFAULT_TOOLCHAIN_LANGUAGE_PROFILE = "forma-core-v1" as const;
-
-/** Tagged deterministic digest of the checker/emitter toolchain, profile, and preludes. */
-export type ToolchainDigest = string;
-
-/** Tagged deterministic digest of extra inputs to an evidence computation. */
-export type InputDigest = string;
+export const DEFAULT_TOOLCHAIN_LANGUAGE_PROFILE = DEFAULT_LANGUAGE_PROFILE;
 
 /** Either a precomputed prelude digest or raw prelude source text to hash. */
 export type PreludeDigestEntry =

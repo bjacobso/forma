@@ -3,88 +3,31 @@
  * (RFC 0029 Stages 0/1). Browser-safe: no Node-only imports.
  */
 
-export type DefHash = string;
-export type SccHash = string;
+import type {
+  DefHash,
+  DefinitionIndex,
+  DefinitionRecord,
+  EvidenceKind,
+  EvidenceSummary,
+  OpaqueBoundaryRef,
+  PresentationMeta,
+  SccHash,
+  SccMembership,
+  StoreDefinitionKind,
+} from "./types.js";
 
-export type StoreDefinitionKind =
-  | "define"
-  | "type"
-  | "error"
-  | "service"
-  | "layer"
-  | "class"
-  | "instance"
-  | "form"
-  | "macro"
-  | "test"
-  | "declaration";
-
-export interface OpaqueBoundaryRef {
-  readonly kind: "builtin" | "external-package" | "native-provider";
-  readonly name: string;
-  readonly signature: string;
-  readonly runtimeDigest: string;
-}
-
-export interface PresentationMeta {
-  readonly displayName: string;
-  readonly qualifiedName: string;
-  readonly moduleId: string;
-  readonly authoredSource?: string | undefined;
-  readonly docstring?: string | undefined;
-  readonly span?:
-    | {
-        readonly start: number;
-        readonly end: number;
-        readonly sourceId?: string | undefined;
-      }
-    | undefined;
-}
-
-export interface SccMembership {
-  readonly sccHash: SccHash;
-  readonly memberIndex: number;
-  readonly memberCount: number;
-}
-
-/** Structurally aligned with `packages/ts/src/store/types.ts` DefinitionRecord. */
-export interface DefinitionRecord {
-  readonly hash: DefHash;
-  readonly kind: StoreDefinitionKind;
-  readonly canonicalForm: string;
-  readonly qualifiedName: string;
-  readonly name: string;
-  readonly moduleId: string;
-  readonly signature?: string | undefined;
-  readonly canonicalSignature?: string | undefined;
-  readonly requirements: readonly string[];
-  readonly errors: readonly string[];
-  readonly languageProfile: string;
-  readonly dependencies: readonly DefHash[];
-  readonly formDependencies: readonly DefHash[];
-  readonly opaqueRefs: readonly OpaqueBoundaryRef[];
-  readonly scc?: SccMembership | undefined;
-  readonly meta: PresentationMeta;
-}
-
-/** Structurally aligned with `packages/ts/src/store/types.ts` DefinitionIndex. */
-export interface DefinitionIndex {
-  readonly definitions: ReadonlyMap<DefHash, DefinitionRecord>;
-  readonly bindings: ReadonlyMap<string, DefHash>;
-  readonly byName: ReadonlyMap<string, readonly DefHash[]>;
-  readonly dependents: ReadonlyMap<DefHash, readonly DefHash[]>;
-  readonly metadata: ReadonlyMap<DefHash, PresentationMeta>;
-  readonly languageProfile: string;
-}
-
-export type EvidenceKind = "typecheck" | "artifact" | "test" | "verification";
-
-/** Structurally aligned with `packages/ts/src/store/types.ts` EvidenceSummary. */
-export interface EvidenceSummary {
-  readonly defHash: DefHash;
-  readonly kinds: readonly EvidenceKind[];
-  readonly records: readonly unknown[];
-}
+export type {
+  DefHash,
+  DefinitionIndex,
+  DefinitionRecord,
+  EvidenceKind,
+  EvidenceSummary,
+  OpaqueBoundaryRef,
+  PresentationMeta,
+  SccHash,
+  SccMembership,
+  StoreDefinitionKind,
+} from "./types.js";
 
 export type EvidenceLookup =
   | ReadonlyMap<DefHash, EvidenceSummary>

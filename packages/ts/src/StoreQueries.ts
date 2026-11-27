@@ -1,4 +1,16 @@
 export {
+  buildDefinitionIndexFromModuleGraph,
+  buildDefinitionIndexFromSources,
+  buildDefinitionIndexFromWorkspace,
+  createDefinitionIndex,
+} from "./store/index-builder.js";
+
+export type {
+  BuildDefinitionIndexOptions,
+  DefinitionIndexSource,
+} from "./store/index-builder.js";
+
+export {
   findDependencies,
   findDependents,
   getDefinition,

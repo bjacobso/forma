@@ -1430,6 +1430,16 @@ export function hashDefinitionGroup(
         ...(schemeEffects?.requirements ?? []),
         ...(coreEffects?.requirements ?? []),
       ]);
+      // A `service` declaration defines its own capability rather than requiring it;
+      // the HM environment attaches the service's own capability label to its provided methods.
+      if (input.kind === "service") {
+        const selfPrefix = `${input.name}.`;
+        for (const req of [...reqSet]) {
+          if (req === input.name || req.startsWith(selfPrefix)) {
+            reqSet.delete(req);
+          }
+        }
+      }
       const errSet = new Set<string>([
         ...(input.errors ?? []),
         ...(schemeEffects?.errors ?? []),

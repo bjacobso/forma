@@ -20,94 +20,37 @@ import {
   type InputDigest,
   type ToolchainDigest,
 } from "./toolchain-digest.js";
+import {
+  EVIDENCE_FORMAT_VERSION,
+  type ArtifactEvidencePayload,
+  type DefHash,
+  type EvidenceKey,
+  type EvidenceKind,
+  type EvidencePayload,
+  type EvidenceRecord,
+  type EvidenceSummary,
+  type EvidenceTrustAccount,
+  type TestEvidencePayload,
+  type TrustAccount,
+  type TypecheckEvidencePayload,
+  type VerificationEvidencePayload,
+} from "./types.js";
 
-// ---------------------------------------------------------------------------
-// Shared RFC 0029 evidence types (structurally aligned with `./types.ts`)
-// ---------------------------------------------------------------------------
-
-export const EVIDENCE_FORMAT_VERSION = "forma-evidence/v1" as const;
-
-/** Tagged SHA-256 content hash of a canonicalized definition (e.g. `def:v1:<hex>`). */
-export type DefHash = string;
-
-/** Verification and build evidence kinds (RFC 0029 §3). */
-export type EvidenceKind = "typecheck" | "artifact" | "test" | "verification";
-
-/** Composite cache key for immutable evidence records. */
-export interface EvidenceKey {
-  readonly defHash: DefHash;
-  readonly kind: EvidenceKind;
-  readonly toolchainDigest: ToolchainDigest;
-  readonly inputDigest: InputDigest;
-}
-
-/** Explicit trust account naming the checker, kernel, runner, or solver that produced an evidence record. */
-export interface EvidenceTrustAccount {
-  readonly producer: string;
-  readonly version: string;
-  readonly profile: string;
-  readonly deterministic: boolean;
-  readonly assumptions?: readonly string[] | undefined;
-  readonly notes?: string | undefined;
-}
-
-/** Alias for `EvidenceTrustAccount`. */
-export type TrustAccount = EvidenceTrustAccount;
-
-export interface TypecheckEvidencePayload {
-  readonly ok: boolean;
-  readonly signature?: string | undefined;
-  readonly requirements: readonly string[];
-  readonly errors: readonly string[];
-  readonly diagnostics: readonly {
-    readonly code?: string | undefined;
-    readonly message: string;
-    readonly severity?: string | undefined;
-  }[];
-}
-
-export interface ArtifactEvidencePayload {
-  readonly format: "canonical-ir" | "effect-ts";
-  readonly content: string;
-  readonly contentHash: string;
-}
-
-export interface TestEvidencePayload {
-  readonly passed: boolean;
-  readonly requirements: readonly string[];
-  readonly runnerProfile: string;
-  readonly deterministicRunner: boolean;
-  readonly summary?: string | undefined;
-}
-
-export interface VerificationEvidencePayload {
-  readonly result: "holds-in-model" | "counterexample" | "inconclusive";
-  readonly bounds: Readonly<Record<string, unknown>>;
-  readonly assumptions: readonly string[];
-  readonly counterexample?: unknown;
-}
-
-export type EvidencePayload =
-  | TypecheckEvidencePayload
-  | ArtifactEvidencePayload
-  | TestEvidencePayload
-  | VerificationEvidencePayload;
-
-/** Immutable hash-keyed evidence record. */
-export interface EvidenceRecord<TPayload = unknown> {
-  readonly formatVersion: typeof EVIDENCE_FORMAT_VERSION;
-  readonly key: EvidenceKey;
-  readonly trust: EvidenceTrustAccount;
-  readonly payload: TPayload;
-  readonly createdAt?: string | undefined;
-}
-
-/** Summary of cached evidence for a definition (used by read queries). */
-export interface EvidenceSummary {
-  readonly defHash: DefHash;
-  readonly kinds: readonly EvidenceKind[];
-  readonly records: readonly EvidenceRecord[];
-}
+export {
+  EVIDENCE_FORMAT_VERSION,
+  type ArtifactEvidencePayload,
+  type DefHash,
+  type EvidenceKey,
+  type EvidenceKind,
+  type EvidencePayload,
+  type EvidenceRecord,
+  type EvidenceSummary,
+  type EvidenceTrustAccount,
+  type TestEvidencePayload,
+  type TrustAccount,
+  type TypecheckEvidencePayload,
+  type VerificationEvidencePayload,
+} from "./types.js";
 
 // ---------------------------------------------------------------------------
 // Evidence key canonicalization & hashing
@@ -559,6 +502,7 @@ export function cachedTypecheck(
       version: options.trust?.version ?? engineVersion,
       profile: options.trust?.profile ?? DEFAULT_TOOLCHAIN_LANGUAGE_PROFILE,
       deterministic: options.trust?.deterministic ?? true,
+      ...(options.trust?.assumptions !== undefined ? { assumptions: options.trust.assumptions } : {}),
       ...(options.trust?.notes !== undefined ? { notes: options.trust.notes } : {}),
     },
   }));
@@ -610,6 +554,7 @@ export function cachedArtifact(
         version: options.trust?.version ?? engineVersion,
         profile: options.trust?.profile ?? DEFAULT_TOOLCHAIN_LANGUAGE_PROFILE,
         deterministic: options.trust?.deterministic ?? true,
+        ...(options.trust?.assumptions !== undefined ? { assumptions: options.trust.assumptions } : {}),
         ...(options.trust?.notes !== undefined ? { notes: options.trust.notes } : {}),
       },
     };

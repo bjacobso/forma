@@ -194,7 +194,24 @@ describe("store read-only semantic queries", () => {
         {
           defHash: hFindUser,
           kinds: ["typecheck", "artifact"],
-          records: [{ kind: "typecheck", ok: true }],
+          records: [
+            {
+              formatVersion: "forma-evidence/v1",
+              key: {
+                defHash: hFindUser,
+                kind: "typecheck",
+                toolchainDigest: "toolchain:v1:test",
+                inputDigest: "input:v1:test",
+              },
+              trust: {
+                producer: "forma-hm-effect-checker",
+                version: "0.3.0",
+                profile: "forma-core-v1",
+                deterministic: true,
+              },
+              payload: { ok: true, requirements: ["Users.find"], errors: ["NotFound"], diagnostics: [] },
+            },
+          ],
         },
       ],
     ]);

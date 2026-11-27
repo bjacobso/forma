@@ -49,7 +49,7 @@ describe("host ABI read-only store queries", () => {
       const findUser = (defResp.value as { definition: Record<string, any> }).definition;
       expect(findUser).toMatchObject({
         name: "find-user",
-        qualifiedName: "app.lisp#find-user",
+        qualifiedName: "app.lisp::find-user",
         kind: "define",
         requirements: ["Users.find"],
         errors: ["NotFound"],
@@ -116,6 +116,26 @@ describe("host ABI read-only store queries", () => {
     } finally {
       await send({ op: "closeSession", sessionId });
     }
+  });
+
+  it("returns canonical alpha-equivalent DefHashes across parameter renames", async () => {
+    const abi = new JsonAbi();
+    const send = (payload: unknown) => abi.handleJson(JSON.stringify(payload));
+    const a = await send({
+      op: "getDefinition",
+      source: "(define inc [x] (+ x 1))",
+      target: "inc",
+    });
+    const b = await send({
+      op: "getDefinition",
+      source: "(define inc [y] (+ y 1))",
+      target: "inc",
+    });
+    expect(a.ok).toBe(true);
+    expect(b.ok).toBe(true);
+    expect((a.value as { definition: { hash: string } }).definition.hash).toBe(
+      (b.value as { definition: { hash: string } }).definition.hash,
+    );
   });
 });
 
