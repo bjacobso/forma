@@ -1,6 +1,8 @@
 import type { ModuleInterface, LinkedEffectProgram, PackageTable } from "@formalang/ts/modules";
 import type { Diagnostic, Span } from "@formalang/ts/diagnostic";
 export type { Diagnostic, Span } from "@formalang/ts/diagnostic";
+import type { DefinitionDetails, DefHash } from "@formalang/ts/store-queries";
+export type { DefinitionDetails, DefHash } from "@formalang/ts/store-queries";
 import type { HostCallJournal, JournalRequest, OnJournalEntryCallback } from "./journal.js";
 
 export type AstNode =
@@ -976,6 +978,79 @@ export interface LanguageHost {
   sourceToOutline?(request: SourceToOutlineRequest): Promise<SourceToOutlineResult>;
   outlineToSource?(request: OutlineToSourceRequest): Promise<OutlineToSourceResult>;
   formSlots?(request: FormSlotsRequest): Promise<FormSlotsResult>;
+  getDefinition?(request: GetDefinitionRequest): Promise<GetDefinitionResult>;
+  findDependents?(request: FindDependentsRequest): Promise<FindDependentsResult>;
+  findDependencies?(request: FindDependenciesRequest): Promise<FindDependenciesResult>;
+  queryByCapability?(request: QueryByCapabilityRequest): Promise<QueryByCapabilityResult>;
+  queryByError?(request: QueryByErrorRequest): Promise<QueryByErrorResult>;
+}
+
+/** Shared source/session targeting for read-only semantic definition queries (RFC 0029). */
+export interface StoreQuerySourceInput {
+  readonly sessionId?: string | undefined;
+  readonly sourceId?: string | undefined;
+  readonly source?: string | undefined;
+}
+
+export interface GetDefinitionRequest extends StoreQuerySourceInput {
+  /** Definition name, qualified name, or DefHash. */
+  readonly target: string;
+}
+
+export interface GetDefinitionResult {
+  readonly definition?: DefinitionDetails | undefined;
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+export interface FindDependentsRequest extends StoreQuerySourceInput {
+  /** Definition name, qualified name, or DefHash. */
+  readonly target: string;
+  readonly transitive?: boolean | undefined;
+  readonly includeSelf?: boolean | undefined;
+  readonly maxDepth?: number | undefined;
+}
+
+export interface FindDependentsResult {
+  readonly target?: DefHash | undefined;
+  readonly definitions: readonly DefinitionDetails[];
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+export interface FindDependenciesRequest extends StoreQuerySourceInput {
+  /** Definition name, qualified name, or DefHash. */
+  readonly target: string;
+  readonly transitive?: boolean | undefined;
+  readonly includeFormDependencies?: boolean | undefined;
+  readonly includeSelf?: boolean | undefined;
+  readonly maxDepth?: number | undefined;
+}
+
+export interface FindDependenciesResult {
+  readonly target?: DefHash | undefined;
+  readonly definitions: readonly DefinitionDetails[];
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+export interface QueryByCapabilityRequest extends StoreQuerySourceInput {
+  /** Service name or operation capability (e.g. `"Users"` or `"Users.find"`). */
+  readonly capability: string;
+}
+
+export interface QueryByCapabilityResult {
+  readonly capability: string;
+  readonly definitions: readonly DefinitionDetails[];
+  readonly diagnostics: readonly Diagnostic[];
+}
+
+export interface QueryByErrorRequest extends StoreQuerySourceInput {
+  /** Error name (e.g. `"NotFound"`). */
+  readonly error: string;
+}
+
+export interface QueryByErrorResult {
+  readonly error: string;
+  readonly definitions: readonly DefinitionDetails[];
+  readonly diagnostics: readonly Diagnostic[];
 }
 
 

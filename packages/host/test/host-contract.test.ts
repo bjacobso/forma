@@ -97,6 +97,11 @@ describe("shared host contract", () => {
         applyEditScript: { source: "42", script: { version: 1, ops: [] } },
         outlineToSource: { items: [] }, releaseValue: { sessionId, valueRefs: [] },
         projectValue: { value: { kind: "int", value: 42 }, projections: ["printed"] },
+        getDefinition: { sessionId, target: "answer" },
+        findDependents: { sessionId, target: "answer", transitive: true },
+        findDependencies: { sessionId, target: "answer" },
+        queryByCapability: { sessionId, capability: "Users" },
+        queryByError: { sessionId, error: "NotFound" },
       };
       if (["callValue", "resumeHostCall", "abortEvaluation"].includes(op)) {
         if (op === "callValue") {
