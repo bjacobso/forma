@@ -15,9 +15,11 @@ import * as Editor from "@formalang/ts/editor";
 import * as Engine from "@formalang/ts/engine";
 import * as LanguageSession from "@formalang/ts/session";
 import * as Syntax from "@formalang/ts/syntax";
+import * as StoreQueries from "@formalang/ts/store-queries";
 import * as VM from "@formalang/ts/vm";
 
 import { typeProjection } from "./abi-projections.js";
+import { buildSessionDefinitionIndex, recordToDetails, type IndexedSourceDocument } from "./store-queries.js";
 import {
   JOURNAL_FORMAT,
   JournalRuntime,
@@ -50,10 +52,21 @@ import type {
   EditScriptResult,
   ExpandRequest,
   ExpandResult,
+  FindDependenciesRequest,
+  FindDependenciesResult,
+  FindDependentsRequest,
+  FindDependentsResult,
   FindReferencesRequest,
   FindReferencesResult,
   FormSlotsRequest,
   FormSlotsResult,
+  GetDefinitionRequest,
+  GetDefinitionResult,
+  QueryByCapabilityRequest,
+  QueryByCapabilityResult,
+  QueryByErrorRequest,
+  QueryByErrorResult,
+  StoreQuerySourceInput,
   EvaluateInSessionRequest,
   EvaluateRequest,
   EvaluationResult,
@@ -1240,6 +1253,101 @@ export class TsLanguageHost implements LanguageHost {
       ...(slots.activeSlot ? { activeSlot: slots.activeSlot } : {}),
       unknownSlots: slots.unknownSlots,
     };
+  }
+
+  #definitionIndex(request: StoreQuerySourceInput) {
+    const documents: IndexedSourceDocument[] = [];
+    const seen = new Set<string>();
+    if (request.sessionId) {
+      const session = this.#requireSession(request.sessionId);
+      for (const source of session.language.orderedSources()) {
+        if (!seen.has(source.id)) {
+          seen.add(source.id);
+          documents.push({ id: source.id, source: source.text });
+        }
+      }
+    }
+    if (request.source !== undefined) {
+      const id = request.sourceId ?? "source";
+      const existingIndex = documents.findIndex((doc) => doc.id === id);
+      if (existingIndex >= 0) documents[existingIndex] = { id, source: request.source };
+      else documents.push({ id, source: request.source });
+    }
+    return buildSessionDefinitionIndex(documents);
+  }
+
+  async getDefinition(request: GetDefinitionRequest): Promise<GetDefinitionResult> {
+    const { index, diagnostics } = this.#definitionIndex(request);
+    const definition = StoreQueries.getDefinition(index, request.target);
+    return this.#locateResult(
+      { ...(definition !== undefined ? { definition } : {}), diagnostics },
+      request,
+    );
+  }
+
+  async findDependents(request: FindDependentsRequest): Promise<FindDependentsResult> {
+    const { index, diagnostics } = this.#definitionIndex(request);
+    const target = StoreQueries.resolveDefinitionHash(index, request.target);
+    const records = StoreQueries.findDependents(index, request.target, {
+      ...(request.transitive !== undefined ? { transitive: request.transitive } : {}),
+      ...(request.includeSelf !== undefined ? { includeSelf: request.includeSelf } : {}),
+      ...(request.maxDepth !== undefined ? { maxDepth: request.maxDepth } : {}),
+    });
+    return this.#locateResult(
+      {
+        ...(target !== undefined ? { target } : {}),
+        definitions: records.map((record) => recordToDetails(index, record)),
+        diagnostics,
+      },
+      request,
+    );
+  }
+
+  async findDependencies(request: FindDependenciesRequest): Promise<FindDependenciesResult> {
+    const { index, diagnostics } = this.#definitionIndex(request);
+    const target = StoreQueries.resolveDefinitionHash(index, request.target);
+    const records = StoreQueries.findDependencies(index, request.target, {
+      ...(request.transitive !== undefined ? { transitive: request.transitive } : {}),
+      ...(request.includeFormDependencies !== undefined
+        ? { includeFormDependencies: request.includeFormDependencies }
+        : {}),
+      ...(request.includeSelf !== undefined ? { includeSelf: request.includeSelf } : {}),
+      ...(request.maxDepth !== undefined ? { maxDepth: request.maxDepth } : {}),
+    });
+    return this.#locateResult(
+      {
+        ...(target !== undefined ? { target } : {}),
+        definitions: records.map((record) => recordToDetails(index, record)),
+        diagnostics,
+      },
+      request,
+    );
+  }
+
+  async queryByCapability(request: QueryByCapabilityRequest): Promise<QueryByCapabilityResult> {
+    const { index, diagnostics } = this.#definitionIndex(request);
+    const records = StoreQueries.queryByCapability(index, request.capability);
+    return this.#locateResult(
+      {
+        capability: request.capability,
+        definitions: records.map((record) => recordToDetails(index, record)),
+        diagnostics,
+      },
+      request,
+    );
+  }
+
+  async queryByError(request: QueryByErrorRequest): Promise<QueryByErrorResult> {
+    const { index, diagnostics } = this.#definitionIndex(request);
+    const records = StoreQueries.queryByError(index, request.error);
+    return this.#locateResult(
+      {
+        error: request.error,
+        definitions: records.map((record) => recordToDetails(index, record)),
+        diagnostics,
+      },
+      request,
+    );
   }
 
   #indexSymbols(request: SymbolIndexRequest): Editor.SymbolIndex {

@@ -72,6 +72,41 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
         const description = await abi.host.describe({ sessionId: request.sessionId! });
         return { ok: !hasErrors(description.diagnostics), ...description };
       }
+      if (name === "get_definition") {
+        const res = await abi.host.getDefinition({ ...request, target: args.target });
+        return { ok: !hasErrors(res.diagnostics), ...res };
+      }
+      if (name === "find_dependents") {
+        const res = await abi.host.findDependents({
+          ...request,
+          target: args.target,
+          ...(args.transitive !== undefined ? { transitive: args.transitive } : {}),
+          ...(args.includeSelf !== undefined ? { includeSelf: args.includeSelf } : {}),
+          ...(args.maxDepth !== undefined ? { maxDepth: args.maxDepth } : {}),
+        });
+        return { ok: !hasErrors(res.diagnostics), ...res };
+      }
+      if (name === "find_dependencies") {
+        const res = await abi.host.findDependencies({
+          ...request,
+          target: args.target,
+          ...(args.transitive !== undefined ? { transitive: args.transitive } : {}),
+          ...(args.includeFormDependencies !== undefined
+            ? { includeFormDependencies: args.includeFormDependencies }
+            : {}),
+          ...(args.includeSelf !== undefined ? { includeSelf: args.includeSelf } : {}),
+          ...(args.maxDepth !== undefined ? { maxDepth: args.maxDepth } : {}),
+        });
+        return { ok: !hasErrors(res.diagnostics), ...res };
+      }
+      if (name === "query_by_capability") {
+        const res = await abi.host.queryByCapability({ ...request, capability: args.capability });
+        return { ok: !hasErrors(res.diagnostics), ...res };
+      }
+      if (name === "query_by_error") {
+        const res = await abi.host.queryByError({ ...request, error: args.error });
+        return { ok: !hasErrors(res.diagnostics), ...res };
+      }
       const check = await checked(request);
       if (name === "check") return check;
       if (!check.ok) return { ...check, value: null, printed: null, type: check.type ?? null };
@@ -114,6 +149,14 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
   tools.push(replTool as unknown as Tool);
   const repl = createNodeRepl(abi);
   tools.push({ name: "describe", description: "Describe the vocabulary a file module graph makes available: forms with typed slots and checked examples, exported functions with signatures and docs, and types.", inputSchema: input({ path: string }, ["path"]) });
+  const nonNegativeInt = { type: "integer", minimum: 0, maximum: Number.MAX_SAFE_INTEGER };
+  tools.push(
+    { name: "get_definition", description: "Look up a definition by name, qualified name, or content hash in source or a file module graph; returns signature, requirements, errors, authored source, and dependencies.", inputSchema: input({ ...sourceProperties, target: { type: "string", minLength: 1 } }, ["target"], sourceChoice) },
+    { name: "find_dependents", description: "Find direct or transitive dependents of a definition (by name or content hash) in source or a file module graph.", inputSchema: input({ ...sourceProperties, target: { type: "string", minLength: 1 }, transitive: { type: "boolean" }, includeSelf: { type: "boolean" }, maxDepth: nonNegativeInt }, ["target"], sourceChoice) },
+    { name: "find_dependencies", description: "Find direct or transitive dependencies of a definition (by name or content hash) in source or a file module graph.", inputSchema: input({ ...sourceProperties, target: { type: "string", minLength: 1 }, transitive: { type: "boolean" }, includeFormDependencies: { type: "boolean" }, includeSelf: { type: "boolean" }, maxDepth: nonNegativeInt }, ["target"], sourceChoice) },
+    { name: "query_by_capability", description: "Find all definitions requiring a given service or operation capability (e.g. \"Users\" or \"Users.find\") in source or a file module graph.", inputSchema: input({ ...sourceProperties, capability: { type: "string", minLength: 1 } }, ["capability"], sourceChoice) },
+    { name: "query_by_error", description: "Find all definitions whose error set includes a given error name in source or a file module graph.", inputSchema: input({ ...sourceProperties, error: { type: "string", minLength: 1 } }, ["error"], sourceChoice) },
+  );
   const validator = new AjvJsonSchemaValidator();
   const validators = new Map(tools.map(tool => [tool.name, validator.getValidator<Record<string, any>>(tool.inputSchema as JsonSchemaType)]));
   const version = await abi.host.version();
@@ -131,7 +174,16 @@ export async function mcp(abi = new JsonAbi()): Promise<void> {
         else {
           const args = validated.data;
           if (params.name === "repl") ({ result, text } = await repl.call(args as { input: string; session?: string }));
-          else if (params.name === "check" || params.name === "run" || params.name === "describe") result = await checkOrRun(params.name, args);
+          else if (
+            params.name === "check" ||
+            params.name === "run" ||
+            params.name === "describe" ||
+            params.name === "get_definition" ||
+            params.name === "find_dependents" ||
+            params.name === "find_dependencies" ||
+            params.name === "query_by_capability" ||
+            params.name === "query_by_error"
+          ) result = await checkOrRun(params.name, args);
           else if (params.name === "format") {
             const path = args.path === undefined ? undefined : confined(args.path);
             const source = path === undefined ? args.source : readFileSync(path, "utf8");

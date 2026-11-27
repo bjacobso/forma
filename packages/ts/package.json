@@ -156,6 +156,10 @@
     "./authoring": {
       "types": "./dist/Authoring.d.mts",
       "import": "./dist/Authoring.mjs"
+    },
+    "./store-queries": {
+      "types": "./dist/StoreQueries.d.mts",
+      "import": "./dist/StoreQueries.mjs"
     }
   },
   "files": [

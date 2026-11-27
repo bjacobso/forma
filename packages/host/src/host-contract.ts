@@ -239,6 +239,69 @@ const descriptionResult = Schema.Struct({
   functions: Schema.Array(describedDefinition), types: Schema.Array(describedDefinition), diagnostics,
 });
 
+const storeDefinitionKind = Schema.Literals([
+  "define",
+  "type",
+  "error",
+  "service",
+  "layer",
+  "class",
+  "instance",
+  "form",
+  "macro",
+  "test",
+  "declaration",
+]);
+const storeDefinitionDetails = Schema.Struct({
+  hash: id,
+  kind: storeDefinitionKind,
+  name: Schema.String,
+  qualifiedName: Schema.String,
+  moduleId: Schema.String,
+  signature: optionalString,
+  canonicalSignature: optionalString,
+  requirements: Schema.Array(Schema.String),
+  errors: Schema.Array(Schema.String),
+  authoredSource: optionalString,
+  docstring: optionalString,
+  span: Schema.optionalKey(Schema.Struct({ start: Schema.Int, end: Schema.Int, sourceId: optionalString })),
+  languageProfile: Schema.String,
+  dependencies: Schema.Array(Schema.String),
+  formDependencies: Schema.Array(Schema.String),
+  opaqueRefs: Schema.Array(Schema.Struct({
+    kind: Schema.Literals(["builtin", "external-package", "native-provider"]),
+    name: Schema.String,
+    signature: Schema.String,
+    runtimeDigest: Schema.String,
+  })),
+  scc: Schema.optionalKey(Schema.Struct({ sccHash: Schema.String, memberIndex: Schema.Int, memberCount: Schema.Int })),
+  evidence: Schema.optionalKey(Schema.Struct({
+    defHash: Schema.String,
+    kinds: Schema.Array(Schema.Literals(["typecheck", "artifact", "test", "verification"])),
+    records: Schema.Array(Schema.Unknown),
+  })),
+  ambiguousMatches: Schema.optionalKey(Schema.Array(Schema.String)),
+}).annotate({ identifier: "DefinitionDetails" });
+const getDefinitionResult = Schema.Struct({
+  definition: Schema.optionalKey(storeDefinitionDetails),
+  diagnostics,
+});
+const graphDefinitionsResult = Schema.Struct({
+  target: optionalString,
+  definitions: Schema.Array(storeDefinitionDetails),
+  diagnostics,
+});
+const queryByCapabilityResult = Schema.Struct({
+  capability: Schema.String,
+  definitions: Schema.Array(storeDefinitionDetails),
+  diagnostics,
+});
+const queryByErrorResult = Schema.Struct({
+  error: Schema.String,
+  definitions: Schema.Array(storeDefinitionDetails),
+  diagnostics,
+});
+
 const stateResponse = (result: Awaited<ReturnType<TsLanguageHost["evaluateInSession"]>> | Awaited<ReturnType<TsLanguageHost["checkedRun"]>>) => ({
   ...envelope(
     result,
@@ -379,6 +442,39 @@ export const HOST_OPERATIONS = [
     const result = await host.analyzeEditor({...request, hostBuiltins: hostBuiltins(request.hostBuiltins)});
     return envelope(result, result.diagnostics);
   }),
+  operation("getDefinition", { ...sessionSource, target: id }, async ({host}, request) => {
+    const result = await host.getDefinition(request);
+    return envelope(result, result.diagnostics);
+  }, getDefinitionResult),
+  operation("findDependents", {
+    ...sessionSource,
+    target: id,
+    transitive: Schema.optionalKey(Schema.Boolean),
+    includeSelf: Schema.optionalKey(Schema.Boolean),
+    maxDepth: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+  }, async ({host}, request) => {
+    const result = await host.findDependents(request);
+    return envelope(result, result.diagnostics);
+  }, graphDefinitionsResult),
+  operation("findDependencies", {
+    ...sessionSource,
+    target: id,
+    transitive: Schema.optionalKey(Schema.Boolean),
+    includeFormDependencies: Schema.optionalKey(Schema.Boolean),
+    includeSelf: Schema.optionalKey(Schema.Boolean),
+    maxDepth: Schema.optionalKey(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0))),
+  }, async ({host}, request) => {
+    const result = await host.findDependencies(request);
+    return envelope(result, result.diagnostics);
+  }, graphDefinitionsResult),
+  operation("queryByCapability", { ...sessionSource, capability: id }, async ({host}, request) => {
+    const result = await host.queryByCapability(request);
+    return envelope(result, result.diagnostics);
+  }, queryByCapabilityResult),
+  operation("queryByError", { ...sessionSource, error: id }, async ({host}, request) => {
+    const result = await host.queryByError(request);
+    return envelope(result, result.diagnostics);
+  }, queryByErrorResult),
 ] as const;
 export const HOST_CAPABILITIES = HOST_OPERATIONS.map(operation => operation.name);
 export const JsonRequest = Schema.Union(HOST_OPERATIONS.map(operation => operation.request));
