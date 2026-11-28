@@ -6,11 +6,13 @@ import { formatFiles } from "./format.js";
 import { describe } from "./describe.js";
 import { explain } from "./explain.js";
 import { repl } from "./repl.js";
+import { storeCommand } from "./store.js";
 import { displayPath, report } from "./output.js";
 
 export async function human(abi: JsonAbi, command: string, args: readonly string[]): Promise<boolean> {
   if (command === "describe") return describe(abi, args);
   if (command === "test") return testFiles(args);
+  if (command === "store") return storeCommand(args);
   const json = args.includes("--json");
   if (command === "run") {
     let unchecked = false;

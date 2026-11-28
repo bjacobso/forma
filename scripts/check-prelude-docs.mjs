@@ -4,7 +4,7 @@ import { readFileSync } from "node:fs";
 import { Effect } from "effect";
 import { loadPreludes, renderPrelude } from "../docs/.vitepress/preludes.ts";
 import { parseManyToSExpr } from "../packages/ts/dist/Reader.mjs";
-import { bootstrapOntologyPreludes, preludeSource } from "../packages/ts/dist/Preludes.mjs";
+import { bootstrapOntologyPreludes, bootstrapPreludes, preludeSource } from "../packages/ts/dist/Preludes.mjs";
 import { elaborateProgram } from "../packages/ts/dist/Descriptor.mjs";
 import { bootstrapElmPreludes, generateElmProgram } from "../packages/ts/dist/Elm.mjs";
 import { bootstrapEmailPreludes, generateEmailProgram } from "../packages/ts/dist/Email.mjs";
@@ -19,6 +19,7 @@ const stacks = {
   "http-api": bootstrapHttpApiPreludes(),
   rpc: bootstrapRpcPreludes(),
   cluster: bootstrapClusterPreludes(),
+  "workflow-laws": bootstrapPreludes(["compiler.lisp", "workflow-laws.lisp"]),
 };
 const linkers = { elm: generateElmProgram, email: generateEmailProgram, "http-api": generateHttpApiProgram, rpc: generateRpcProgram, cluster: generateClusterProgram };
 const parse = source => Effect.runSync(parseManyToSExpr(source));

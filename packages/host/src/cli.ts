@@ -10,8 +10,8 @@ import { located, printJson, report } from "./cli/output.js";
 
 const [command = "", ...args] = process.argv.slice(2);
 // File-reading commands reuse cached prelude snapshots; a cache problem never fails compilation.
-if (["file", "prelude", "check", "run", "test", "describe"].includes(command)) enablePreludeCache();
-const humanCommand = ["check", "run", "test", "fmt", "repl", "explain", "describe"].includes(command);
+if (["file", "prelude", "check", "run", "test", "describe", "store"].includes(command)) enablePreludeCache();
+const humanCommand = ["check", "run", "test", "fmt", "repl", "explain", "describe", "store"].includes(command);
 try {
   const abi = new JsonAbi();
   if (["help", "--help", "-h"].includes(command) || (args.length === 1 && ["--help", "-h"].includes(args[0]!))) process.stdout.write(usage);

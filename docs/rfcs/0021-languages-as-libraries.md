@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; stage 0 implemented |
+| Status | Deferred (off critical path) — stage 0 Clojure spellings stays as-is; multi-dialect surfaces and `.cljc`/Racket/Scheme/Common Lisp emitters are parked while Forma focuses on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-11-04 |
 | Amends | [RFC 0001](./0001-unified-syntax.md)'s single canonical surface and its three-form meta layer (`type`, `form`, `macro`); its one type language and one option syntax are unchanged |
 | Depends on | [RFC 0008](./0008-typed-form-results.md) for checking declarative templates once; [RFC 0017](./0017-diagnostic-catalog.md) for stable codes on surface diagnostics |

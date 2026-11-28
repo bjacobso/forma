@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Deferred (off critical path) — Go/Rust Effect hosts are parked while Forma focuses on owning Effect TypeScript completely on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-11-04 |
 | Builds on | The Effect-Go RFC and prototype (unmerged; see [Current state](#current-state)); [RFC 0021](./0021-languages-as-libraries.md)'s kernel ports and differential conformance |
 | Scope | A host-neutral lowering between the mechanics checker and code generators, per-host profiles, a shared runtime kernel contract, data-driven conformance scenarios, host-keyed emit hooks and externs, and a Rust target that emits idiomatic async Rust |

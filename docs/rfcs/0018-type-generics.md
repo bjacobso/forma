@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; exploration, not implemented as a complete contract |
+| Status | Deferred (off critical path) — parked until after Milestones A–C while Forma focuses on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-11-02 |
 | Scope | Rank-one generic signatures, callback/result inference, generic aliases, collection contracts, module and tooling behavior |
 | Direction | Reuse Forma's existing type variables and inference; make explicit generic signatures promises that bodies must satisfy |

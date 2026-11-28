@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Deferred (off critical path) — FX2 authored-syntax prerequisite remains implemented; typed form result templates are parked until after Milestones A–C while Forma focuses on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-10-09 |
 | Depends on | [RFC 0007](./0007-type-normalization.md) for the bridge; [RFC 0006](./0006-qualified-rows.md) and [RFC 0009](./0009-field-names-and-row-map.md) for generic template checking |
 | Scope | Metadata-to-type reflection, declarative form result types, and compatible prelude migration |

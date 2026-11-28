@@ -72,6 +72,15 @@ const manifest: Record<string, Manifest> = {
     guide: { text: "Prelude-defined Cluster entities", link: "/effect/cluster" },
     note: "In-memory state only. Runners, message storage, and process wiring remain native Effect code.",
   },
+  "workflow-laws": {
+    title: "Workflow and evidence safety laws",
+    group: "domain",
+    status: "Prototype",
+    tone: "live",
+    order: 2.7,
+    summary: "Finite workflow domains, initial states, transitions, and safety laws for bounded fixed-point exploration.",
+    note: "Bootstrap it with compiler.lisp, separately from the ontology stack. Bounded exploration checks finite models only.",
+  },
   elm: {
     title: "Elm-style applications",
     group: "domain",

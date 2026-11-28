@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import type { ContractSnapshot } from "../../src/contracts/types.js";
+import { EvidenceCache } from "../../src/store/evidence-cache.js";
 import { buildDefinitionIndexFromSources } from "../../src/store/index-builder.js";
 import {
   capabilityAllowed,
@@ -7,12 +9,14 @@ import {
   matchesNamespace,
   type BranchPolicy,
   type InterfaceImpact,
+  type PolicyContractSnapshotPair,
   type PolicyEvaluationContext,
   type PolicyEvidenceSource,
   type PolicySnapshotView,
   type SnapshotDiff,
   type TransactionProposal,
 } from "../../src/store/policies.js";
+import { computeInputDigest, computeToolchainDigest } from "../../src/store/toolchain-digest.js";
 import {
   DEFAULT_LANGUAGE_PROFILE,
   EVIDENCE_FORMAT_VERSION,
@@ -21,7 +25,13 @@ import {
   type DefinitionRecord,
   type EvidenceKind,
   type EvidenceRecord,
+  type VerificationEvidencePayload,
 } from "../../src/store/types.js";
+import {
+  defaultVerificationTrustAccount,
+  toVerificationEvidencePayload,
+  verifyWorkflowSource,
+} from "../../src/verification/bounded-explorer.js";
 
 function makeSnapshot(index: DefinitionIndex, policy: BranchPolicy, hash: string): PolicySnapshotView {
   return {
@@ -105,6 +115,7 @@ function makeContext(opts: {
   diff?: SnapshotDiff;
   impacts?: readonly InterfaceImpact[];
   evidence?: PolicyEvidenceSource;
+  contractSnapshots?: PolicyContractSnapshotPair | readonly PolicyContractSnapshotPair[];
 }): PolicyEvaluationContext {
   const baseIndex = buildDefinitionIndexFromSources(opts.baseSources);
   const candidateIndex = buildDefinitionIndexFromSources(opts.candidateSources);
@@ -126,6 +137,7 @@ function makeContext(opts: {
     impacts: opts.impacts ?? [],
     diff,
     evidence: opts.evidence,
+    contractSnapshots: opts.contractSnapshots,
   };
 }
 
@@ -589,6 +601,214 @@ describe("RFC 0029 Stage 3: evaluateBranchPolicies", () => {
         proposal: { waiveEvolution: true },
       });
       expect(evaluateBranchPolicies(waivedCtx)).toEqual([]);
+    });
+
+    it("enforces RFC 0027 directional contract diffs (rejects incompatible/unknown, allows metadataOnlyChange and waivers)", () => {
+      const jsonCodec = { name: "json", version: "1.0", unknownFieldPolicy: "ignore" as const };
+      const oldSnapshot: ContractSnapshot = {
+        revision: "rev-1",
+        contractId: "order-api:v1",
+        codec: jsonCodec,
+        rootType: "Order",
+        types: {
+          Order: {
+            kind: "record",
+            fields: [
+              { name: "id", type: { kind: "primitive", primitive: "string" } },
+            ],
+          },
+        },
+      };
+      const metadataOnlySnapshot: ContractSnapshot = {
+        ...oldSnapshot,
+        revision: "rev-2",
+        contractId: "order-api:v1-docs",
+        metadata: { doc: "Clarified order identifier docs" },
+      };
+      const incompatibleSnapshot: ContractSnapshot = {
+        ...oldSnapshot,
+        revision: "rev-3",
+        types: {
+          Order: {
+            kind: "record",
+            fields: [
+              { name: "id", type: { kind: "primitive", primitive: "string" } },
+              { name: "currency", type: { kind: "primitive", primitive: "string" } },
+            ],
+          },
+        },
+      };
+      const unknownSnapshot: ContractSnapshot = {
+        ...oldSnapshot,
+        revision: "rev-4",
+        codec: { name: "custom-opaque", version: "1.0", opaque: true },
+      };
+
+      const evolutionPolicy: BranchPolicy = {
+        evolution: { publishedNamespaces: ["public"], mode: "backward-compatible" },
+      };
+
+      // Metadata-only change passes without false positives.
+      const metaCtx = makeContext({
+        baseSources: [{ id: "public/api.lisp", source: pubBase }],
+        candidateSources: [{ id: "public/api.lisp", source: pubBase }],
+        policy: evolutionPolicy,
+        contractSnapshots: {
+          qualifiedName: "public/api.lisp::Order",
+          oldSnapshot,
+          newSnapshot: metadataOnlySnapshot,
+        },
+      });
+      expect(evaluateBranchPolicies(metaCtx)).toEqual([]);
+
+      // Incompatible contract diff fails the evolution gate unless waived.
+      const incompatCtx = makeContext({
+        baseSources: [{ id: "public/api.lisp", source: pubBase }],
+        candidateSources: [{ id: "public/api.lisp", source: pubBase }],
+        policy: evolutionPolicy,
+        contractSnapshots: {
+          qualifiedName: "public/api.lisp::Order",
+          oldSnapshot,
+          newSnapshot: incompatibleSnapshot,
+        },
+      });
+      expect(evaluateBranchPolicies(incompatCtx)).toEqual([
+        expect.objectContaining({
+          rule: "evolution",
+          qualifiedName: "public/api.lisp::Order",
+          details: expect.objectContaining({
+            source: "rfc-0027-contract-diff",
+            verdict: "incompatible",
+          }),
+        }),
+      ]);
+
+      // Unknown compatibility verdict also fails the evolution gate unless waived.
+      const unknownCtx = makeContext({
+        baseSources: [{ id: "public/api.lisp", source: pubBase }],
+        candidateSources: [{ id: "public/api.lisp", source: pubBase }],
+        policy: evolutionPolicy,
+        contractSnapshots: {
+          qualifiedName: "public/api.lisp::Order",
+          oldSnapshot,
+          newSnapshot: unknownSnapshot,
+        },
+      });
+      expect(evaluateBranchPolicies(unknownCtx)).toEqual([
+        expect.objectContaining({
+          rule: "evolution",
+          qualifiedName: "public/api.lisp::Order",
+          details: expect.objectContaining({
+            source: "rfc-0027-contract-diff",
+            verdict: "unknown",
+          }),
+        }),
+      ]);
+
+      // Explicit waiveEvolution bypasses the contract diff evolution gate.
+      const waivedContractCtx = makeContext({
+        baseSources: [{ id: "public/api.lisp", source: pubBase }],
+        candidateSources: [{ id: "public/api.lisp", source: pubBase }],
+        policy: evolutionPolicy,
+        proposal: { waiveEvolution: true },
+        contractSnapshots: {
+          qualifiedName: "public/api.lisp::Order",
+          oldSnapshot,
+          newSnapshot: unknownSnapshot,
+        },
+      });
+      expect(evaluateBranchPolicies(waivedContractCtx)).toEqual([]);
+    });
+  });
+
+  describe("RFC 0028 -> EvidenceCache -> evaluateBranchPolicies integration", () => {
+    const safeWorkflow = `(workflow-model ReleaseGate
+  (initial {:authorized false :released false})
+  (transition authorize
+    :guard (not state.authorized)
+    :update (assoc state :authorized true))
+  (transition release
+    :guard state.authorized
+    :update (assoc state :released true))
+  (law release-requires-auth
+    :when state.released
+    :holds state.authorized))`;
+
+    const buggyWorkflow = `(workflow-model BuggyReleaseGate
+  (initial {:authorized false :released false})
+  (transition release-unchecked
+    :guard (not state.released)
+    :update (assoc state :released true))
+  (law release-requires-auth
+    :when state.released
+    :holds state.authorized))`;
+
+    function cacheVerificationReport(
+      defHash: DefHash,
+      source: string,
+      maxDepth?: number,
+    ): EvidenceCache {
+      const report = verifyWorkflowSource(source, {
+        sourceId: "workflow.lisp",
+        ...(maxDepth !== undefined ? { maxDepth } : {}),
+      });
+      const cache = new EvidenceCache();
+      const record: EvidenceRecord<VerificationEvidencePayload> = {
+        formatVersion: EVIDENCE_FORMAT_VERSION,
+        key: {
+          defHash,
+          kind: "verification",
+          toolchainDigest: computeToolchainDigest({}),
+          inputDigest: computeInputDigest({ modelHash: report.modelHash, maxDepth: maxDepth ?? null }),
+        },
+        trust: defaultVerificationTrustAccount(report),
+        payload: toVerificationEvidencePayload(report),
+      };
+      cache.set(record);
+      return cache;
+    }
+
+    it("passes holds-in-model and rejects counterexample and inconclusive verification from EvidenceCache", () => {
+      const baseSrc = `(define release-step [x] (+ x 1))`;
+      const nextSrc = `(define release-step [x] (+ 1 x))`;
+      const policy: BranchPolicy = {
+        evidenceGates: {
+          requiredKinds: ["verification"],
+          rejectInconclusiveVerification: true,
+        },
+      };
+
+      const baseCtx = makeContext({
+        baseSources: [{ id: "workflow.lisp", source: baseSrc }],
+        candidateSources: [{ id: "workflow.lisp", source: nextSrc }],
+        policy,
+      });
+      const candHash = [...baseCtx.candidateIndex.definitions.values()][0]!.hash;
+
+      // 1. Safe workflow -> holds-in-model passes the verification evidence gate.
+      const okCache = cacheVerificationReport(candHash, safeWorkflow);
+      expect(
+        evaluateBranchPolicies({
+          ...baseCtx,
+          evidence: (hash) => okCache.summary(hash),
+        }),
+      ).toEqual([]);
+
+      // 2. Buggy workflow -> counterexample is rejected by the evidence gate.
+      const cexCache = cacheVerificationReport(candHash, buggyWorkflow);
+      const cexViolations = evaluateBranchPolicies({
+        ...baseCtx,
+        evidence: (hash) => cexCache.summary(hash),
+      });
+      expect(cexViolations.some((v) => v.rule === "evidence-gate" && v.message.includes("counterexample"))).toBe(true);
+
+      // 3. Depth-truncated exploration -> inconclusive is rejected by the evidence gate.
+      const incCache = cacheVerificationReport(candHash, safeWorkflow, 0);
+      const incViolations = evaluateBranchPolicies({
+        ...baseCtx,
+        evidence: (hash) => incCache.summary(hash),
+      });
+      expect(incViolations.some((v) => v.rule === "evidence-gate" && v.message.includes("inconclusive"))).toBe(true);
     });
   });
 });

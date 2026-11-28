@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Deferred (off critical path) — explicit `Effect`/`do!` is the shipped foundation; parked while Forma focuses on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-10-06 |
 | Scope | Effect inference, service operations, evaluation order, deferred computations, and target lowering |
 | Direction | Ordinary Lisp calls and bindings, inferred effects, explicit capability contracts, and function-based deferral |

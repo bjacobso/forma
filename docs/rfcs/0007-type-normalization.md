@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Deferred (off critical path) — parked until after Milestones A–C while Forma focuses on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-10-09 |
 | Depends on | [RFC 0005](./0005-row-operations.md); [RFC 0006](./0006-qualified-rows.md) for symbolic inputs |
 | Scope | Contextual coercion, type values, schema emission, and tagged payload classification |

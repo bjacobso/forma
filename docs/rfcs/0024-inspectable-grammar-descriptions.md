@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; evaluation only, not implemented |
+| Status | Deferred (off critical path) — evaluation-only grammar descriptions are parked while Forma focuses on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-11-08 |
 | Scope | Named recursive syntax descriptions with structural parser and documentation/analysis interpretations |
 | Related | [RFC 0021](./0021-languages-as-libraries.md)'s proposed syntax categories and library-owned surfaces; [RFC 0017](./0017-diagnostic-catalog.md)'s diagnostic catalog |

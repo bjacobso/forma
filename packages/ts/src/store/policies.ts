@@ -10,6 +10,7 @@
  */
 
 import { canonicalJson, sha256 } from "../artifact/canonical-json.js";
+import { diffContractSnapshots } from "../contracts/diff.js";
 import {
   POLICY_HASH_VERSION,
   SNAPSHOT_HASH_VERSION,
@@ -21,6 +22,7 @@ import {
   type EvolutionPolicy,
   type InterfaceImpact,
   type OperationClass,
+  type PolicyContractSnapshotPair,
   type PolicyEvaluationContext,
   type PolicyEvaluator,
   type PolicyEvidenceSource,
@@ -58,6 +60,7 @@ export type {
   EvolutionPolicy,
   InterfaceImpact,
   OperationClass,
+  PolicyContractSnapshotPair,
   PolicyEvaluationContext,
   PolicyEvaluator,
   PolicyEvidenceSource,
@@ -772,6 +775,52 @@ function checkEvolutionPolicy(context: PolicyEvaluationContext): PolicyViolation
           newSignature: updated.newSignature,
         },
       });
+    }
+  }
+
+  if (context.contractSnapshots) {
+    const pairs: readonly PolicyContractSnapshotPair[] = Array.isArray(context.contractSnapshots)
+      ? context.contractSnapshots
+      : [context.contractSnapshots as PolicyContractSnapshotPair];
+
+    for (const pair of pairs) {
+      const scopeNamespace =
+        pair.namespace ??
+        (pair.qualifiedName !== undefined
+          ? namespaceOfQualifiedName(pair.qualifiedName)
+          : undefined);
+      if (scopeNamespace !== undefined && !isPublished(scopeNamespace)) continue;
+
+      const report = diffContractSnapshots(pair.oldSnapshot, pair.newSnapshot, pair.options);
+      if (report.metadataOnlyChange) continue;
+      if (report.verdict === "incompatible" || report.verdict === "unknown") {
+        const label =
+          pair.qualifiedName ??
+          scopeNamespace ??
+          report.newContractId ??
+          report.oldContractId ??
+          `${report.oldRevision}->${report.newRevision}`;
+        violations.push({
+          rule: "evolution",
+          ...(pair.qualifiedName !== undefined ? { qualifiedName: pair.qualifiedName } : {}),
+          message:
+            report.verdict === "unknown"
+              ? `Evolution policy (${evolution.mode}) rejected '${label}': RFC 0027 directional contract diff returned 'unknown' compatibility (${report.oldRevision} -> ${report.newRevision}); unknown compatibility cannot silently pass without waiveEvolution.`
+              : `Evolution policy (${evolution.mode}) rejected '${label}': RFC 0027 directional contract diff detected an incompatible change (${report.oldRevision} -> ${report.newRevision}); publish a new version or pass waiveEvolution.`,
+          details: {
+            source: "rfc-0027-contract-diff",
+            mode: evolution.mode,
+            ...(scopeNamespace !== undefined ? { namespace: scopeNamespace } : {}),
+            verdict: report.verdict,
+            directions: report.directions,
+            oldRevision: report.oldRevision,
+            newRevision: report.newRevision,
+            metadataOnlyChange: report.metadataOnlyChange,
+            issues: report.issues,
+            assumptions: report.assumptions,
+          },
+        });
+      }
     }
   }
 

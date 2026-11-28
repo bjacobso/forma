@@ -2,7 +2,7 @@
 
 | | |
 | --- | --- |
-| Status | Proposed; not implemented |
+| Status | Deferred (off critical path) — parked until after Milestones A–C while Forma focuses on the Forma → Effect TypeScript + content-addressed transactional store + verification/contracts critical path |
 | Created | 2026-10-09 |
 | Depends on | [RFC 0005](./0005-row-operations.md) |
 | Scope | Row constraints, symbolic operations, generic bodies, and module contracts |
