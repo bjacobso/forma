@@ -7,6 +7,10 @@
  */
 
 import type {
+  ContractDiffOptions,
+  ContractSnapshot,
+} from "../contracts/types.js";
+import type {
   DefHash,
   DefinitionIndex,
   DefinitionRecord,
@@ -307,6 +311,17 @@ export type PolicyEvidenceSource =
   | ReadonlyMap<DefHash, EvidenceSummary>
   | ((hash: DefHash) => readonly EvidenceRecord[] | EvidenceSummary | undefined);
 
+/** Optional RFC 0027 old/new contract snapshot pair evaluated by `checkEvolutionPolicy`. */
+export interface PolicyContractSnapshotPair {
+  /** Optional namespace/module filter checked against `evolution.publishedNamespaces`. */
+  readonly namespace?: string | undefined;
+  /** Optional qualified name reported on any resulting evolution policy violation. */
+  readonly qualifiedName?: QualifiedName | undefined;
+  readonly oldSnapshot: ContractSnapshot;
+  readonly newSnapshot: ContractSnapshot;
+  readonly options?: ContractDiffOptions | undefined;
+}
+
 export interface PolicyEvaluationContext {
   readonly proposal: TransactionProposal;
   readonly policy: BranchPolicy;
@@ -317,6 +332,11 @@ export interface PolicyEvaluationContext {
   readonly impacts: readonly InterfaceImpact[];
   readonly diff: SnapshotDiff;
   readonly evidence?: PolicyEvidenceSource | undefined;
+  /** Optional RFC 0027 contract snapshot pair(s) checked against the branch evolution gate. */
+  readonly contractSnapshots?:
+    | PolicyContractSnapshotPair
+    | readonly PolicyContractSnapshotPair[]
+    | undefined;
 }
 
 /** Pluggable policy evaluator hook invoked inside every transaction commit. */

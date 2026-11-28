@@ -403,4 +403,7 @@ export const builtinDiagnosticCatalog = [
   {"code":"store/unknown-snapshot","summary":"The requested store snapshot hash does not exist.","explanation":"Check the snapshot hash against listBranches or prior transaction results before diffing or submitting against it.","stability":"experimental"},
   {"code":"value-ref/not-found","summary":"Not found.","explanation":"Check the located value-ref input against the declaration or operation's contract. Correct the reported problem before retrying.","stability":"experimental"},
   {"code":"value-ref/unsupported","summary":"Unsupported.","explanation":"Check the located value-ref input against the declaration or operation's contract. Correct the reported problem before retrying.","stability":"experimental"},
+  {"code":"workflow-laws/cardinality","summary":"A workflow-laws source must declare exactly one workflow-model.","explanation":"Supply a single (workflow-model ...) declaration per verification source input.","stability":"experimental"},
+  {"code":"workflow-laws/lower","summary":"A workflow-laws declaration could not be lowered into a finite model.","explanation":"Check that every domain, initial state, transition parameter binding, guard, update, and law uses finite ground values and supported decidable operations.","stability":"experimental"},
+  {"code":"workflow-laws/parse","summary":"The workflow-laws source could not be parsed.","explanation":"Fix the reader syntax error at the reported span before running bounded workflow verification.","stability":"experimental"},
 ] as const;

@@ -3,7 +3,7 @@
 ; Purpose: Finite workflow and evidence safety law declarations for bounded
 ;          fixed-point verification (RFC 0028 Stage 1).
 ; Requires: compiler.lisp; bootstrap separately from the ontology stack.
-; Used by: @formalang/ts bounded workflow explorer (browser-safe).
+; Used by: the Forma bounded workflow explorer (browser-safe).
 ; -----------------------------------------------------------------------------
 
 (type WorkflowDomainIR
